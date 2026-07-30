@@ -77,3 +77,35 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
   Production-Prüfung als verbindlicher Blocker dokumentiert.
 - Für andere MilosApps relevant: Ja. Datenlizenz und API-Betriebsrecht sind
   getrennt zu prüfen.
+
+## 2026-07-30 – Statisches Unterpfad-Hosting ist ein Gesamtvertrag
+
+- Datum und geprüfter Stand: 30. Juli 2026, öffentlicher GitHub-Pages-DEV.
+- Beobachtung: Ein Vite-Basispfad allein korrigiert nicht automatisch
+  Integrationsmetadaten, PWA-Scope, Service Worker, Vorschaubild oder
+  E2E-URL-Annahmen. Eine absolute `/`-Erwartung im Exporttest war auf einem
+  Projekt-Unterpfad falsch.
+- Evidenz oder reproduzierbarer Test: öffentlicher Matrixlauf gegen
+  `https://drmilos33.github.io/MilosApps-Wolkenpost/`, Artefaktprüfung sowie
+  fokussierter Export-Regressionslauf.
+- Änderung und Regressionstest: ein fester Hosting-Basispfad für Build,
+  Manifest und Service Worker; vollständige absolute Integrations-URLs;
+  Navigationstests relativ zur konfigurierten Basis; Artefaktprüfung aller
+  externen Metadaten.
+- Für andere MilosApps relevant: Ja. Unterpfad-Hosting muss als Vertrag über
+  Runtime, PWA, Metadaten und Tests behandelt werden.
+
+## 2026-07-30 – Paketmanager-Cache erst nach Aktivierung prüfen
+
+- Datum und geprüfter Stand: 30. Juli 2026, erster GitHub-Actions-CI-Lauf.
+- Beobachtung: `setup-node` mit `cache: pnpm` versucht `pnpm` bereits während
+  seines eigenen Schritts aufzurufen. Wenn Corepack erst danach aktiviert wird,
+  scheitert CI vor der Installation.
+- Evidenz oder reproduzierbarer Test: fehlgeschlagener Workflow mit
+  `Unable to locate executable file: pnpm`, anschließend grüner Wiederholung
+  nach explizitem Corepack-Schritt und Installation aus dem Lockfile.
+- Änderung und Regressionstest: Cache-Kopplung entfernt, Corepack zuerst
+  aktiviert und `pnpm install --frozen-lockfile` als eigener Schritt
+  ausgeführt.
+- Für andere MilosApps relevant: Ja, für Actions-Setups ohne vorinstalliertes
+  pnpm.
