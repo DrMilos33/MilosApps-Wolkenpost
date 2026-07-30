@@ -135,10 +135,42 @@ Spezialfälle wie Export, Offline-Service-Worker, Axe und Geolocation werden
 einmal im Desktop-Projekt ausgeführt und in den anderen drei Projekten bewusst
 übersprungen.
 
-## Nicht extern testbar
+## Runde 4 – unabhängiges öffentliches HTTPS-DEV
 
-- Kein externes HTTPS-DEV-Deployment, weil weder Hostingziel noch Zugangsdaten
-  oder eigene GitHub-Remote eingetragen sind.
+Geprüft:
+
+- unabhängiger Direktaufruf ohne Portal-Cookie und ohne Milos-Login;
+- Smartphone hoch/quer, Tablet-WebKit und Desktop-Chromium gegen die
+  öffentliche HTTPS-DEV-URL;
+- Readiness mit App-Key, Umgebung, Production-Sperre und tatsächlich
+  ausgelieferter vollständiger Commit-ID;
+- GitHub-Pages-Unterpfad für HTML, Assets, Manifest, Service Worker,
+  Healthcheck, Integrationsmetadaten, Vorschaubild und Export-Navigation;
+- app-eigener GitHub-Actions-Build mit Lockfile, Tests, Artefaktstempel und
+  Identitätsprüfung.
+
+Evidenz:
+
+- erster gesunder Pages-Deploy:
+  `c5597051a1b3485975e9cb7f278f406005dc658e`;
+- initialer externer Matrixlauf: 25 bestanden, 1 fehlerhafte Testannahme,
+  42 bewusst projektgefiltert;
+- fokussierter externer Export-Regressionslauf nach der Korrektur: 1 bestanden;
+- der abschließende vollständige Matrixlauf wird gegen die aus
+  `/health.json` gelesene Übergaberevision ausgeführt.
+
+Gefunden und behoben:
+
+1. Der Exporttest erwartete nach einem Reload die Domainwurzel `/`, obwohl eine
+   korrekt unter einem Pages-Projektpfad laufende App auf
+   `/MilosApps-Wolkenpost/` bleibt. Der Test prüft nun die eigentliche
+   Datenschutzanforderung: keine Koordinaten in Query oder Fragment.
+2. Das Vorschaubild war in den Integrationsmetadaten noch als Domainwurzelpfad
+   angegeben. Pfad, absolute URL und Artefaktprüfung verwenden jetzt denselben
+   App-Unterpfad.
+
+## Verbleibende Prüfgrenzen
+
 - Keine echte Betriebslast oder API-Quota-Prüfung; nur ein einzelner echter
   Live-Abruf und deterministische Testfixtures.
 - Keine reale Screenreader-Ausgabe mit menschlicher Assistive-Technology-
