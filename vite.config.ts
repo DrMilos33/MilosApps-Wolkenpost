@@ -2,14 +2,30 @@ import react from '@vitejs/plugin-react';
 import type { Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
 
-function appShellServiceWorker(): Plugin {
+const GITHUB_PAGES_BASE = '/MilosApps-Wolkenpost/';
+
+function withBase(base: string, path: string) {
+  return `${base}${path.replace(/^\/+/, '')}`;
+}
+
+function appShellServiceWorker(base: string): Plugin {
   return {
     name: 'wolkenpost-app-shell-service-worker',
     apply: 'build',
     generateBundle(_, bundle) {
       const files = Object.keys(bundle)
         .filter((file) => !file.endsWith('.map') && file !== 'sw.js')
-        .map((file) => `/${file}`);
+        .map((file) => withBase(base, file));
+      const appShell = Array.from(new Set([
+        base,
+        withBase(base, 'index.html'),
+        withBase(base, 'manifest.webmanifest'),
+        withBase(base, 'icon.svg'),
+        withBase(base, 'health.json'),
+        withBase(base, 'integration.json'),
+        withBase(base, 'preview.png'),
+        ...files,
+      ]));
       const cacheSignature = files
         .join('|')
         .split('')
@@ -18,7 +34,8 @@ function appShellServiceWorker(): Plugin {
 
       const source = `
 const CACHE = 'wolkenpost-${cacheSignature}';
-const APP_SHELL = ${JSON.stringify(['/', '/index.html', '/manifest.webmanifest', '/icon.svg', '/health.json', ...files])};
+const BASE = ${JSON.stringify(base)};
+const APP_SHELL = ${JSON.stringify(appShell)};
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
 });
@@ -31,7 +48,11 @@ self.addEventListener('activate', (event) => {
 });
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-  if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
+  if (
+    event.request.method !== 'GET'
+    || url.origin !== self.location.origin
+    || !url.pathname.startsWith(BASE)
+  ) return;
   event.respondWith(
     caches.match(url.pathname, { ignoreVary: true }).then((cached) => {
       if (cached) return cached;
@@ -41,7 +62,9 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE).then((cache) => cache.put(event.request, copy));
         }
         return response;
-      }).catch(() => event.request.mode === 'navigate' ? caches.match('/index.html') : Response.error());
+      }).catch(() => event.request.mode === 'navigate'
+        ? caches.match(\`\${BASE}index.html\`)
+        : Response.error());
     })
   );
 });`;
@@ -51,19 +74,24 @@ self.addEventListener('fetch', (event) => {
   };
 }
 
-export default defineConfig({
-  plugins: [react(), appShellServiceWorker()],
-  build: {
-    sourcemap: true,
-    target: 'es2022',
-  },
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./tests/unit/setup.ts'],
-    include: ['./tests/unit/**/*.test.ts'],
-    coverage: {
-      reporter: ['text', 'html'],
+export default defineConfig(({ mode }) => {
+  const base = mode === 'github-pages' ? GITHUB_PAGES_BASE : '/';
+
+  return {
+    base,
+    plugins: [react(), appShellServiceWorker(base)],
+    build: {
+      sourcemap: true,
+      target: 'es2022',
     },
-  },
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: ['./tests/unit/setup.ts'],
+      include: ['./tests/unit/**/*.test.ts'],
+      coverage: {
+        reporter: ['text', 'html'],
+      },
+    },
+  };
 });

@@ -7,7 +7,7 @@ test('shows slow loading and allows cancellation without losing the drawing', as
     await new Promise((resolve) => setTimeout(resolve, 1200));
     if (!route.request().failure()) await route.abort();
   });
-  await page.goto('/');
+  await page.goto('./');
   const count = await page.getByTestId('drawing-canvas').getAttribute('data-stroke-count');
   await page.getByRole('button', { name: 'Flug mit Live-Wind starten' }).click();
   await expect(page.getByText('Live-Wind wird gelesen …')).toBeVisible();
@@ -19,7 +19,7 @@ test('shows slow loading and allows cancellation without losing the drawing', as
 test('recovers from network failure using explicitly labelled demo wind', async ({ page }) => {
   test.skip(test.info().project.name !== 'desktop', 'focused recovery check');
   await page.route('**/v1/forecast**', (route) => route.abort('failed'));
-  await page.goto('/');
+  await page.goto('./');
   await page.getByRole('button', { name: 'Flug mit Live-Wind starten' }).click();
   await expect(page.getByRole('heading', { name: /Live-Wind ist gerade nicht erreichbar/ })).toBeVisible();
   await page.getByRole('button', { name: 'Bewusst mit Demo-Wind starten' }).click();
@@ -41,7 +41,7 @@ test('distinguishes timeout and retry from network failure', async ({ page }) =>
     }
     await fulfillWind(route);
   });
-  await page.goto('/');
+  await page.goto('./');
   await page.getByRole('button', { name: 'Flug mit Live-Wind starten' }).click();
   await expect(page.getByRole('heading', { name: /zu lange gebraucht/ })).toBeVisible();
   await page.getByRole('button', { name: 'Live-Wind erneut versuchen' }).click();
@@ -51,7 +51,7 @@ test('distinguishes timeout and retry from network failure', async ({ page }) =>
 test('keeps map and search usable when geolocation is denied', async ({ page, context }) => {
   test.skip(test.info().project.name !== 'desktop', 'focused permission check');
   await context.clearPermissions();
-  await page.goto('/');
+  await page.goto('./');
   await page.getByRole('button', { name: 'Meinen Ort verwenden' }).click();
   await expect(page.getByText(/Ortung wurde nicht erlaubt/)).toBeAttached();
   await page.getByLabel('Ort suchen').fill('Paris');
@@ -61,7 +61,7 @@ test('keeps map and search usable when geolocation is denied', async ({ page, co
 
 test('works with explicit demo wind while offline', async ({ page, context }) => {
   test.skip(test.info().project.name !== 'desktop', 'focused offline check');
-  await page.goto('/');
+  await page.goto('./');
   await context.setOffline(true);
   await page.getByRole('button', { name: 'Flug mit Live-Wind starten' }).click();
   await expect(page.getByRole('heading', { name: /Du bist gerade offline/ })).toBeVisible();
@@ -72,7 +72,7 @@ test('works with explicit demo wind while offline', async ({ page, context }) =>
 test('retains the finished route after app background and resume', async ({ page, context }) => {
   test.skip(test.info().project.name !== 'desktop', 'focused resume check');
   await page.route('**/v1/forecast**', (route) => fulfillWind(route));
-  await page.goto('/');
+  await page.goto('./');
   await startFlight(page);
   const distance = await page.locator('.result-metrics article').first().textContent();
   const secondPage = await context.newPage();

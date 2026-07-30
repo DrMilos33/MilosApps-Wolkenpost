@@ -7,12 +7,14 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 4315 --strictPort",
     "build": "tsc -b && vite build",
+    "build:dev-hosting": "tsc -b && vite build --mode github-pages",
     "preview": "vite preview --host 127.0.0.1 --port 4315 --strictPort",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:matrix": "playwright test tests/e2e/matrix.spec.ts",
-    "test:all": "pnpm test && pnpm build && pnpm test:e2e"
+    "test:all": "pnpm test && pnpm build && pnpm test:e2e",
+    "verify:dev-artifact": "node scripts/verify-dev-artifact.mjs"
   },
   "dependencies": {
     "react": "19.2.8",

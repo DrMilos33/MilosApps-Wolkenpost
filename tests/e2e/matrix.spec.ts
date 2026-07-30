@@ -6,13 +6,17 @@ import {
   startFlight,
 } from './helpers';
 
+// Page-level request mocks are not reliable for requests that a browser routes
+// through an active service worker. PWA behavior has its own dedicated test.
+test.use({ serviceWorkers: 'block' });
+
 test.beforeEach(async ({ page }) => {
   await page.route('**/v1/forecast**', (route) => fulfillWind(route));
 });
 
 test('complete wind journey is usable without login', async ({ page }) => {
   const consoleProblems = recordConsoleProblems(page);
-  await page.goto('/');
+  await page.goto('./');
   await expect(page.getByRole('heading', { name: /Schick deine Zeichnung/ })).toBeVisible();
   await expect(page.getByText('keine Anmeldung', { exact: false }).first()).toBeVisible();
 
@@ -23,13 +27,15 @@ test('complete wind journey is usable without login', async ({ page }) => {
 
   await expect(page.getByText('echte Modelldaten')).toBeVisible();
   await expect(page.getByText(/Open‑Meteo · NOAA GFS global/)).toBeVisible();
-  await expect(page).toHaveURL('/');
+  const currentUrl = new URL(page.url());
+  expect(currentUrl.search).toBe('');
+  expect(currentUrl.hash).toBe('');
   await expectNoHorizontalOverflow(page);
   expect(consoleProblems).toEqual([]);
 });
 
 test('drawing accepts a pointer stroke and safely discards pointer cancellation', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   const canvas = page.getByTestId('drawing-canvas');
   const before = Number(await canvas.getAttribute('data-stroke-count'));
   const bounds = await canvas.boundingBox();
@@ -86,7 +92,7 @@ test('drawing accepts a pointer stroke and safely discards pointer cancellation'
 });
 
 test('keyboard can create a drawing and choose a map position', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   await page.getByRole('button', { name: 'Leeren' }).click();
   const canvas = page.getByTestId('drawing-canvas');
   await canvas.focus();
