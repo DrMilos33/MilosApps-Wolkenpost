@@ -1,0 +1,18 @@
+{
+  "name": "Wolkenpost",
+  "short_name": "Wolkenpost",
+  "description": "Deine Zeichnung reist mit echten Winddaten.",
+  "lang": "de",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7fbf8",
+  "theme_color": "#dff5ee",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

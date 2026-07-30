@@ -1,0 +1,76 @@
+export type ObjectType = 'cloud' | 'balloon' | 'seed' | 'paper-plane';
+export type MotionPreference = 'system' | 'full' | 'reduced';
+export type ThemePreference = 'system' | 'light' | 'dark';
+
+export interface Coordinate {
+  latitude: number;
+  longitude: number;
+}
+
+export interface Place extends Coordinate {
+  id: string;
+  name: string;
+  country: string;
+}
+
+export interface DrawingPoint {
+  x: number;
+  y: number;
+  pressure: number;
+}
+
+export interface DrawingStroke {
+  id: string;
+  points: DrawingPoint[];
+}
+
+export interface WindVector {
+  east: number;
+  north: number;
+}
+
+export interface WindNode extends Coordinate {
+  times: number[];
+  vectors: WindVector[];
+}
+
+export interface WindSource {
+  kind: 'live' | 'demo';
+  label: string;
+  model: string;
+  fetchedAt: string;
+  forecastStart: string;
+  attributionUrl?: string;
+}
+
+export interface WindField {
+  nodes: WindNode[];
+  source: WindSource;
+}
+
+export interface RoutePoint extends Coordinate {
+  time: number;
+  speed: number;
+}
+
+export interface RouteResult {
+  points: RoutePoint[];
+  distanceKm: number;
+  durationHours: number;
+  averageSpeedKmh: number;
+  maxSpeedKmh: number;
+  source: WindSource;
+  objectType: ObjectType;
+  startLabel: string;
+  endLabel: string;
+}
+
+export interface StoredState {
+  version: 1;
+  drawing: DrawingStroke[];
+  objectType: ObjectType;
+  lastStart: Place;
+  motion: MotionPreference;
+  theme: ThemePreference;
+  soundEnabled: boolean;
+}
