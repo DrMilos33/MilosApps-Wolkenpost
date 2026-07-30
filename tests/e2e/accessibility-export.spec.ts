@@ -14,7 +14,7 @@ test.beforeEach(async ({ page }) => {
 test('has no serious automated accessibility violations', async ({ page }) => {
   test.skip(test.info().project.name !== 'desktop', 'focused accessibility check');
   const consoleProblems = recordConsoleProblems(page);
-  await page.goto('/');
+  await page.goto('./');
   await startFlight(page);
   const results = await new AxeBuilder({ page }).analyze();
   const serious = results.violations.filter((violation) =>
@@ -26,7 +26,7 @@ test('has no serious automated accessibility violations', async ({ page }) => {
 
 test('keeps light and dark themes free of serious accessibility violations', async ({ page }) => {
   test.skip(test.info().project.name !== 'desktop', 'focused theme check');
-  await page.goto('/');
+  await page.goto('./');
   const theme = page.getByLabel('Darstellung');
   for (const value of ['light', 'dark']) {
     await theme.selectOption(value);
@@ -42,7 +42,7 @@ test('keeps light and dark themes free of serious accessibility violations', asy
 test('respects reduced motion and keeps the route static', async ({ page }) => {
   test.skip(test.info().project.name !== 'desktop', 'focused reduced-motion check');
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto('/');
+  await page.goto('./');
   await startFlight(page);
   await expect(page.getByTestId('world-map')).toHaveAttribute('data-motion', 'reduced');
 });
@@ -50,14 +50,14 @@ test('respects reduced motion and keeps the route static', async ({ page }) => {
 test('reflows at a 320 CSS-pixel viewport without horizontal scrolling', async ({ page }) => {
   test.skip(test.info().project.name !== 'desktop', 'focused 200% equivalent reflow check');
   await page.setViewportSize({ width: 320, height: 820 });
-  await page.goto('/');
+  await page.goto('./');
   await startFlight(page);
   await expectNoHorizontalOverflow(page);
 });
 
 test('exports a privacy-preserving PNG', async ({ page }) => {
   test.skip(test.info().project.name !== 'desktop', 'focused export check');
-  await page.goto('/');
+  await page.goto('./');
   await startFlight(page);
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Ergebnisbild speichern' }).click();
@@ -69,7 +69,7 @@ test('exports a privacy-preserving PNG', async ({ page }) => {
 test('loads the app shell again while offline after service worker installation', async ({ page, context }) => {
   test.skip(test.info().project.name !== 'desktop', 'focused PWA offline check');
   const consoleProblems = recordConsoleProblems(page);
-  await page.goto('/');
+  await page.goto('./');
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;
     if (!navigator.serviceWorker.controller) {

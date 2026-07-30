@@ -7,13 +7,16 @@
     "de": "Zeichne ein Flugobjekt und schicke es mit echten Winddaten auf eine stilisierte Weltreise."
   },
   "languages": ["de"],
-  "status": "local-dev-ready",
-  "devUrl": null,
+  "status": "dev-online",
+  "devUrl": "https://drmilos33.github.io/MilosApps-Wolkenpost/",
   "localDevUrl": "http://127.0.0.1:4315",
+  "productionApproved": false,
+  "deploymentRevision": null,
   "authentication": "none",
   "requestedPortalRoute": "/apps/cloud-post",
   "healthcheck": {
-    "path": "/health.json",
+    "path": "/MilosApps-Wolkenpost/health.json",
+    "url": "https://drmilos33.github.io/MilosApps-Wolkenpost/health.json",
     "expected": {
       "status": "ok",
       "appKey": "cloud-post",

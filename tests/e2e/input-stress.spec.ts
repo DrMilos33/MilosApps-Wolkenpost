@@ -5,7 +5,7 @@ test('handles a tap, a long self-intersecting stroke, and rapid object changes',
   test.skip(test.info().project.name !== 'desktop', 'focused stress check');
   const consoleProblems = recordConsoleProblems(page);
   await page.route('**/v1/forecast**', (route) => fulfillWind(route, 250));
-  await page.goto('/');
+  await page.goto('./');
   await page.getByRole('button', { name: 'Leeren' }).click();
   const canvas = page.getByTestId('drawing-canvas');
   const bounds = await canvas.boundingBox();
@@ -77,7 +77,7 @@ test('handles a tap, a long self-intersecting stroke, and rapid object changes',
 
 test('keeps all visible button targets at least 44 CSS pixels high', async ({ page }) => {
   test.skip(test.info().project.name !== 'desktop', 'focused target-size check');
-  await page.goto('/');
+  await page.goto('./');
   const tooSmall = await page.locator('button:visible').evaluateAll((buttons) =>
     buttons
       .map((button) => {

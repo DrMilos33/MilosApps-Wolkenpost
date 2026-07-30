@@ -1,5 +1,6 @@
 const EXPECTED_APP_KEY = 'cloud-post';
-const HEALTH_URL = 'http://127.0.0.1:4315/health.json';
+const baseUrl = process.env.CLOUD_POST_E2E_BASE_URL ?? 'http://127.0.0.1:4315/';
+const HEALTH_URL = new URL('health.json', `${baseUrl.replace(/\/+$/, '')}/`);
 
 export default async function globalSetup() {
   const response = await fetch(HEALTH_URL, {
@@ -12,14 +13,16 @@ export default async function globalSetup() {
     status?: string;
     appKey?: string;
     environment?: string;
+    productionApproved?: boolean;
   };
   if (
     health.status !== 'ok'
     || health.appKey !== EXPECTED_APP_KEY
     || health.environment !== 'dev-build'
+    || health.productionApproved !== false
   ) {
     throw new Error(
-      `Port 4315 is not Wolkenpost DEV: expected ${EXPECTED_APP_KEY}/dev-build, received ${JSON.stringify(health)}.`,
+      `Readiness is not Wolkenpost DEV: expected ${EXPECTED_APP_KEY}/dev-build/productionApproved=false, received ${JSON.stringify(health)}.`,
     );
   }
 }

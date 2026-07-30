@@ -2,5 +2,7 @@
   "status": "ok",
   "appKey": "cloud-post",
   "environment": "dev-build",
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "productionApproved": false,
+  "deploymentRevision": null
 }
