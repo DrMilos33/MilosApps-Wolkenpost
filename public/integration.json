@@ -1,0 +1,27 @@
+{
+  "appKey": "cloud-post",
+  "titles": {
+    "de": "Wolkenpost"
+  },
+  "shortDescriptions": {
+    "de": "Zeichne ein Flugobjekt und schicke es mit echten Winddaten auf eine stilisierte Weltreise."
+  },
+  "languages": ["de"],
+  "status": "local-dev-ready",
+  "devUrl": null,
+  "localDevUrl": "http://127.0.0.1:4315",
+  "authentication": "none",
+  "requestedPortalRoute": "/apps/cloud-post",
+  "healthcheck": {
+    "path": "/health.json",
+    "expected": {
+      "status": "ok",
+      "appKey": "cloud-post",
+      "environment": "dev-build"
+    }
+  },
+  "preview": {
+    "path": "/preview.png",
+    "rights": "Eigenes App-Screenshot; ausschließlich eigene Gestaltung und eigene Weltvisualisierung."
+  }
+}
