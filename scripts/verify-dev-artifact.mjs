@@ -29,6 +29,8 @@ const checks = [
   [integration.devUrl === DEV_URL, 'Integration metadata contains the wrong DEV URL.'],
   [integration.productionApproved === false, 'Integration metadata must explicitly reject Production approval.'],
   [integration.healthcheck?.url === `${DEV_URL}health.json`, 'Integration metadata contains the wrong health URL.'],
+  [integration.preview?.path === `${BASE}preview.png`, 'Integration metadata contains the wrong preview path.'],
+  [integration.preview?.url === `${DEV_URL}preview.png`, 'Integration metadata contains the wrong preview URL.'],
 ];
 
 if (expectedRevision) {

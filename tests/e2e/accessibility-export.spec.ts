@@ -63,7 +63,9 @@ test('exports a privacy-preserving PNG', async ({ page }) => {
   await page.getByRole('button', { name: 'Ergebnisbild speichern' }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/^wolkenpost-\d{4}-\d{2}-\d{2}\.png$/);
-  await expect(page).toHaveURL('/');
+  const currentUrl = new URL(page.url());
+  expect(currentUrl.search).toBe('');
+  expect(currentUrl.hash).toBe('');
 });
 
 test('loads the app shell again while offline after service worker installation', async ({ page, context }) => {
