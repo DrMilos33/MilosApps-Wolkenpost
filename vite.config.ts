@@ -24,14 +24,19 @@ const SHELL_RUNTIME_FILES = [
   'milos-app-shell.css',
   'milos-app-shell-theme.css',
 ] as const;
+const LAYOUT_VENDOR_DIRECTORY = 'vendor/milosapps-layout/v1';
+const LAYOUT_RUNTIME_FILES = [
+  'milos-app-layout.css',
+  'milos-app-layout-theme.css',
+] as const;
 
 function withBase(base: string, path: string) {
   return `${base}${path.replace(/^\/+/, '')}`;
 }
 
-function vendoredPublicShell(): Plugin {
+function vendoredPublicContracts(): Plugin {
   return {
-    name: 'wolkenpost-vendored-public-shell',
+    name: 'wolkenpost-vendored-public-contracts',
     apply: 'build',
     async generateBundle() {
       for (const file of SHELL_RUNTIME_FILES) {
@@ -39,6 +44,13 @@ function vendoredPublicShell(): Plugin {
           type: 'asset',
           fileName: `${SHELL_VENDOR_DIRECTORY}/${file}`,
           source: await readFile(path.resolve(SHELL_VENDOR_DIRECTORY, file)),
+        });
+      }
+      for (const file of LAYOUT_RUNTIME_FILES) {
+        this.emitFile({
+          type: 'asset',
+          fileName: `${LAYOUT_VENDOR_DIRECTORY}/${file}`,
+          source: await readFile(path.resolve(LAYOUT_VENDOR_DIRECTORY, file)),
         });
       }
     },
@@ -116,7 +128,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     base,
-    plugins: [react(), vendoredPublicShell(), appShellServiceWorker(base)],
+    plugins: [react(), vendoredPublicContracts(), appShellServiceWorker(base)],
     build: {
       sourcemap: true,
       target: 'es2022',

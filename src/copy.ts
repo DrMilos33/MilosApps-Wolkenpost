@@ -13,9 +13,9 @@ export const copy = {
       offline: 'offline',
     },
     hero: {
-      eyebrow: 'Zeichnen · Wind lesen · Staunen',
-      heading: 'Wolkenpost. Schick deine Zeichnung auf eine Reise mit dem Wind.',
-      lead: 'Keine Anmeldung, keine Galerie, keine fremden Bilder. Nur dein kleines Flugobjekt, echte Winddaten und eine eigene stilisierte Welt.',
+      eyebrow: 'Zeichnen · Wind · Staunen',
+      heading: 'Schick deine Zeichnung mit dem Wind auf Reisen.',
+      lead: 'Zeichne, wähle einen groben Startpunkt und entdecke eine private Modellroute mit echten Winddaten.',
       start: 'Jetzt loszeichnen',
     },
     objectTypes: {
@@ -96,6 +96,7 @@ export const copy = {
       again: 'Noch eine Reise',
     },
     settings: {
+      summary: 'Darstellung, Bewegung und lokale Daten',
       kicker: 'Auf diesem Gerät',
       heading: 'Ruhig, privat, anpassbar.',
       description: 'Zeichnung, Einstellungen und grober letzter Start bleiben nur im lokalen Browser.',
@@ -178,9 +179,9 @@ export const copy = {
       offline: 'offline',
     },
     hero: {
-      eyebrow: 'Draw · Read the wind · Wonder',
-      heading: 'Cloud Post. Send your drawing on a journey with the wind.',
-      lead: 'No account, no gallery, no third-party images. Just your little flying object, real wind data and an original stylised world.',
+      eyebrow: 'Draw · Wind · Wonder',
+      heading: 'Send your drawing travelling with the wind.',
+      lead: 'Draw, choose an approximate start and discover a private model route using real wind data.',
       start: 'Start drawing',
     },
     objectTypes: {
@@ -261,6 +262,7 @@ export const copy = {
       again: 'Another journey',
     },
     settings: {
+      summary: 'Appearance, motion and local data',
       kicker: 'On this device',
       heading: 'Calm, private, adaptable.',
       description: 'Your drawing, settings and approximate last start stay only in the local browser.',

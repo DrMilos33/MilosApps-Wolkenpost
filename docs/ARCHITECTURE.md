@@ -10,6 +10,8 @@ Stand: 1. August 2026
 - `public-app-shell/v2.0.3` als feste, lokal vendorte Build-Abhängigkeit mit
   Manifest und SHA-256-Lock; kein CDN, kein Runtimeimport und keine gemeinsame
   Datenbank;
+- `public-app-layout/v1.0.0` als davon getrennte, lokal vendorte
+  Inhaltslayout-Abhängigkeit mit Profil `guided-flow` und eigenem Lock;
 - Browser-Lokalspeicher ausschließlich für Zeichnung, Einstellungen und den
   groben letzten Startpunkt;
 - Service Worker für den App-Shell-Offlinebetrieb;
@@ -50,6 +52,30 @@ zusätzlich aus `document.documentElement.lang`, damit der erste Render und ein
 Reload nicht vom Zeitpunkt des Initialevents abhängen. Deutsch und Englisch
 verwenden strukturgleiche Wörterbücher; Ortsnamen, dynamische Meldungen,
 Exporttexte und zugängliche Namen werden gemeinsam umgeschaltet.
+
+## Kompaktes Inhaltslayout
+
+`milos-layout.json` pinnt `public-app-layout/v1.0.0` auf Shared-Commit
+`bd09643e2767eddba032a82afc550043f3e3b31e`. Der Shared-Sync erzeugt unter
+`vendor/milosapps-layout/v1/` die frameworkneutrale Layout-CSS, die aus den
+app-eigenen Grün-/Creme-Tokens erzeugte Theme-CSS, den portablen Validator und
+`layout-lock.json`. Der Lock bindet genau diese drei Laufzeitartefakte per
+SHA-256; es gibt weder CDN noch Runtimeimport aus dem Shared-Repository. Der
+bestehende Fünf-Artefakt-Lock der App-Shell bleibt davon unabhängig.
+
+Die React-Struktur markiert Intro, Primärarbeit, Schritte, Aktionen, Ergebnis
+und sekundäre Einstellungen semantisch mit den Vertragsattributen. Wolkenpost
+behält Zeichenfläche, Weltkarte und redaktionelle Typografie, verwendet aber
+nur eine gemeinsame visuelle Arbeitsfläche statt verschachtelter Karten. Die
+große Orbit-Wolke ist auf eine kleine unterstützende Dekoration reduziert;
+Darstellung, Bewegung und lokale Daten werden progressiv offengelegt.
+
+Der Vite-Build kopiert beide Layout-CSS-Dateien unter ihren festen
+Same-Origin-Pfad. Die DEV-Artefaktprüfung vergleicht ihre Hashes mit dem
+Layout-Lock und verlangt beide Pfade im Service-Worker-Cache. Der Browser-Gate
+misst am echten Build `[data-milos-intro]` und
+`[data-milos-primary-work]`, prüft 1440 × 900, 390 × 844 und den
+360 × 800@200-%-Reflow sowie strikte `style-src 'self'` ohne Inline-Ausnahme.
 
 ## Windabruf
 

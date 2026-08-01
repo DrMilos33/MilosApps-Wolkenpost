@@ -227,6 +227,70 @@ Playwright:       96 Kombinationen, 33 bestanden, 63 profilspezifisch gefiltert
 Visual-QA:        3/3 bestanden
 ```
 
+## Runde 6 – Pilot `public-app-layout/v1.0.0`
+
+Geprüft:
+
+- fester Shared-Pin `bd09643e2767eddba032a82afc550043f3e3b31e`, Profil
+  `guided-flow`, vendorte Basis-/Theme-CSS und separater Drei-Artefakt-Lock;
+- kompakte, flache Intro-/Arbeitsstruktur ohne Karten-in-Karten-Optik;
+- vollständige Zeichen-, Karten-, Wind-, Fehler-, Offline- und Exportfunktion;
+- progressive Offenlegung der lokalen Komforteinstellungen;
+- DE/EN-Umschaltung und Reload-Persistenz;
+- Tastatur, Touch, Pointer-Abbruch, 44-Pixel-Ziele, sichtbarer Fokus,
+  Reduced Motion und Hell-/Dunkel-Kontrast;
+- strikte CSP mit beiden Layout-CSS-Dateien als Same-Origin-Ressourcen,
+  korrektem `text/css`-MIME, Lock-Hash und Service-Worker-Cache;
+- 1440 × 900, 390 × 844 sowie 180 × 400 CSS-Pixel als
+  360 × 800@200-%-Äquivalent ohne horizontalen Überlauf oder Text-Clipping.
+
+Visuelle QA-Runde 1:
+
+- Ausgangsmessung nach dem ersten Umbau: Intro 372 px Desktop und 346 px
+  mobil; beide Budgets waren noch überschritten.
+- Bei 200-%-Reflow wurden die Texte der Objektwahl durch nebeneinander
+  erzwungenes Symbol und Text zu schmal.
+- Behoben durch kürzere Statuszeile, maßvollere Titeltypografie, kompakte
+  Dekoration und eine echte einspaltige Objektoption unter 240 CSS-Pixeln.
+
+Visuelle QA-Runde 2:
+
+- Desktop hell und dunkel: Intro 273,61 px, Primärarbeit ab 374,61 px;
+- 390 × 844 Englisch: Intro 260,11 px, Primärarbeit ab 397,48 px;
+- 360 × 800@200 %: kein Dokumentüberlauf, kein geclipptes sichtbares
+  Textelement und kein Leerraum unter dem Footer;
+- alle vier visuellen Vertragsfälle bestanden mit null CSP- oder
+  Konsolenproblemen.
+
+Gefunden und behoben:
+
+1. Der bisherige Dark-Mode-Axe-Lauf meldete die transparenten Textknoten der
+   Shadow-DOM-Shell gegen eine von `color-mix()` falsch zusammengesetzte
+   Zwischenfarbe. Axe prüft weiterhin den vollständigen Fachinhalt; die
+   tatsächlich berechneten Vorder-/Hintergrundfarben aller Shell-Controls
+   werden zusätzlich mit WCAG-Luminanzformel auf mindestens 4,5:1 geprüft.
+2. Der vollständige No-Login-Flow suchte den Text `keine Anmeldung` im
+   entfernten großen Hero-Link. Der Regressionstest prüft jetzt die echte
+   Grenze: kein Passwortfeld, kein Formular und sichtbarer No-Login-Hinweis
+   im Shell-Footer.
+3. Ein Pages-Unterpfad-Artefakt kann nicht direkt als lokaler Root-Preview
+   getestet werden. Das Gate prüft zuerst das Pages-Artefakt und baut danach
+   den Standard-Preview neu, bevor Playwright startet.
+
+Lokale Evidenz vor dem Pilot-Publish:
+
+```text
+Shared-Validatoren: Shell PASS; Layout PASS (cloud-post, guided-flow)
+Vitest:             5 Dateien, 20 Tests, 20 bestanden
+Playwright Runde 1: 100 Kombinationen, 30 bestanden, 66 Profilfilter,
+                    4 veraltete No-Login-Testannahmen
+Betroffene Matrix:  12/12 nach Korrektur bestanden
+Visual-QA Runde 2:  4/4 bestanden
+Abschlussmatrix:    100 Kombinationen, 34 bestanden, 66 profilspezifisch
+                    gefiltert, 0 fehlgeschlagen
+Pages-Artefakt:     PASS einschließlich Layout-CSS-Hashes und PWA-Cache
+```
+
 ## Verbleibende Prüfgrenzen
 
 - Keine echte Betriebslast oder API-Quota-Prüfung; nur ein einzelner echter

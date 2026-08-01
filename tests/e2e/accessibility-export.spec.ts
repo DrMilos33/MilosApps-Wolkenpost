@@ -37,14 +37,39 @@ test('has no serious automated accessibility violations in German and English', 
 test('keeps light and dark themes free of serious accessibility violations', async ({ page }) => {
   test.skip(test.info().project.name !== 'desktop', 'focused theme check');
   await page.goto('./');
+  await page.getByText('Darstellung, Bewegung und lokale Daten', { exact: true }).click();
   const theme = page.getByLabel('Darstellung');
   for (const value of ['light', 'dark']) {
     await theme.selectOption(value);
-    const results = await new AxeBuilder({ page }).analyze();
+    const results = await new AxeBuilder({ page }).include('.app-content').analyze();
     const serious = results.violations.filter((violation) =>
       violation.impact === 'serious' || violation.impact === 'critical',
     );
+    const shellContrast = await page.locator('milos-app-shell').evaluate((shell) => {
+      const channels = (value: string) => {
+        const numbers = value.match(/[\d.]+/g)?.map(Number) ?? [];
+        if (value.startsWith('color(')) return numbers.slice(0, 3);
+        return numbers.slice(0, 3).map((channel) => channel / 255);
+      };
+      const luminance = (value: string) => channels(value)
+        .map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4)
+        .reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+      const ratio = (foreground: string, background: string) => {
+        const values = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
+        return (values[0] + 0.05) / (values[1] + 0.05);
+      };
+      return [...shell.shadowRoot!.querySelectorAll<HTMLElement>('.control, .skip')]
+        .filter((control) => getComputedStyle(control).display !== 'none')
+        .map((control) => {
+          const style = getComputedStyle(control);
+          return {
+            label: control.textContent?.trim().replace(/\s+/g, ' '),
+            ratio: ratio(style.color, style.backgroundColor),
+          };
+        });
+    });
     expect(serious, `${value}: ${JSON.stringify(serious)}`).toEqual([]);
+    expect(shellContrast.filter(({ ratio }) => ratio < 4.5), value).toEqual([]);
   }
   await theme.selectOption('system');
 });

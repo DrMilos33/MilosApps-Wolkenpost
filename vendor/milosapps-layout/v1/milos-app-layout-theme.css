@@ -1,0 +1,11 @@
+[data-milos-layout="compact"][data-milos-app-key="cloud-post"] {
+  --milos-layout-page: #f7fbf8;
+  --milos-layout-surface: #fffdf8;
+  --milos-layout-surface-strong: #eaf6f0;
+  --milos-layout-text: #173f35;
+  --milos-layout-muted: #5d746d;
+  --milos-layout-border: #c9dcd4;
+  --milos-layout-accent: #1f6658;
+  --milos-layout-accent-contrast: #ffffff;
+  --milos-layout-focus: #bd4a34;
+}

@@ -15,6 +15,7 @@
     "test:e2e:matrix": "playwright test tests/e2e/matrix.spec.ts",
     "test:all": "pnpm test && pnpm build && pnpm test:e2e",
     "verify:shell": "node ./vendor/milosapps-shell/v2/verify.mjs --app-root . --manifest milos-app.json",
+    "verify:layout": "node ./vendor/milosapps-layout/v1/verify-layout.mjs --app-root . --manifest milos-layout.json",
     "verify:dev-artifact": "node scripts/verify-dev-artifact.mjs"
   },
   "dependencies": {

@@ -366,11 +366,16 @@ export default function App({ initialLanguage: language }: AppProps) {
   };
 
   return (
-    <div className="app-content">
-        <section className="hero" id="top">
-          <div className="hero-copy">
+    <div
+      className="app-content"
+      data-milos-layout="compact"
+      data-milos-profile="guided-flow"
+      data-milos-app-key="cloud-post"
+    >
+        <section className="hero" id="top" data-milos-intro>
+          <div className="hero-copy" data-milos-intro-copy>
             <div className="hero-status-row">
-              <p className="eyebrow">{text.hero.eyebrow}</p>
+            <p className="eyebrow" data-milos-eyebrow>{text.hero.eyebrow}</p>
               <span
                 className={`connection-pill ${online ? '' : 'is-offline'}`}
                 data-testid="connection-status"
@@ -380,10 +385,7 @@ export default function App({ initialLanguage: language }: AppProps) {
               </span>
             </div>
             <h1>{text.hero.heading}</h1>
-            <p className="hero-lead">{text.hero.lead}</p>
-            <a className="primary-link" href="#zeichnen">
-              {text.hero.start} <span aria-hidden="true">↓</span>
-            </a>
+            <p className="hero-lead" data-milos-lead>{text.hero.lead}</p>
           </div>
           <div className="hero-orbit" aria-hidden="true">
             <span className="hero-cloud">☁</span>
@@ -391,10 +393,10 @@ export default function App({ initialLanguage: language }: AppProps) {
           </div>
         </section>
 
-        <div className="journey-layout">
+        <div className="journey-layout" data-milos-primary-work data-milos-flow data-milos-panel>
           <section className="step-card drawing-step" id="zeichnen" aria-labelledby="drawing-heading">
-            <div className="step-heading">
-              <span className="step-number" aria-hidden="true">1</span>
+            <div className="step-heading" data-milos-step>
+              <span className="step-number" aria-hidden="true" data-milos-step-index>1</span>
               <div>
                 <p className="step-kicker">{text.drawing.kicker}</p>
                 <h2 id="drawing-heading">{text.drawing.heading}</h2>
@@ -438,7 +440,7 @@ export default function App({ initialLanguage: language }: AppProps) {
                 setAnnouncement(text.announcements.strokeUndone);
               }}
             />
-            <div className="drawing-actions">
+            <div className="drawing-actions" data-milos-actions>
               <button
                 className="secondary-button"
                 type="button"
@@ -480,8 +482,8 @@ export default function App({ initialLanguage: language }: AppProps) {
           </section>
 
           <section className="step-card map-step" aria-labelledby="map-heading">
-            <div className="step-heading">
-              <span className="step-number" aria-hidden="true">2</span>
+            <div className="step-heading" data-milos-step>
+              <span className="step-number" aria-hidden="true" data-milos-step-index>2</span>
               <div>
                 <p className="step-kicker">{text.map.kicker}</p>
                 <h2 id="map-heading">{text.map.heading}</h2>
@@ -578,7 +580,7 @@ export default function App({ initialLanguage: language }: AppProps) {
           </section>
         </div>
 
-        <section className="launch-panel" aria-labelledby="launch-heading">
+        <section className="launch-panel" aria-labelledby="launch-heading" data-milos-command-dock>
           <div>
             <p className="step-kicker">{text.launch.kicker}</p>
             <h2 id="launch-heading">{text.launch.heading}</h2>
@@ -607,7 +609,7 @@ export default function App({ initialLanguage: language }: AppProps) {
         </section>
 
         {flightStatus === 'error' && (
-          <section className="state-panel error-panel" role="alert" aria-labelledby="wind-error-heading">
+          <section className="state-panel error-panel" role="alert" aria-labelledby="wind-error-heading" data-milos-result>
             <div className="state-symbol" aria-hidden="true">↯</div>
             <div>
               <p className="step-kicker">{text.errorPanel.kicker}</p>
@@ -626,7 +628,7 @@ export default function App({ initialLanguage: language }: AppProps) {
         )}
 
         {result && (
-          <section className="result-section" aria-labelledby="result-heading">
+          <section className="result-section" aria-labelledby="result-heading" data-milos-result>
             <div className="result-heading-row">
               <div>
                 <p className="eyebrow">
@@ -681,7 +683,7 @@ export default function App({ initialLanguage: language }: AppProps) {
                 </strong>
               </div>
             </div>
-            <div className="result-actions">
+            <div className="result-actions" data-milos-actions>
               <button className="primary-button" type="button" onClick={saveImage} disabled={exporting}>
                 {exporting ? text.result.exporting : text.result.save}
               </button>
@@ -703,7 +705,9 @@ export default function App({ initialLanguage: language }: AppProps) {
           </section>
         )}
 
-        <section className="settings-section" aria-labelledby="settings-heading">
+        <details className="settings-disclosure" data-milos-secondary>
+          <summary>{text.settings.summary}</summary>
+          <section className="settings-section" aria-labelledby="settings-heading">
           <div>
             <p className="step-kicker">{text.settings.kicker}</p>
             <h2 id="settings-heading">{text.settings.heading}</h2>
@@ -760,7 +764,8 @@ export default function App({ initialLanguage: language }: AppProps) {
               {text.settings.storageWarning}
             </p>
           )}
-        </section>
+          </section>
+        </details>
 
         <aside className="credits-bar" aria-label={text.footer.credits}>
           <a href={OPEN_METEO_ATTRIBUTION_URL} target="_blank" rel="noreferrer">
