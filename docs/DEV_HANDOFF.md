@@ -15,6 +15,7 @@ Stand: 1. August 2026
 | Anmeldung | keine |
 | Status | `dev-online` |
 | Shell-Vertrag | `public-app-shell/v2.0.3`, Shared-Commit `ed898412306e22c6ae1b10ee8953df29f8acd627` |
+| Layout-Vertrag | `public-app-layout/v1.0.0`, Profil `guided-flow`, Shared-Commit `bd09643e2767eddba032a82afc550043f3e3b31e` |
 | Git-Remote | `https://github.com/DrMilos33/MilosApps-Wolkenpost.git` |
 | Hosting | app-eigene GitHub Pages über `.github/workflows/deploy-dev.yml` |
 | öffentliche DEV-URL | `https://drmilos33.github.io/MilosApps-Wolkenpost/` |
@@ -63,6 +64,11 @@ Für die Shell-v2-Migration ist
 App-/Pages-Stand. Ein Rollback stellt diesen Commit per normalem Revert wieder
 her und löst ausschließlich das app-eigene DEV-Deployment neu aus; Shared und
 Portal müssen dafür nicht zurückgerollt werden.
+
+Für den Layout-v1-Piloten ist
+`22af04ef5fe0c7ffc5b6a8474eee588aa0dac827` der unmittelbar vorherige gesunde
+App-/Pages-Stand. Der Layout-Pilot bleibt mit einem normalen Revert auf diesen
+Stand rückrollbar; der getrennte Shell-v2.0.3-Pin bleibt dabei erhalten.
 
 ## Portalgrenze
 

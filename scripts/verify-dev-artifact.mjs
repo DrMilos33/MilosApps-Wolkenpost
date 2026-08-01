@@ -12,20 +12,32 @@ const shellRuntimeFiles = [
   'milos-app-shell.css',
   'milos-app-shell-theme.css',
 ];
-const [index, serviceWorker, manifestText, healthText, integrationText, shellLockText, ...shellArtifacts] = await Promise.all([
+const layoutDirectory = 'vendor/milosapps-layout/v1';
+const layoutRuntimeFiles = [
+  'milos-app-layout.css',
+  'milos-app-layout-theme.css',
+];
+const [index, serviceWorker, manifestText, healthText, integrationText, shellLockText, layoutLockText] = await Promise.all([
   readFile('dist/index.html', 'utf8'),
   readFile('dist/sw.js', 'utf8'),
   readFile('dist/manifest.webmanifest', 'utf8'),
   readFile('dist/health.json', 'utf8'),
   readFile('dist/integration.json', 'utf8'),
   readFile(`${shellDirectory}/shell-lock.json`, 'utf8'),
-  ...shellRuntimeFiles.map((file) => readFile(`dist/${shellDirectory}/${file}`)),
+  readFile(`${layoutDirectory}/layout-lock.json`, 'utf8'),
 ]);
+const shellArtifacts = await Promise.all(
+  shellRuntimeFiles.map((file) => readFile(`dist/${shellDirectory}/${file}`)),
+);
+const layoutArtifacts = await Promise.all(
+  layoutRuntimeFiles.map((file) => readFile(`dist/${layoutDirectory}/${file}`)),
+);
 
 const manifest = JSON.parse(manifestText);
 const health = JSON.parse(healthText);
 const integration = JSON.parse(integrationText);
 const shellLock = JSON.parse(shellLockText);
+const layoutLock = JSON.parse(layoutLockText);
 
 function sha256(content) {
   return `sha256:${createHash('sha256').update(content).digest('hex')}`;
@@ -34,6 +46,8 @@ function sha256(content) {
 const checks = [
   [index.includes(`${BASE}assets/`), 'index.html does not use the GitHub Pages base path.'],
   [index.includes(`./${shellDirectory}/bootstrap.js`), 'index.html does not load the local vendored shell bootstrap.'],
+  [index.includes(`./${layoutDirectory}/milos-app-layout.css`), 'index.html does not load the local vendored layout CSS.'],
+  [index.includes(`./${layoutDirectory}/milos-app-layout-theme.css`), 'index.html does not load the local vendored layout theme CSS.'],
   [index.includes(`${BASE}manifest.webmanifest`), 'The manifest URL is not scoped to the DEV base path.'],
   [serviceWorker.includes(`const BASE = "${BASE}";`), 'The service worker does not enforce the DEV base path.'],
   [serviceWorker.includes(`${BASE}index.html`), 'The service worker offline fallback is outside the DEV base path.'],
@@ -57,6 +71,14 @@ const checks = [
   ...shellRuntimeFiles.map((file) => [
     serviceWorker.includes(`${BASE}${shellDirectory}/${file}`),
     `The service worker does not cache shell runtime artifact ${file}.`,
+  ]),
+  ...layoutRuntimeFiles.map((file, index) => [
+    sha256(layoutArtifacts[index]) === layoutLock.artifacts[file],
+    `Built layout runtime artifact ${file} does not match layout-lock.json.`,
+  ]),
+  ...layoutRuntimeFiles.map((file) => [
+    serviceWorker.includes(`${BASE}${layoutDirectory}/${file}`),
+    `The service worker does not cache layout runtime artifact ${file}.`,
   ]),
 ];
 

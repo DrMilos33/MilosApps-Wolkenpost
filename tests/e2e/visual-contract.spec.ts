@@ -4,10 +4,11 @@ const externalBaseUrl = process.env.CLOUD_POST_E2E_BASE_URL;
 import { expectNoHorizontalOverflow, recordConsoleProblems } from './helpers';
 
 const cases = [
-  { name: 'desktop-de', width: 1440, height: 900, locale: 'de' },
-  { name: 'mobile-en', width: 390, height: 844, locale: 'en' },
+  { name: 'desktop-de', width: 1440, height: 900, locale: 'de', theme: 'system' },
+  { name: 'desktop-dark-de', width: 1440, height: 900, locale: 'de', theme: 'dark' },
+  { name: 'mobile-en', width: 390, height: 844, locale: 'en', theme: 'system' },
   // CSS-pixel equivalent of a 360 x 800 viewport at 200% browser zoom.
-  { name: 'zoom200-de', width: 180, height: 400, locale: 'de' },
+  { name: 'zoom200-de', width: 180, height: 400, locale: 'de', theme: 'system' },
 ] as const;
 
 for (const visualCase of cases) {
@@ -39,9 +40,26 @@ for (const visualCase of cases) {
         .click();
     }
 
+    if (visualCase.theme === 'dark') {
+      await page.getByText('Darstellung, Bewegung und lokale Daten', { exact: true }).click();
+      await page.getByLabel('Darstellung').selectOption('dark');
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+      await page.getByText('Darstellung, Bewegung und lokale Daten', { exact: true }).click();
+    }
+
+    await page.locator('h1').scrollIntoViewIfNeeded();
+
     await expect(page.locator('html')).toHaveAttribute('lang', visualCase.locale);
     await expect(page.locator('milos-app-shell')).toHaveCount(1);
     await expect(page.locator('h1')).toHaveCount(1);
+    await expect(page.getByRole('heading', {
+      level: 2,
+      name: visualCase.locale === 'de' ? 'Was fliegt heute?' : 'What will fly today?',
+    })).toBeVisible();
+    await expect(page.getByRole('heading', {
+      level: 2,
+      name: visualCase.locale === 'de' ? 'Wo geht die Reise los?' : 'Where does the journey begin?',
+    })).toBeVisible();
     const shellContract = await page.locator('milos-app-shell').evaluate((shell) => {
       const root = shell.shadowRoot!;
       const brand = root.querySelector<HTMLElement>('.brand')!;
@@ -67,6 +85,42 @@ for (const visualCase of cases) {
     expect(shellContract.iconHeight).toBeCloseTo(38, 1);
     expect(shellContract.componentStyles).toMatch(/\/vendor\/milosapps-shell\/v2\/milos-app-shell\.css$/);
     expect(shellContract.themeStyles).toMatch(/\/vendor\/milosapps-shell\/v2\/milos-app-shell-theme\.css$/);
+
+    const layoutContract = await page.evaluate(async () => {
+      const links = [...document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')]
+        .map((link) => link.href)
+        .filter((href) => href.includes('/vendor/milosapps-layout/v1/'));
+      const responses = await Promise.all(links.map(async (href) => {
+        const response = await fetch(href);
+        return {
+          href,
+          ok: response.ok,
+          contentType: response.headers.get('content-type'),
+        };
+      }));
+      const intro = document.querySelector<HTMLElement>('[data-milos-intro]')!.getBoundingClientRect();
+      const primary = document.querySelector<HTMLElement>('[data-milos-primary-work]')!.getBoundingClientRect();
+      return {
+        responses,
+        introHeight: intro.height,
+        primaryTop: primary.top,
+        layoutDisplay: getComputedStyle(document.querySelector<HTMLElement>('[data-milos-layout="compact"]')!).display,
+      };
+    });
+    expect(layoutContract.responses.map(({ href }) => href)).toEqual([
+      expect.stringMatching(/\/vendor\/milosapps-layout\/v1\/milos-app-layout\.css$/),
+      expect.stringMatching(/\/vendor\/milosapps-layout\/v1\/milos-app-layout-theme\.css$/),
+    ]);
+    expect(layoutContract.responses.every(({ ok, contentType }) => ok && contentType?.includes('text/css'))).toBe(true);
+    expect(layoutContract.layoutDisplay).toBe('grid');
+    if (visualCase.name.startsWith('desktop')) {
+      expect(layoutContract.introHeight).toBeLessThanOrEqual(320);
+      expect(layoutContract.primaryTop).toBeLessThanOrEqual(520);
+    }
+    if (visualCase.name === 'mobile-en') {
+      expect(layoutContract.introHeight).toBeLessThanOrEqual(280);
+      expect(layoutContract.primaryTop).toBeLessThanOrEqual(500);
+    }
     await expectNoHorizontalOverflow(page);
     const undersizedTargets = await page.locator('button, a').evaluateAll((controls) => controls
       .filter((control) => {

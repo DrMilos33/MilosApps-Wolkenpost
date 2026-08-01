@@ -18,9 +18,10 @@ test('shell and complete app switch to English and persist across reload', async
   await shell.getByRole('button', { name: 'EN', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await expect(page).toHaveTitle('Cloud Post – Your drawing travels with the wind');
-  await expect(page.getByRole('heading', { level: 1, name: /Cloud Post\. Send your drawing/ })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: /Send your drawing travelling/ })).toBeVisible();
   await expect(page.getByRole('radio', { name: /Balloon floating gently/ })).toBeVisible();
   await expect(page.getByLabel('Search for a place')).toBeVisible();
+  await page.getByText('Appearance, motion and local data', { exact: true }).click();
   await expect(page.getByLabel('Appearance')).toBeVisible();
   await expect(shell.getByRole('link', { name: /All apps/ }))
     .toHaveAttribute('href', 'https://dev.milos-apps.de/apps');
@@ -39,7 +40,7 @@ test('shell and complete app switch to English and persist across reload', async
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await expect(page.locator('milos-app-shell').getByRole('button', { name: 'EN', exact: true }))
     .toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByRole('heading', { level: 1, name: /Cloud Post\. Send your drawing/ })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: /Send your drawing travelling/ })).toBeVisible();
   await expect.poll(() => page.evaluate(() => localStorage.getItem('milosapps.cloud-post.language')))
     .toBe('en');
   expect(consoleProblems).toEqual([]);
@@ -50,7 +51,7 @@ test('corrupt language storage safely falls back to German', async ({ page }) =>
   await page.addInitScript(() => localStorage.setItem('milosapps.cloud-post.language', 'fr'));
   await page.goto('./');
   await expect(page.locator('html')).toHaveAttribute('lang', 'de');
-  await expect(page.getByRole('heading', { level: 1, name: /Wolkenpost\. Schick deine Zeichnung/ })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: /Schick deine Zeichnung/ })).toBeVisible();
   await expect(page.locator('milos-app-shell').getByRole('button', { name: 'DE', exact: true }))
     .toHaveAttribute('aria-pressed', 'true');
 });
@@ -113,6 +114,6 @@ test('English shell and app remain available after an offline reload', async ({ 
   await context.setOffline(true);
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-  await expect(page.getByRole('heading', { level: 1, name: /Cloud Post\. Send your drawing/ })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: /Send your drawing travelling/ })).toBeVisible();
   await expect(page.getByTestId('connection-status')).toContainText(/offline|ready/);
 });

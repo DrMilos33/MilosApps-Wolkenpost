@@ -1,0 +1,29 @@
+{
+  "$schema": "https://milos-apps.de/contracts/public-app-layout/v1/layout-manifest.schema.json",
+  "appKey": "cloud-post",
+  "public": true,
+  "loginRequired": false,
+  "layoutContract": {
+    "id": "public-app-layout/v1",
+    "version": "1.0.0",
+    "sharedCommit": "bd09643e2767eddba032a82afc550043f3e3b31e",
+    "vendorDirectory": "vendor/milosapps-layout/v1"
+  },
+  "profile": "guided-flow",
+  "sources": {
+    "markup": ["index.html", "src/App.tsx"],
+    "styles": ["src/styles.css"]
+  },
+  "theme": {
+    "page": "#f7fbf8",
+    "surface": "#fffdf8",
+    "surfaceStrong": "#eaf6f0",
+    "text": "#173f35",
+    "muted": "#5d746d",
+    "border": "#c9dcd4",
+    "accent": "#1f6658",
+    "accentContrast": "#ffffff",
+    "focus": "#bd4a34"
+  },
+  "productionApproved": false
+}

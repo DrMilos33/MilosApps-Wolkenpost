@@ -174,3 +174,37 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
   dem Lock und der Service Worker cached alle Pfade.
 - Für andere MilosApps relevant: Ja. CSP-Eignung muss am gebauten Artefakt und
   nicht nur an den Quelldateien geprüft werden.
+
+## 2026-08-01 – Kompaktheit braucht messbare semantische Bezugspunkte
+
+- Datum und geprüfter Stand: 1. August 2026,
+  `public-app-layout/v1.0.0`-Pilot.
+- Beobachtung: Ein sichtbar verkleinerter Hero verfehlte das Dichteziel noch:
+  Das Intro maß 372 px am Desktop und 346 px mobil, obwohl die Primärarbeit
+  subjektiv bereits näher wirkte.
+- Evidenz oder reproduzierbarer Test: Browsermessung von
+  `[data-milos-intro]` und der Oberkante von `[data-milos-primary-work]` bei
+  1440 × 900 und 390 × 844; Vollseitenscreenshots in zwei QA-Runden.
+- Änderung und Regressionstest: kürzere Statuszeile, kleinere unterstützende
+  Dekoration, ausgewogene Titelbreite und flache gemeinsame Arbeitsfläche.
+  Der finale Gate misst 273,61/374,61 px am Desktop und 260,11/397,48 px mobil.
+- Für andere MilosApps relevant: Ja. Dichtebudgets brauchen stabile
+  semantische Marker; reine Screenshothöhe oder Bauchgefühl reichen nicht.
+
+## 2026-08-01 – Shadow-DOM-Kontrast braucht einen zweiten Messweg
+
+- Datum und geprüfter Stand: 1. August 2026, Dark-Mode-Regression der
+  vendorten `public-app-shell/v2.0.3`.
+- Beobachtung: Axe setzte transparente Textknoten in Shadow DOM unter
+  `color-mix()` gegen eine rechnerische Zwischenfarbe und meldete 3,25:1,
+  obwohl die finalen berechneten Control-Farben deutlich kontrastreicher waren.
+- Evidenz oder reproduzierbarer Test: derselbe Dark-Mode-Browserlauf vergleicht
+  Axe für `.app-content` und die finalen `getComputedStyle`-Farben jedes
+  sichtbaren Shell-Controls per WCAG-Luminanzformel.
+- Änderung und Regressionstest: Fachinhalt bleibt vollständig unter Axe;
+  Shell-Controls erhalten eine getrennte Mindestprüfung von 4,5:1. Ein
+  zwischenzeitlicher heller Shell-Hintergrund wurde verworfen, weil die Shell
+  zugleich den Seitenhintergrund des geslotteten App-Inhalts besitzt.
+- Für andere MilosApps relevant: Ja. Automatisierte Shadow-DOM-Kontrastbefunde
+  sollten mit finalen Browserfarben verifiziert, nicht blind ausgeblendet oder
+  durch visuell falsche Theme-Ausnahmen kaschiert werden.
