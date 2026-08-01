@@ -11,17 +11,27 @@ test.beforeEach(async ({ page }) => {
   await page.route('**/v1/forecast**', (route) => fulfillWind(route));
 });
 
-test('has no serious automated accessibility violations', async ({ page }) => {
+test('has no serious automated accessibility violations in German and English', async ({ page }) => {
   test.skip(test.info().project.name !== 'desktop', 'focused accessibility check');
   const consoleProblems = recordConsoleProblems(page);
   await page.goto('./');
   await startFlight(page);
-  const results = await new AxeBuilder({ page }).analyze();
-  const serious = results.violations.filter((violation) =>
-    violation.impact === 'serious' || violation.impact === 'critical',
-  );
-  expect(serious).toEqual([]);
   expect(consoleProblems).toEqual([]);
+  for (const locale of ['de', 'en'] as const) {
+    if (locale === 'en') {
+      await page.locator('milos-app-shell')
+        .getByRole('button', { name: 'EN', exact: true })
+        .click();
+    }
+    const results = await new AxeBuilder({ page }).analyze();
+    const serious = results.violations.filter((violation) =>
+      violation.impact === 'serious' || violation.impact === 'critical',
+    );
+    expect(serious, `${locale}: ${JSON.stringify(serious)}`).toEqual([]);
+  }
+  // Axe's own page instrumentation attempts temporary inline styles. Under
+  // the strict preview CSP Chromium reports those blocked test-only attempts;
+  // app runtime CSP violations are covered before Axe and in visual-contract.
 });
 
 test('keeps light and dark themes free of serious accessibility violations', async ({ page }) => {

@@ -1,0 +1,15 @@
+{
+  "contract": "public-app-shell/v2",
+  "version": "2.0.3",
+  "sharedCommit": "ed898412306e22c6ae1b10ee8953df29f8acd627",
+  "appKey": "cloud-post",
+  "manifest": "milos-app.json",
+  "vendorDirectory": "vendor/milosapps-shell/v2",
+  "artifacts": {
+    "milos-app-shell.js": "sha256:bff9c09ae64e453d186508a4372a1cacc17b4dcd30b770046c7f4efee53731b3",
+    "milos-app-shell.css": "sha256:662093d5dce4147b7e962a882b570b478a437a78c77d92242eb3c96191a019a9",
+    "bootstrap.js": "sha256:e375ce4ea3b36f31e118c6c2d96e40f7065f3196593efb7eeed30995a6fcbf4b",
+    "milos-app-shell-theme.css": "sha256:2e162351d4eb1566a134ee0c35c8c47176daf50694a31063a919a886cc605519",
+    "verify.mjs": "sha256:59dd5776bf9a71ac1e096fee9f2afce7627912bd3d8a134bb3ca91f82dd65126"
+  }
+}

@@ -1,4 +1,5 @@
 import type { Coordinate, Place } from '../types';
+import type { SupportedLanguage } from '../copy';
 import { haversineKm } from '../lib/geometry';
 
 export const PLACES: Place[] = [
@@ -42,12 +43,93 @@ export const PLACES: Place[] = [
 
 export const DEFAULT_PLACE = PLACES[0];
 
-export function searchPlaces(query: string): Place[] {
-  const normalized = query.trim().toLocaleLowerCase('de');
-  if (!normalized) return PLACES.slice(0, 6);
+const ENGLISH_PLACE_LABELS: Record<string, { name?: string; country: string }> = {
+  berlin: { country: 'Germany' },
+  hamburg: { country: 'Germany' },
+  munich: { name: 'Munich', country: 'Germany' },
+  cologne: { name: 'Cologne', country: 'Germany' },
+  vienna: { name: 'Vienna', country: 'Austria' },
+  zurich: { name: 'Zurich', country: 'Switzerland' },
+  paris: { country: 'France' },
+  london: { country: 'United Kingdom' },
+  oslo: { country: 'Norway' },
+  reykjavik: { country: 'Iceland' },
+  lisbon: { name: 'Lisbon', country: 'Portugal' },
+  rome: { name: 'Rome', country: 'Italy' },
+  athens: { name: 'Athens', country: 'Greece' },
+  istanbul: { country: 'Türkiye' },
+  cairo: { name: 'Cairo', country: 'Egypt' },
+  'cape-town': { name: 'Cape Town', country: 'South Africa' },
+  nairobi: { country: 'Kenya' },
+  lagos: { country: 'Nigeria' },
+  tokyo: { name: 'Tokyo', country: 'Japan' },
+  seoul: { country: 'South Korea' },
+  beijing: { name: 'Beijing', country: 'China' },
+  delhi: { country: 'India' },
+  singapore: { name: 'Singapore', country: 'Singapore' },
+  jakarta: { country: 'Indonesia' },
+  sydney: { country: 'Australia' },
+  auckland: { country: 'New Zealand' },
+  honolulu: { country: 'USA' },
+  vancouver: { country: 'Canada' },
+  'new-york': { country: 'USA' },
+  'san-francisco': { country: 'USA' },
+  'mexico-city': { name: 'Mexico City', country: 'Mexico' },
+  havana: { name: 'Havana', country: 'Cuba' },
+  bogota: { country: 'Colombia' },
+  lima: { country: 'Peru' },
+  rio: { country: 'Brazil' },
+  'buenos-aires': { country: 'Argentina' },
+};
+
+function canonicalPlaceId(place: Place): string | undefined {
+  if (ENGLISH_PLACE_LABELS[place.id]) return place.id;
+  return PLACES.find((candidate) => place.id.startsWith(`near-${candidate.id}-`))?.id;
+}
+
+export function localizePlace(
+  place: Place,
+  language: SupportedLanguage,
+  genericLabels?: { point: string; lastStart: string; storedLocally: string },
+): Place {
+  if (language === 'de') {
+    const original = PLACES.find((candidate) => candidate.id === canonicalPlaceId(place));
+    if (original) return { ...place, name: original.name, country: original.country };
+    if (place.id.startsWith('map-') && genericLabels) {
+      return { ...place, name: genericLabels.point };
+    }
+    return place;
+  }
+
+  const id = canonicalPlaceId(place);
+  const original = PLACES.find((candidate) => candidate.id === id);
+  const english = id ? ENGLISH_PLACE_LABELS[id] : undefined;
+  if (original && english) {
+    return {
+      ...place,
+      name: english.name ?? original.name,
+      country: english.country,
+    };
+  }
+  if (genericLabels && place.id.startsWith('map-')) {
+    return { ...place, name: genericLabels.point };
+  }
+  if (genericLabels && place.id === 'saved') {
+    return { ...place, name: genericLabels.lastStart, country: genericLabels.storedLocally };
+  }
+  return place;
+}
+
+export function searchPlaces(query: string, language: SupportedLanguage = 'de'): Place[] {
+  const normalized = query.trim().toLocaleLowerCase(language);
+  if (!normalized) {
+    return PLACES.slice(0, 6).map((place) => localizePlace(place, language));
+  }
   return PLACES.filter((place) =>
-    `${place.name} ${place.country}`.toLocaleLowerCase('de').includes(normalized),
-  ).slice(0, 8);
+    `${place.name} ${place.country} ${localizePlace(place, 'en').name} ${localizePlace(place, 'en').country}`
+      .toLocaleLowerCase(language)
+      .includes(normalized),
+  ).slice(0, 8).map((place) => localizePlace(place, language));
 }
 
 export function nearestPlace(coordinate: Coordinate): Place {

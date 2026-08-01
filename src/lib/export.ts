@@ -1,4 +1,5 @@
 import type { DrawingStroke, RouteResult } from '../types';
+import { copy, type SupportedLanguage } from '../copy';
 import { drawDrawing, drawRoute, drawWorldBase, WORLD_PALETTES } from './world-renderer';
 
 function canvasBlob(canvas: HTMLCanvasElement): Promise<Blob> {
@@ -13,7 +14,10 @@ function canvasBlob(canvas: HTMLCanvasElement): Promise<Blob> {
 export async function createResultImage(
   result: RouteResult,
   drawing: DrawingStroke[],
+  language: SupportedLanguage = 'de',
 ): Promise<File> {
+  const text = copy[language];
+  const locale = language === 'de' ? 'de-DE' : 'en-GB';
   const canvas = document.createElement('canvas');
   canvas.width = 1600;
   canvas.height = 1000;
@@ -24,7 +28,7 @@ export async function createResultImage(
   context.fillRect(0, 0, canvas.width, canvas.height);
   context.fillStyle = '#173f35';
   context.font = '700 72px Georgia, serif';
-  context.fillText('Meine Wolkenpost', 90, 100);
+  context.fillText(text.export.title, 90, 100);
   context.font = '32px system-ui, sans-serif';
   context.fillStyle = '#46655c';
   context.fillText(`${result.startLabel} → ${result.endLabel}`, 92, 152);
@@ -38,17 +42,17 @@ export async function createResultImage(
 
   context.fillStyle = '#173f35';
   context.font = '600 33px system-ui, sans-serif';
-  context.fillText(`${Math.round(result.distanceKm).toLocaleString('de-DE')} km`, 90, 912);
-  context.fillText(`${result.durationHours.toLocaleString('de-DE')} Stunden`, 410, 912);
+  context.fillText(`${Math.round(result.distanceKm).toLocaleString(locale)} km`, 90, 912);
+  context.fillText(`${result.durationHours.toLocaleString(locale)} ${text.export.hours}`, 410, 912);
   context.fillText(`Ø ${Math.round(result.averageSpeedKmh)} km/h`, 760, 912);
   context.font = '24px system-ui, sans-serif';
   context.fillStyle = '#5d746d';
   const source = result.source.kind === 'live'
-    ? `Modellroute mit ${result.source.label}, ${result.source.model}`
-    : 'Modellroute mit klar gekennzeichnetem synthetischem Demo-Wind';
+    ? text.export.liveSource(result.source.label, result.source.model)
+    : text.export.demoSource;
   context.fillText(source, 90, 962);
   context.textAlign = 'right';
-  context.fillText('wolkenpost · keine Navigation · Start nur grob dargestellt', 1510, 962);
+  context.fillText(text.export.disclaimer, 1510, 962);
 
   const blob = await canvasBlob(canvas);
   const date = new Date(result.source.forecastStart).toISOString().slice(0, 10);

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://milos-apps.de/contracts/public-app-shell/v2/app-manifest.schema.json",
+  "appKey": "cloud-post",
+  "ownerTask": "MilosApps – Wolkenpost",
+  "public": true,
+  "loginRequired": false,
+  "shellContract": {
+    "id": "public-app-shell/v2",
+    "version": "2.0.3",
+    "sharedCommit": "ed898412306e22c6ae1b10ee8953df29f8acd627",
+    "vendorDirectory": "vendor/milosapps-shell/v2",
+    "entryHtml": "index.html",
+    "localeModule": "src/main.tsx"
+  },
+  "environment": "dev",
+  "description": {
+    "de": "Deine Zeichnung reist mit dem Wind – privat, verspielt und ohne Anmeldung.",
+    "en": "Your drawing travels with the wind – private, playful and without an account."
+  },
+  "integration": {
+    "portalRoute": "/apps/cloud-post"
+  },
+  "dev": {
+    "url": "https://drmilos33.github.io/MilosApps-Wolkenpost/",
+    "healthUrl": "https://drmilos33.github.io/MilosApps-Wolkenpost/health.json"
+  },
+  "productionApproved": false
+}

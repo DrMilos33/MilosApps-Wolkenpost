@@ -13,7 +13,9 @@ Kartenportal.
 - lokale Speicherung persönlicher Eingaben;
 - eigener DEV- und später eigener Production-Lifecycle;
 - Production ist nicht freigegeben;
-- keine Shared-Abhängigkeit, bis eine feste Version veröffentlicht wurde;
+- `public-app-shell/v2.0.3` wird aus dem festen Shared-Commit
+  `ed898412306e22c6ae1b10ee8953df29f8acd627` lokal vendort und per
+  SHA-256-Lock geprüft; kein CDN und kein Shared-Runtimeimport;
 - Portal-DEV darf nur über einen dokumentierten Link oder Routingvertrag
   anbinden.
 
@@ -65,13 +67,18 @@ Quelldatei hat `deploymentRevision: null`.
 ## Qualitätsprüfung
 
 ```text
+pnpm verify:shell
 pnpm test
 pnpm build
+pnpm build:dev-hosting
+pnpm verify:dev-artifact
 pnpm test:e2e
 ```
 
-Die Browsermatrix umfasst Smartphone hoch/quer, Tablet und Desktop. Details,
-Fehlerbilder und behobene Regressionen stehen in
+Die Browsermatrix umfasst Smartphone hoch/quer, Tablet und Desktop sowie
+390 × 844 und den 360 × 800@200-%-Reflowfall. Die vollständige sichtbare
+Oberfläche ist auf Deutsch und Englisch verfügbar; die Shell speichert die
+Sprachwahl lokal. Details, Fehlerbilder und behobene Regressionen stehen in
 [QA_EVIDENCE.md](docs/QA_EVIDENCE.md).
 
 ## Betrieb

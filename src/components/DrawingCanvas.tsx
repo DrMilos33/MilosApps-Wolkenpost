@@ -13,6 +13,13 @@ interface DrawingCanvasProps {
   strokes: DrawingStroke[];
   onChange: (strokes: DrawingStroke[]) => void;
   onUndo: () => void;
+  labels: {
+    canvasLabel: string;
+    keyboardMode: string;
+    pointerMode: string;
+    readyMode: string;
+    help: string;
+  };
   disabled?: boolean;
 }
 
@@ -52,6 +59,7 @@ export function DrawingCanvas({
   strokes,
   onChange,
   onUndo,
+  labels,
   disabled = false,
 }: DrawingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -276,7 +284,7 @@ export function DrawingCanvas({
       <canvas
         ref={canvasRef}
         className="drawing-canvas"
-        aria-label="Zeichenfläche. Mit Maus, Touch oder Stift zeichnen. Tastatur: Leertaste startet und beendet einen Strich, Pfeiltasten bewegen den Zeichenstift."
+        aria-label={labels.canvasLabel}
         aria-describedby="drawing-help"
         data-testid="drawing-canvas"
         data-stroke-count={strokes.length}
@@ -292,13 +300,13 @@ export function DrawingCanvas({
       />
       <p className="drawing-mode" aria-live="polite">
         {drawingMode === 'keyboard'
-          ? 'Tastaturstrich aktiv · Pfeiltasten bewegen · Leertaste beendet · Escape verwirft'
+          ? labels.keyboardMode
           : drawingMode === 'pointer'
-            ? 'Strich wird gezeichnet'
-            : 'Bereit zum Zeichnen'}
+            ? labels.pointerMode
+            : labels.readyMode}
       </p>
       <p id="drawing-help" className="sr-only">
-        Striche bleiben nur auf diesem Gerät. Mit Steuerung Z oder der Rückgängig-Taste wird der letzte Strich entfernt.
+        {labels.help}
       </p>
     </div>
   );

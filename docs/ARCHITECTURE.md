@@ -1,12 +1,15 @@
 # Wolkenpost-Architektur
 
-Stand: 30. Juli 2026
+Stand: 1. August 2026
 
 ## Stack und Grenze
 
 - React 19 und TypeScript 7 für klar getrennte Zustands- und Interaktionslogik;
 - Vite 8 für lokalen DEV-Server und statischen Build;
-- keine Serverkomponente, App-Datenbank, Anmeldung oder Shared-Abhängigkeit;
+- keine Serverkomponente, App-Datenbank oder Anmeldung;
+- `public-app-shell/v2.0.3` als feste, lokal vendorte Build-Abhängigkeit mit
+  Manifest und SHA-256-Lock; kein CDN, kein Runtimeimport und keine gemeinsame
+  Datenbank;
 - Browser-Lokalspeicher ausschließlich für Zeichnung, Einstellungen und den
   groben letzten Startpunkt;
 - Service Worker für den App-Shell-Offlinebetrieb;
@@ -15,6 +18,38 @@ Stand: 30. Juli 2026
 Die App ist eine einzelne Route. Der Build kann später statisch auf einem
 eigenständigen Dienst liegen. Portal und App importieren keinen Quellcode
 voneinander.
+
+## Öffentliche App-Shell und Sprache
+
+`milos-app.json` ist die app-eigene Metadatenquelle für den Vertrag
+`public-app-shell/v2`. Der Sync aus dem unveränderlichen Shared-Tag
+`public-app-shell-v2.0.3` kopiert Web Component, externe Shadow-CSS,
+app-spezifische Theme-CSS, Bootstrap und portablen Validator nach
+`vendor/milosapps-shell/v2/`. `shell-lock.json` bindet diese Kopie an
+Shared-Commit `ed898412306e22c6ae1b10ee8953df29f8acd627` und die
+Artefakt-Hashes. CI und
+DEV-Deployment validieren Manifest, Einstiegspunkt, Lock und Hashes vor dem
+Build.
+
+Bootstrap und Komponente laden ihre CSS-Dateien relativ zu `import.meta.url`.
+Damit bleibt auch GitHub-Pages-Unterpfadhosting unter
+`default-src 'self'; script-src 'self'; style-src 'self'` funktionsfähig. Die
+Shell injiziert weder `<style>` noch `style`-Attribute, setzt keine
+Laufzeit-CSS-Properties und benötigt kein `unsafe-inline`, Nonce oder Hash.
+Der Vite-Build behandelt den Bootstrap mit `vite-ignore` als unveränderte
+Runtime-Grenze und kopiert Bootstrap, Komponente sowie beide Stylesheets unter
+ihren festen Vendorpfad in das statische Artefakt. Die DEV-Artefaktprüfung
+vergleicht alle vier ausgelieferten Dateien erneut mit `shell-lock.json` und
+prüft, dass der Service Worker jeden Runtimepfad cached.
+
+Die Shell besitzt Header, Footer, absolute umgebungsabhängige Portal- und
+Rechtslinks sowie die Sprachpersistenz unter
+`milosapps.cloud-post.language`. Die App besitzt ihr Inline-SVG und sämtliche
+Fachtexte. `src/main.tsx` hört auf `milosapps:localechange` und initialisiert
+zusätzlich aus `document.documentElement.lang`, damit der erste Render und ein
+Reload nicht vom Zeitpunkt des Initialevents abhängen. Deutsch und Englisch
+verwenden strukturgleiche Wörterbücher; Ortsnamen, dynamische Meldungen,
+Exporttexte und zugängliche Namen werden gemeinsam umgeschaltet.
 
 ## Windabruf
 
