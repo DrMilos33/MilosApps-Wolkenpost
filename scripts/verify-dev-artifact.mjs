@@ -1,23 +1,39 @@
 import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 
 const BASE = '/MilosApps-Wolkenpost/';
 const DEV_URL = `https://drmilos33.github.io${BASE}`;
 const expectedRevision = process.env.GITHUB_SHA;
 
-const [index, serviceWorker, manifestText, healthText, integrationText] = await Promise.all([
+const shellDirectory = 'vendor/milosapps-shell/v2';
+const shellRuntimeFiles = [
+  'bootstrap.js',
+  'milos-app-shell.js',
+  'milos-app-shell.css',
+  'milos-app-shell-theme.css',
+];
+const [index, serviceWorker, manifestText, healthText, integrationText, shellLockText, ...shellArtifacts] = await Promise.all([
   readFile('dist/index.html', 'utf8'),
   readFile('dist/sw.js', 'utf8'),
   readFile('dist/manifest.webmanifest', 'utf8'),
   readFile('dist/health.json', 'utf8'),
   readFile('dist/integration.json', 'utf8'),
+  readFile(`${shellDirectory}/shell-lock.json`, 'utf8'),
+  ...shellRuntimeFiles.map((file) => readFile(`dist/${shellDirectory}/${file}`)),
 ]);
 
 const manifest = JSON.parse(manifestText);
 const health = JSON.parse(healthText);
 const integration = JSON.parse(integrationText);
+const shellLock = JSON.parse(shellLockText);
+
+function sha256(content) {
+  return `sha256:${createHash('sha256').update(content).digest('hex')}`;
+}
 
 const checks = [
   [index.includes(`${BASE}assets/`), 'index.html does not use the GitHub Pages base path.'],
+  [index.includes(`./${shellDirectory}/bootstrap.js`), 'index.html does not load the local vendored shell bootstrap.'],
   [index.includes(`${BASE}manifest.webmanifest`), 'The manifest URL is not scoped to the DEV base path.'],
   [serviceWorker.includes(`const BASE = "${BASE}";`), 'The service worker does not enforce the DEV base path.'],
   [serviceWorker.includes(`${BASE}index.html`), 'The service worker offline fallback is outside the DEV base path.'],
@@ -28,9 +44,20 @@ const checks = [
   [health.productionApproved === false, 'Health must explicitly reject Production approval.'],
   [integration.devUrl === DEV_URL, 'Integration metadata contains the wrong DEV URL.'],
   [integration.productionApproved === false, 'Integration metadata must explicitly reject Production approval.'],
+  [integration.titles?.de === 'Wolkenpost' && integration.titles?.en === 'Cloud Post', 'Integration titles must cover DE and EN.'],
+  [integration.shortDescriptions?.de && integration.shortDescriptions?.en, 'Integration descriptions must cover DE and EN.'],
+  [integration.languages?.length === 2 && integration.languages.includes('de') && integration.languages.includes('en'), 'Integration languages must be exactly DE and EN.'],
   [integration.healthcheck?.url === `${DEV_URL}health.json`, 'Integration metadata contains the wrong health URL.'],
   [integration.preview?.path === `${BASE}preview.png`, 'Integration metadata contains the wrong preview path.'],
   [integration.preview?.url === `${DEV_URL}preview.png`, 'Integration metadata contains the wrong preview URL.'],
+  ...shellRuntimeFiles.map((file, index) => [
+    sha256(shellArtifacts[index]) === shellLock.artifacts[file],
+    `Built shell runtime artifact ${file} does not match shell-lock.json.`,
+  ]),
+  ...shellRuntimeFiles.map((file) => [
+    serviceWorker.includes(`${BASE}${shellDirectory}/${file}`),
+    `The service worker does not cache shell runtime artifact ${file}.`,
+  ]),
 ];
 
 if (expectedRevision) {

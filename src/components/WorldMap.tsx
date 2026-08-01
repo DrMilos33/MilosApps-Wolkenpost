@@ -26,6 +26,7 @@ interface WorldMapProps {
   motion: MotionPreference;
   theme: ThemePreference;
   onSelect: (coordinate: Coordinate) => void;
+  label: string;
 }
 
 export function WorldMap({
@@ -35,6 +36,7 @@ export function WorldMap({
   motion,
   theme,
   onSelect,
+  label,
 }: WorldMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sizeRef = useRef({ width: 1, height: 1 });
@@ -164,7 +166,7 @@ export function WorldMap({
       className="world-map"
       data-testid="world-map"
       data-motion={reduced ? 'reduced' : 'full'}
-      aria-label="Interaktive stilisierte Weltkarte. Klicken oder mit den Pfeiltasten einen groben Startpunkt wählen. Die Ortssuche darunter ist die zugänglichere Alternative."
+      aria-label={label}
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}
       onPointerCancel={() => {

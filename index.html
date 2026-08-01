@@ -11,10 +11,33 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>Wolkenpost – Deine Zeichnung reist mit dem Wind</title>
+    <script type="module" vite-ignore src="./vendor/milosapps-shell/v2/bootstrap.js"></script>
   </head>
   <body>
-    <noscript>Wolkenpost benötigt JavaScript für die Zeichenfläche und die Windroute.</noscript>
-    <div id="root"></div>
+    <milos-app-shell>
+      <svg slot="app-icon" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+        <rect width="40" height="40" rx="10" fill="currentColor" />
+        <path
+          d="M10.8 25.4c-3.7 0-6.4-2.6-6.4-6 0-3 2.3-5.5 5.3-5.9C11 9 15 6 19.7 6c5.4 0 9.8 4 10.4 9.2 3.3.5 5.5 2.9 5.5 6 0 3.5-2.8 6.2-6.5 6.2H10.8Z"
+          fill="var(--bg, #fffdf8)"
+        />
+        <path
+          d="M11.3 30.1c5.5 1.7 11.2 1.8 17.4.1"
+          fill="none"
+          stroke="var(--accent, #b34834)"
+          stroke-linecap="round"
+          stroke-width="2.4"
+        />
+      </svg>
+      <main id="main" slot="main">
+        <div id="root">
+          <section class="app-loading" aria-label="Wolkenpost wird geladen">
+            <h1>Wolkenpost</h1>
+          </section>
+        </div>
+        <noscript>Wolkenpost benötigt JavaScript für die Zeichenfläche und die Windroute.</noscript>
+      </main>
+    </milos-app-shell>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

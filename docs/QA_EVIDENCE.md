@@ -1,6 +1,6 @@
 # Wolkenpost QA-Evidenz
 
-Stand: 30. Juli 2026, Branch `codex/cloud-post-dev`
+Stand: 1. August 2026, Branch `codex/cloud-post-shell-v2`
 
 Der Miteinander-Product-QA-Workflow wurde nach dem ersten lauffähigen Stand in
 drei vollständigen Runden angewendet. Testdaten wurden lokal und deterministisch
@@ -26,6 +26,8 @@ geprüft.
 | iPad Mini | WebKit, mobile/touch | 768 × 1024 | Touch, Pointer, Tastatur |
 | Desktop Chrome | Chromium | 1440 × 1000 | Maus, Pointer, Tastatur |
 | Reflow-Sonderfall | Chromium | 320 × 820 | 200-%-äquivalente Breite |
+| Shell-Mobil | Chromium | 390 × 844 | Touchziele, DE/EN, Reload |
+| Shell-Reflow | Chromium | 180 × 400 CSS-Pixel | 360 × 800 bei 200 % Zoom |
 
 ## Runde 1 – Kernlogik und kompletter Ablauf
 
@@ -168,6 +170,62 @@ Gefunden und behoben:
 2. Das Vorschaubild war in den Integrationsmetadaten noch als Domainwurzelpfad
    angegeben. Pfad, absolute URL und Artefaktprüfung verwenden jetzt denselben
    App-Unterpfad.
+
+## Runde 5 – `public-app-shell/v2.0.3`, DE/EN, CSP und extremer Reflow
+
+Geprüft:
+
+- fester Shared-Pin `ed898412306e22c6ae1b10ee8953df29f8acd627`, vendorte
+  Artefakte und `shell-lock.json` mit SHA-256;
+- genau eine Shell, app-eigenes Inline-SVG, semantischer Hauptinhalt und
+  absolute DEV-Links;
+- vollständige strukturgleiche DE/EN-Fachtexte, Ortsnamen, dynamische
+  Meldungen, Exporttexte und zugängliche Namen;
+- Sprachwechsel und Reload-Persistenz sowie sicherer Fallback bei beschädigtem
+  Speicherwert;
+- Deutsch und Englisch ohne schwere oder kritische Axe-Befunde;
+- Tastaturfokus, sichtbare Fokusmarkierung, mindestens 44 × 44 CSS-Pixel große
+  Ziele, Reduced Motion und Offline-Reload;
+- visuelle Abnahme bei 1440 × 900 (DE), 390 × 844 (EN) und 180 × 400
+  CSS-Pixeln als 360 × 800@200-%-Äquivalent;
+- kein horizontaler Überlauf, kein verdeckter Text und kein Leerraum unter dem
+  Shell-Footer.
+- echte strikte CSP mit `default-src 'self'; script-src 'self'; style-src
+  'self'`, externen Same-Origin-Shell-/Theme-Styles und ohne CSP-Warnung.
+
+Gefunden und behoben:
+
+1. Ein Playwright-Sprachselektor suchte nur nach dem Teilstring `DE`/`EN` und
+   traf dadurch Fachbuttons. Exakte zugängliche Namen sichern jetzt den
+   tatsächlichen Sprachschalter.
+2. Eine reine Dokumentbreitenmessung war grün, obwohl die app-eigene große
+   Typografie bei 360 × 800@200 % innerhalb eines geclippten Hero-Containers
+   abgeschnitten wurde. Eine schmale app-eigene Typografie-/Grid-Regel und ein
+   Test auf Element-Scrollbreite verhindern diese stille Clipping-Regression.
+   Es wurde kein Shell-Min-Width-Workaround eingeführt.
+3. Die App initialisiert ihre Sprache zusätzlich aus
+   `document.documentElement.lang`, weil ein Listener allein das bereits
+   gesendete Initialevent der Shell verpassen kann.
+4. Vite wandelte die kleine Theme-CSS beim normalen Modulbuild zunächst in
+   eine `data:`-URL um. `style-src 'self'` blockierte diese korrekt und die
+   Shell blieb unregistriert. Der Bootstrap bleibt nun als externe
+   Vendor-Runtime erhalten; der Build kopiert alle vier Runtime-Dateien mit
+   festen Pfaden und prüft ihre Lock-Hashes im fertigen DEV-Artefakt.
+5. Eine app-eigene alte `display: block`-Regel überschrieb das neue
+   Shared-Host-Grid. Die App setzt am Host nur noch Theme-Variablen; der
+   CSP-Test verlangt berechnet `display: grid`, Marken-Flexlayout, 38-Pixel-
+   Icon und 44-Pixel-Ziele.
+
+Lokale Evidenz vor dem DEV-Publish:
+
+```text
+Shared-Validator: PASS (cloud-post, dev), Release-Hashes exakt
+Vitest:           5 Dateien, 20 Tests, 20 bestanden
+Build:            erfolgreich, App-JavaScript 78,79 kB gzip, App-CSS 4,33 kB
+                  plus externe Shell-CSS 1,55 kB gzip
+Playwright:       96 Kombinationen, 33 bestanden, 63 profilspezifisch gefiltert
+Visual-QA:        3/3 bestanden
+```
 
 ## Verbleibende Prüfgrenzen
 

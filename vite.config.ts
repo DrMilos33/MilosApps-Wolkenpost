@@ -1,11 +1,48 @@
 import react from '@vitejs/plugin-react';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import type { Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
 
 const GITHUB_PAGES_BASE = '/MilosApps-Wolkenpost/';
+const STRICT_DEV_CSP = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self'",
+  "connect-src 'self' https://api.open-meteo.com",
+  "img-src 'self' data: blob:",
+  "manifest-src 'self'",
+  "worker-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "frame-ancestors 'none'",
+].join('; ');
+const SHELL_VENDOR_DIRECTORY = 'vendor/milosapps-shell/v2';
+const SHELL_RUNTIME_FILES = [
+  'bootstrap.js',
+  'milos-app-shell.js',
+  'milos-app-shell.css',
+  'milos-app-shell-theme.css',
+] as const;
 
 function withBase(base: string, path: string) {
   return `${base}${path.replace(/^\/+/, '')}`;
+}
+
+function vendoredPublicShell(): Plugin {
+  return {
+    name: 'wolkenpost-vendored-public-shell',
+    apply: 'build',
+    async generateBundle() {
+      for (const file of SHELL_RUNTIME_FILES) {
+        this.emitFile({
+          type: 'asset',
+          fileName: `${SHELL_VENDOR_DIRECTORY}/${file}`,
+          source: await readFile(path.resolve(SHELL_VENDOR_DIRECTORY, file)),
+        });
+      }
+    },
+  };
 }
 
 function appShellServiceWorker(base: string): Plugin {
@@ -79,10 +116,15 @@ export default defineConfig(({ mode }) => {
 
   return {
     base,
-    plugins: [react(), appShellServiceWorker(base)],
+    plugins: [react(), vendoredPublicShell(), appShellServiceWorker(base)],
     build: {
       sourcemap: true,
       target: 'es2022',
+    },
+    preview: {
+      headers: {
+        'Content-Security-Policy': STRICT_DEV_CSP,
+      },
     },
     test: {
       globals: true,

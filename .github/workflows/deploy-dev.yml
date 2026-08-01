@@ -27,6 +27,8 @@ jobs:
         run: corepack enable
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
+      - name: Verify pinned public app shell
+        run: pnpm verify:shell
       - name: Run logic tests
         run: pnpm test
       - name: Build the isolated DEV artifact

@@ -1,12 +1,14 @@
 {
   "appKey": "cloud-post",
   "titles": {
-    "de": "Wolkenpost"
+    "de": "Wolkenpost",
+    "en": "Cloud Post"
   },
   "shortDescriptions": {
-    "de": "Zeichne ein Flugobjekt und schicke es mit echten Winddaten auf eine stilisierte Weltreise."
+    "de": "Zeichne ein Flugobjekt und schicke es mit echten Winddaten auf eine stilisierte Weltreise.",
+    "en": "Draw a flying object and send it around a stylised world using real wind data."
   },
-  "languages": ["de"],
+  "languages": ["de", "en"],
   "status": "dev-online",
   "devUrl": "https://drmilos33.github.io/MilosApps-Wolkenpost/",
   "localDevUrl": "http://127.0.0.1:4315",

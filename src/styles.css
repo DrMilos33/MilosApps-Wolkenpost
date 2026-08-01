@@ -74,12 +74,22 @@ html {
 
 body {
   margin: 0;
-  min-width: 320px;
+  min-width: 0;
   min-height: 100vh;
   background:
     radial-gradient(circle at 86% 4%, color-mix(in srgb, var(--yellow) 28%, transparent) 0 10rem, transparent 26rem),
     var(--bg);
   color: var(--ink);
+}
+
+milos-app-shell {
+  --milos-shell-accent: var(--brand);
+  --milos-shell-accent-contrast: var(--surface-strong);
+  --milos-shell-surface: var(--bg);
+  --milos-shell-text: var(--ink);
+  --milos-shell-muted: var(--muted);
+  --milos-shell-border: var(--line);
+  --milos-shell-focus: var(--focus);
 }
 
 button,
@@ -110,60 +120,10 @@ a {
   color: inherit;
 }
 
-.app-shell {
-  min-height: 100vh;
+.app-content {
+  min-width: 0;
+  padding-block: 1.25rem 0;
   overflow: clip;
-}
-
-.skip-link {
-  position: fixed;
-  z-index: 100;
-  top: 0.75rem;
-  left: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
-  background: var(--surface-strong);
-  transform: translateY(-160%);
-}
-
-.skip-link:focus {
-  transform: translateY(0);
-}
-
-.site-header,
-main,
-footer {
-  width: min(1180px, calc(100% - 40px));
-  margin-inline: auto;
-}
-
-.site-header {
-  min-height: 84px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.7rem;
-  font-weight: 700;
-  text-decoration: none;
-  letter-spacing: -0.02em;
-}
-
-.brand-mark {
-  display: grid;
-  width: 42px;
-  aspect-ratio: 1;
-  place-items: center;
-  border-radius: 14px;
-  background: var(--ink);
-  color: var(--surface);
-  font-size: 1.4rem;
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--ink) 20%, transparent);
 }
 
 .connection-pill {
@@ -190,6 +150,18 @@ footer {
 .connection-pill.is-offline .connection-dot {
   background: var(--accent);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.hero-status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+}
+
+.hero-status-row .eyebrow {
+  margin: 0;
 }
 
 .hero {
@@ -915,28 +887,23 @@ button:disabled {
   grid-column: 1 / -1;
 }
 
-footer {
+.credits-bar {
   display: flex;
-  justify-content: space-between;
-  gap: 2rem;
-  padding: 3.5rem 0 4rem;
+  align-items: center;
+  gap: 0.25rem 1rem;
+  flex-wrap: wrap;
+  margin: 1.5rem 0 0;
+  padding: 0.9rem 0 1.25rem;
+  border-top: 1px solid var(--line);
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
 }
 
-footer > div {
-  display: grid;
-  gap: 0.35rem;
-}
-
-footer strong {
-  color: var(--ink);
-  font-size: 1rem;
-}
-
-.footer-links {
-  justify-items: end;
-  text-align: right;
+.credits-bar a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 650;
 }
 
 .sr-only {
@@ -1013,16 +980,6 @@ footer strong {
 }
 
 @media (max-width: 620px) {
-  .site-header,
-  main,
-  footer {
-    width: min(100% - 24px, 1180px);
-  }
-
-  .site-header {
-    min-height: 70px;
-  }
-
   .hero {
     padding: 2.6rem 1.3rem 2rem;
     border-radius: 28px;
@@ -1093,15 +1050,6 @@ footer strong {
   .switch-label {
     grid-column: 1;
   }
-
-  footer {
-    flex-direction: column;
-  }
-
-  .footer-links {
-    justify-items: start;
-    text-align: left;
-  }
 }
 
 @media (max-width: 390px) {
@@ -1113,6 +1061,57 @@ footer strong {
   .state-actions > *,
   .result-actions > * {
     width: 100%;
+  }
+}
+
+@media (max-width: 240px) {
+  .hero {
+    padding: 1.5rem 0.65rem;
+  }
+
+  h1 {
+    font-size: 2.15rem;
+  }
+
+  h1,
+  h2,
+  p,
+  a,
+  button,
+  label,
+  strong,
+  small {
+    overflow-wrap: anywhere;
+  }
+
+  .hero-lead {
+    font-size: 0.95rem;
+  }
+
+  .step-card,
+  .state-panel,
+  .result-section,
+  .settings-section,
+  .launch-panel {
+    padding-inline: 0.75rem;
+  }
+
+  .step-heading {
+    gap: 0.5rem;
+  }
+
+  .step-number {
+    flex-basis: 32px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .primary-link,
+  .launch-button,
+  .location-button {
+    max-width: 100%;
+    justify-content: center;
+    text-align: center;
   }
 }
 

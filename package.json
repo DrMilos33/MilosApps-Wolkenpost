@@ -14,6 +14,7 @@
     "test:e2e": "playwright test",
     "test:e2e:matrix": "playwright test tests/e2e/matrix.spec.ts",
     "test:all": "pnpm test && pnpm build && pnpm test:e2e",
+    "verify:shell": "node ./vendor/milosapps-shell/v2/verify.mjs --app-root . --manifest milos-app.json",
     "verify:dev-artifact": "node scripts/verify-dev-artifact.mjs"
   },
   "dependencies": {
@@ -23,6 +24,7 @@
   "devDependencies": {
     "@axe-core/playwright": "4.12.1",
     "@playwright/test": "1.62.0",
+    "@types/node": "24.0.0",
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "6.0.4",

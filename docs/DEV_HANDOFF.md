@@ -1,6 +1,6 @@
 # Wolkenpost DEV- und Portalübergabe
 
-Stand: 30. Juli 2026
+Stand: 1. August 2026
 
 ## Öffentlicher DEV-Vertrag
 
@@ -8,10 +8,13 @@ Stand: 30. Juli 2026
 |---|---|
 | App-Key | `cloud-post` |
 | Titel DE | Wolkenpost |
+| Titel EN | Cloud Post |
 | Kurzbeschreibung DE | Zeichne ein Flugobjekt und schicke es mit echten Winddaten auf eine stilisierte Weltreise. |
-| Sprachen | `de` |
+| Kurzbeschreibung EN | Draw a flying object and send it around a stylised world using real wind data. |
+| Sprachen | `de`, `en` |
 | Anmeldung | keine |
 | Status | `dev-online` |
+| Shell-Vertrag | `public-app-shell/v2.0.3`, Shared-Commit `ed898412306e22c6ae1b10ee8953df29f8acd627` |
 | Git-Remote | `https://github.com/DrMilos33/MilosApps-Wolkenpost.git` |
 | Hosting | app-eigene GitHub Pages über `.github/workflows/deploy-dev.yml` |
 | öffentliche DEV-URL | `https://drmilos33.github.io/MilosApps-Wolkenpost/` |
@@ -55,13 +58,20 @@ vollständig grüne und extern geprüfte Pages-Stand ist
 ist immer die vollständige `deploymentRevision` in `/health.json`; sie wird
 nicht manuell in dieser Dokumentation fortgeschrieben.
 
+Für die Shell-v2-Migration ist
+`bde623d72eb648f2af32b8f9124d24677e84b5da` der unmittelbar vorherige gesunde
+App-/Pages-Stand. Ein Rollback stellt diesen Commit per normalem Revert wieder
+her und löst ausschließlich das app-eigene DEV-Deployment neu aus; Shared und
+Portal müssen dafür nicht zurückgerollt werden.
+
 ## Portalgrenze
 
-Die gewünschte Portalroute `/apps/cloud-post` darf ausschließlich auf die oben
-genannte unabhängige HTTPS-DEV-URL weiterleiten. Wolkenpost benötigt weder
-Portal-Cookie noch Milos-Login und bleibt bei einem Portal-Ausfall direkt
-erreichbar. Der Portal-Task besitzt die Portaländerung; dieses Repository
-importiert keinen Portal-Quellcode.
+Die Portalroute `/apps/cloud-post` darf ausschließlich auf die oben genannte
+unabhängige HTTPS-DEV-URL weiterleiten. Wolkenpost benötigt weder Portal-Cookie
+noch Milos-Login und bleibt bei einem Portal-Ausfall direkt erreichbar. Der
+Portal-Task besitzt die bestehende Route und ihre Revalidierung nach einem
+neuen App-DEV-Deploy; dieses Repository importiert keinen Portal-Quellcode und
+ändert keine Portaldatei.
 
 ## Production
 

@@ -109,3 +109,68 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
   ausgeführt.
 - Für andere MilosApps relevant: Ja, für Actions-Setups ohne vorinstalliertes
   pnpm.
+
+## 2026-08-01 – Ein Locale-Event allein initialisiert eine App nicht sicher
+
+- Datum und geprüfter Stand: 1. August 2026,
+  `public-app-shell/v2.0.3`-Integration.
+- Beobachtung: Eine Shell kann ihr initiales `milosapps:localechange` senden,
+  bevor das Fachmodul seinen Listener registriert. Dann wäre die persistierte
+  Sprache in der Shell sichtbar, die App aber noch in der Fallbacksprache.
+- Evidenz oder reproduzierbarer Test: Sprachwechsel auf Englisch,
+  Seiten-Reload und Prüfung von `html[lang]`, Shell-Schalter, H1, Fachlabels
+  und `milosapps.cloud-post.language`.
+- Änderung und Regressionstest: Das Fachmodul hört weiter auf das Event,
+  initialisiert aber zusätzlich aus `document.documentElement.lang`.
+- Für andere MilosApps relevant: Ja. Persistenzbesitzer und Fachmodul brauchen
+  neben dem Änderungsereignis einen synchron lesbaren Initialzustand.
+
+## 2026-08-01 – Kein Scrollbalken beweist noch keinen gelungenen Reflow
+
+- Datum und geprüfter Stand: 1. August 2026, visuelle Shell-QA bei
+  360 × 800 und 200 % Zoom.
+- Beobachtung: `documentElement.scrollWidth <= clientWidth` war erfüllt,
+  obwohl lange app-eigene Überschriften in einem `overflow: hidden`-Container
+  rechts abgeschnitten wurden.
+- Evidenz oder reproduzierbarer Test: Vollseitenscreenshot bei 180 × 400
+  CSS-Pixeln sowie Prüfung der `scrollWidth` sichtbarer Texte und
+  Bedienelemente.
+- Änderung und Regressionstest: App-eigene Typografie, Kartenpadding und
+  Umbruchverhalten reflowen unter 240 CSS-Pixeln. Der Test verbindet
+  Dokumentbreite, Element-Clipping und visuelle Evidenz; die Shared-Shell
+  erhielt keinen lokalen Min-Width-Workaround.
+- Für andere MilosApps relevant: Ja. Reflow-QA braucht neben globaler Breite
+  mindestens eine visuelle oder elementbezogene Clipping-Prüfung.
+
+## 2026-08-01 – Vendoring wird erst durch Lock und CI reproduzierbar
+
+- Datum und geprüfter Stand: 1. August 2026, Shared-Commit
+  `ed898412306e22c6ae1b10ee8953df29f8acd627`.
+- Beobachtung: Ein kopiertes Web Component ist ohne Quellcommit und
+  Artefakthashes nicht eindeutig auf einen veröffentlichten Vertrag
+  zurückführbar.
+- Evidenz oder reproduzierbarer Test: `pnpm verify:shell` prüft Manifest,
+  Einstiegspunkt, Vendorpfad, Shared-Commit und SHA-256; CI und DEV-Workflow
+  führen den Validator vor dem Build aus.
+- Änderung und Regressionstest: `milos-app.json`, vendorte Dateien und
+  `shell-lock.json` werden gemeinsam eingecheckt; kein CDN oder Runtimeimport.
+- Für andere MilosApps relevant: Ja. Gepinnte Shared-Verträge müssen in jedem
+  Verbraucher lokal und in dessen eigenem Lifecycle verifizierbar sein.
+
+## 2026-08-01 – Ein Bundler kann CSP-sichere Quelldateien wieder inline machen
+
+- Datum und geprüfter Stand: 1. August 2026,
+  `public-app-shell/v2.0.3` unter strikter Preview-CSP.
+- Beobachtung: Obwohl die Shared-Quelle eine externe Theme-CSS referenzierte,
+  wandelte Vite die kleine Datei beim HTML-Modulbuild in eine `data:`-URL um.
+  `style-src 'self'` blockierte sie; das Top-Level-Await im Bootstrap stoppte
+  die Shell-Registrierung sichtbar vor dem Upgrade des Custom Elements.
+- Evidenz oder reproduzierbarer Test: Preview-Antwort mit
+  `default-src 'self'; script-src 'self'; style-src 'self'`, Prüfung auf null
+  `securitypolicyviolation`-Events und Kontrolle der beiden externen CSS-URLs.
+- Änderung und Regressionstest: Der vendorte Bootstrap bleibt eine
+  `vite-ignore`-Runtimegrenze. Ein Build-Plugin kopiert vier feste
+  Same-Origin-Dateien; die Artefaktprüfung vergleicht deren SHA-256 erneut mit
+  dem Lock und der Service Worker cached alle Pfade.
+- Für andere MilosApps relevant: Ja. CSP-Eignung muss am gebauten Artefakt und
+  nicht nur an den Quelldateien geprüft werden.
