@@ -75,6 +75,10 @@ Für die zweite Layoutiteration auf `public-app-layout/v1.1.0` ist
 portal-verifizierte App-/Pages-Stand. Ein normaler Revert auf diesen Commit
 stellt die v1.0.0-Dichte wieder her, ohne Shell, Shared oder Portal zu ändern.
 
+Für den engen Folgepatch der deutschen Mobile-Dichte ist
+`e5d4dd6869d921c8876433a7a860a65077474bd5` der unmittelbar vorherige gesunde
+DEV-Stand und damit der bevorzugte Rollbackpunkt.
+
 ## Portalgrenze
 
 Die Portalroute `/apps/cloud-post` darf ausschließlich auf die oben genannte

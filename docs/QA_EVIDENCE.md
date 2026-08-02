@@ -354,6 +354,48 @@ Playwright:         100 Kombinationen, 34 bestanden, 66 profilspezifisch
 Visual-QA:          4/4 in der finalen zweiten Runde
 ```
 
+## Runde 8 – deutsche Mobile-Dichte nach unabhängiger Live-Messung
+
+Die erste v1.1-Abnahme maß mobil nur die englische Fassung. Eine unabhängige
+Live-Prüfung zeigte deshalb eine echte Lücke: Bei 375 px Clientbreite brachen
+die lange deutsche Metazeile und der Bereitschaftsstatus um; zusammen mit dem
+deutschen Lead wuchs das Intro auf 253,59 px. Bei 390 px Clientbreite waren es
+noch 233,80 px. Overflow und Fachfunktion blieben zwar grün, das 220-px-Budget
+war aber nicht erfüllt.
+
+Der enge App-Patch kürzt ausschließlich die redundante Metazeile zu
+„Wolkenpost“ und formuliert den Lead kompakter. Datenschutz- und Modellwahrheit
+bleiben explizit erhalten: grober Startpunkt, private Modellroute und echte
+Winddaten. H1, Intro-Icon, Paired-Flow, Settings und beide Shared-Pins bleiben
+unverändert.
+
+Fokussierte visuelle Runde 1 nach dem Patch:
+
+- 375 px Clientbreite, DE: Intro 206,30 px, Primärarbeit ab 343,67 px;
+- 390 px Clientbreite, DE: Intro 184,53 px, Primärarbeit ab 321,91 px;
+- 390 px, EN: Intro 156,70 px, Primärarbeit ab 294,08 px;
+- jeweils H1 27,2–27,3 px, H2 18,4 px, Icon 52 × 52 px, Settings 338,92 px,
+  Clientbreite gleich Scrollbreite und kein Clipping.
+
+Die Regression enthält jetzt beide deutschen Clientbreiten zusätzlich zum
+englischen Mobilfall. Damit kann eine englische Kurzfassung einen deutschen
+Umbruch künftig nicht mehr verdecken.
+
+Fokussierte visuelle Runde 2 und vollständiges Abschlussgate:
+
+```text
+Shared-Validatoren: Shell v2.0.3 PASS; Layout v1.1.0 PASS
+Vitest:             5 Dateien, 20 Tests, 20 bestanden
+Visual-QA:          6/6 bestanden (Desktop hell/dunkel, DE 375/390,
+                    EN 390, 200%-Äquivalent)
+Playwright:         108 Kombinationen, 36 bestanden, 72 profilspezifisch
+                    gefiltert, 0 fehlgeschlagen
+Build:              Standardbuild PASS
+```
+
+Das aktualisierte app-eigene `preview.png` zeigt denselben verkürzten
+DE-Introtext; Rechtebasis bleibt ein Screenshot ausschließlich der eigenen App.
+
 ## Verbleibende Prüfgrenzen
 
 - Keine echte Betriebslast oder API-Quota-Prüfung; nur ein einzelner echter
