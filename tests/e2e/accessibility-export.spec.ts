@@ -119,7 +119,7 @@ test('loads the app shell again while offline after service worker installation'
   await context.setOffline(true);
   await expect(page.getByText('offline', { exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole('heading', { name: /Schick deine Zeichnung/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Zeichne. Lass es fliegen.' })).toBeVisible();
   await expect(page.getByTestId('connection-status')).toContainText(/offline|bereit/);
   expect(consoleProblems).toEqual([]);
 });

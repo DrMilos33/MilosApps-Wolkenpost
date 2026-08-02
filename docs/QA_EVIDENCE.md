@@ -1,6 +1,6 @@
 # Wolkenpost QA-Evidenz
 
-Stand: 1. August 2026, Branch `codex/cloud-post-shell-v2`
+Stand: 2. August 2026, Branch `codex/cloud-post-layout-v1-1`
 
 Der Miteinander-Product-QA-Workflow wurde nach dem ersten lauffähigen Stand in
 drei vollständigen Runden angewendet. Testdaten wurden lokal und deterministisch
@@ -289,6 +289,69 @@ Visual-QA Runde 2:  4/4 bestanden
 Abschlussmatrix:    100 Kombinationen, 34 bestanden, 66 profilspezifisch
                     gefiltert, 0 fehlgeschlagen
 Pages-Artefakt:     PASS einschließlich Layout-CSS-Hashes und PWA-Cache
+```
+
+## Runde 7 – Nutzeriteration `public-app-layout/v1.1.0`
+
+Geprüft:
+
+- atomarer Pin auf Shared-Commit
+  `55b649d997489ca703682679257ac1a5b790bdc7`, vendorte Basis-/Theme-CSS,
+  portabler Verifier und Drei-Artefakt-Lock;
+- bewusstes Desktop-Opt-in `data-milos-flow="paired"`, während der generische
+  Vertragsfluss und alle mobilen Breiten einspaltig bleiben;
+- kürzere vollständige DE-/EN-H1, kleinere Schritt-H2 und sichtbares
+  `data-milos-intro-icon` innerhalb der Desktop-/Mobilgrenzen;
+- kompletter Settings-Baustein mit Intro, drei Geräteoptionen und getrennter
+  lokaler Löschaktion;
+- 1440 × 900 hell/dunkel, 390 × 844 Englisch und 180 × 400 CSS-Pixel als
+  360 × 800 bei 200 Prozent Textzoom;
+- Fokus, 44-Pixel-Ziele, Reduced Motion, DE/EN samt Reload, strikte CSP,
+  Offline-PWA, Export sowie alle Wind-, Ortungs-, Fehler- und Eingabeflüsse.
+
+Baseline vor der Änderung:
+
+- Desktop: Intro 273,61 px, Primärarbeit ab 374,61 px, H1 60 px, beide
+  Schritt-H2 44,8 px, Dekoration 160 × 112 px und offene Einstellungen
+  314,42 px;
+- 390 × 844: Intro 260,11 px, Primärarbeit ab 397,48 px, H1 31,2 px,
+  Schritt-H2 28 px, ausgeblendete Introdekoration und offene Einstellungen
+  460,88 px;
+- unveränderte Baseline: beide Validatoren, 20/20 Unit und 34/34 anwendbare
+  Browserfälle grün.
+
+Visuelle QA-Runde 1:
+
+- die erste v1.1-Adaption erfüllte H1/H2/Icon und Primary-Top, lag aber mit
+  224,91 px Desktop-Intro, 269,67 px Mobil-Intro und 412,22 px mobilen
+  Einstellungen noch über den neuen Budgets;
+- kürzere Aufgabenformulierung, seitlich eingebundene mobile Wolke,
+  zurückgenommene Abstände und kompakte Einstellungszeilen beseitigten den
+  unnötigen Höhenverbrauch ohne kleinere Touchziele;
+- bei 200 Prozent waren die horizontalen Select-Zeilen anschließend 132 px
+  breit in einem 124-px-Inhaltsbereich. Unter 240 CSS-Pixeln reflowen nur
+  diese Zeilen wieder einspaltig; es gibt kein Verstecken oder Clipping.
+
+Visuelle QA-Runde 2:
+
+- Desktop hell/dunkel: Intro 177,92 px, Primärarbeit ab 278,92 px, H1
+  46,08 px, Schritt-H2 25,92 px, Icon 72 × 72 px und offene Einstellungen
+  153,44 px;
+- 390 × 844 Englisch: Intro 203,81 px, Primärarbeit ab 341,19 px, H1 27,3 px,
+  Schritt-H2 18,4 px, Icon 52 × 52 px und offene Einstellungen 338,92 px;
+- 360 × 800 bei 200 Prozent: Root-Overflow 0, keine geclippten sichtbaren
+  Texte oder Controls, Icon 32,39 px und sauberer einspaltiger Settings-Reflow;
+- alle vier visuellen Fälle, CSP- und Konsolenprüfung grün.
+
+Lokale Abschlussevidenz vor dem DEV-Publish:
+
+```text
+Shared-Validatoren: Shell PASS; Layout v1.1.0 PASS (cloud-post, guided-flow)
+Vitest:             5 Dateien, 20 Tests, 20 bestanden
+Pages-Artefakt:     PASS einschließlich Layout-CSS-Hashes und PWA-Cache
+Playwright:         100 Kombinationen, 34 bestanden, 66 profilspezifisch
+                    gefiltert, 0 fehlgeschlagen
+Visual-QA:          4/4 in der finalen zweiten Runde
 ```
 
 ## Verbleibende Prüfgrenzen

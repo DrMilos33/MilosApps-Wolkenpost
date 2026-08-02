@@ -86,6 +86,14 @@ for (const visualCase of cases) {
     expect(shellContract.componentStyles).toMatch(/\/vendor\/milosapps-shell\/v2\/milos-app-shell\.css$/);
     expect(shellContract.themeStyles).toMatch(/\/vendor\/milosapps-shell\/v2\/milos-app-shell-theme\.css$/);
 
+    const settingsSummary = page.getByText(
+      visualCase.locale === 'de'
+        ? 'Darstellung, Bewegung und lokale Daten'
+        : 'Appearance, motion and local data',
+      { exact: true },
+    );
+    await settingsSummary.click();
+
     const layoutContract = await page.evaluate(async () => {
       const links = [...document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')]
         .map((link) => link.href)
@@ -100,26 +108,51 @@ for (const visualCase of cases) {
       }));
       const intro = document.querySelector<HTMLElement>('[data-milos-intro]')!.getBoundingClientRect();
       const primary = document.querySelector<HTMLElement>('[data-milos-primary-work]')!.getBoundingClientRect();
+      const h1 = document.querySelector<HTMLElement>('h1')!;
+      const stepHeadings = [...document.querySelectorAll<HTMLElement>('[data-milos-step] h2')];
+      const introIcon = document.querySelector<HTMLElement>('.hero-orbit')!;
+      const settings = document.querySelector<HTMLElement>('.settings-section')!;
       return {
         responses,
         introHeight: intro.height,
-        primaryTop: primary.top,
+        primaryTop: primary.top + window.scrollY,
         layoutDisplay: getComputedStyle(document.querySelector<HTMLElement>('[data-milos-layout="compact"]')!).display,
+        h1Size: Number.parseFloat(getComputedStyle(h1).fontSize),
+        h2Sizes: stepHeadings.map((heading) => Number.parseFloat(getComputedStyle(heading).fontSize)),
+        introIconWidth: introIcon.getBoundingClientRect().width,
+        introIconHeight: introIcon.getBoundingClientRect().height,
+        settingsHeight: settings.getBoundingClientRect().height,
       };
     });
+    console.info(`[layout-density:${visualCase.name}] ${JSON.stringify(layoutContract)}`);
     expect(layoutContract.responses.map(({ href }) => href)).toEqual([
       expect.stringMatching(/\/vendor\/milosapps-layout\/v1\/milos-app-layout\.css$/),
       expect.stringMatching(/\/vendor\/milosapps-layout\/v1\/milos-app-layout-theme\.css$/),
     ]);
     expect(layoutContract.responses.every(({ ok, contentType }) => ok && contentType?.includes('text/css'))).toBe(true);
     expect(layoutContract.layoutDisplay).toBe('grid');
+    await expect(page.locator('[data-milos-primary-work]')).toHaveAttribute('data-milos-flow', 'paired');
+    await expect(page.locator('[data-milos-intro-icon]')).toHaveCount(1);
+    await expect(page.locator('[data-milos-settings]')).toHaveCount(1);
+    await expect(page.locator('[data-milos-settings-intro]')).toHaveCount(1);
+    await expect(page.locator('[data-milos-settings-controls]')).toHaveCount(1);
+    await expect(page.locator('[data-milos-settings-control]')).toHaveCount(3);
+    await expect(page.locator('[data-milos-settings-danger]')).toHaveCount(1);
     if (visualCase.name.startsWith('desktop')) {
-      expect(layoutContract.introHeight).toBeLessThanOrEqual(320);
-      expect(layoutContract.primaryTop).toBeLessThanOrEqual(520);
+      expect(layoutContract.introHeight).toBeLessThanOrEqual(220);
+      expect(layoutContract.primaryTop).toBeLessThanOrEqual(400);
+      expect(layoutContract.h1Size).toBeLessThanOrEqual(48);
+      expect(Math.max(...layoutContract.h2Sizes)).toBeLessThanOrEqual(26.4);
+      expect(Math.max(layoutContract.introIconWidth, layoutContract.introIconHeight)).toBeLessThanOrEqual(72);
+      expect(layoutContract.settingsHeight).toBeLessThanOrEqual(220);
     }
     if (visualCase.name === 'mobile-en') {
-      expect(layoutContract.introHeight).toBeLessThanOrEqual(280);
-      expect(layoutContract.primaryTop).toBeLessThanOrEqual(500);
+      expect(layoutContract.introHeight).toBeLessThanOrEqual(220);
+      expect(layoutContract.primaryTop).toBeLessThanOrEqual(420);
+      expect(layoutContract.h1Size).toBeLessThanOrEqual(36);
+      expect(Math.max(...layoutContract.h2Sizes)).toBeLessThanOrEqual(22.4);
+      expect(Math.max(layoutContract.introIconWidth, layoutContract.introIconHeight)).toBeLessThanOrEqual(52);
+      expect(layoutContract.settingsHeight).toBeLessThanOrEqual(360);
     }
     await expectNoHorizontalOverflow(page);
     const undersizedTargets = await page.locator('button, a').evaluateAll((controls) => controls

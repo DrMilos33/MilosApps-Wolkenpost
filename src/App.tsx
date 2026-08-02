@@ -387,13 +387,13 @@ export default function App({ initialLanguage: language }: AppProps) {
             <h1>{text.hero.heading}</h1>
             <p className="hero-lead" data-milos-lead>{text.hero.lead}</p>
           </div>
-          <div className="hero-orbit" aria-hidden="true">
+          <div className="hero-orbit" data-milos-intro-icon aria-hidden="true">
             <span className="hero-cloud">☁</span>
             <span className="hero-trail" />
           </div>
         </section>
 
-        <div className="journey-layout" data-milos-primary-work data-milos-flow data-milos-panel>
+        <div className="journey-layout" data-milos-primary-work data-milos-flow="paired" data-milos-panel>
           <section className="step-card drawing-step" id="zeichnen" aria-labelledby="drawing-heading">
             <div className="step-heading" data-milos-step>
               <span className="step-number" aria-hidden="true" data-milos-step-index>1</span>
@@ -707,14 +707,14 @@ export default function App({ initialLanguage: language }: AppProps) {
 
         <details className="settings-disclosure" data-milos-secondary>
           <summary>{text.settings.summary}</summary>
-          <section className="settings-section" aria-labelledby="settings-heading">
-          <div>
+          <section className="settings-section" aria-labelledby="settings-heading" data-milos-settings>
+          <div data-milos-settings-intro>
             <p className="step-kicker">{text.settings.kicker}</p>
             <h2 id="settings-heading">{text.settings.heading}</h2>
             <p>{text.settings.description}</p>
           </div>
-          <div className="settings-grid">
-            <label>
+          <div className="settings-grid" data-milos-settings-controls>
+            <label data-milos-settings-control>
               {text.settings.theme}
               <select value={theme} onChange={(event) => setTheme(event.target.value as ThemePreference)}>
                 <option value="system">{text.settings.themeSystem}</option>
@@ -722,7 +722,7 @@ export default function App({ initialLanguage: language }: AppProps) {
                 <option value="dark">{text.settings.themeDark}</option>
               </select>
             </label>
-            <label>
+            <label data-milos-settings-control>
               {text.settings.motion}
               <select value={motion} onChange={(event) => setMotion(event.target.value as MotionPreference)}>
                 <option value="system">{text.settings.motionSystem}</option>
@@ -730,7 +730,7 @@ export default function App({ initialLanguage: language }: AppProps) {
                 <option value="reduced">{text.settings.motionReduced}</option>
               </select>
             </label>
-            <label className="switch-label">
+            <label className="switch-label" data-milos-settings-control>
               <span>
                 {text.settings.sound}
                 <small>{text.settings.soundHint}</small>
@@ -741,23 +741,23 @@ export default function App({ initialLanguage: language }: AppProps) {
                 onChange={(event) => setSoundEnabled(event.target.checked)}
               />
             </label>
-          </div>
-          <div className="reset-row">
-            {!resetArmed ? (
-              <button className="text-button danger" type="button" onClick={() => setResetArmed(true)}>
-                {text.settings.delete}
-              </button>
-            ) : (
-              <div className="reset-confirm" role="group" aria-label={text.settings.deleteGroup}>
-                <span>{text.settings.deleteQuestion}</span>
-                <button className="danger-button" type="button" onClick={resetLocalData}>
-                  {text.settings.deleteConfirm}
+            <div className="reset-row" data-milos-settings-danger>
+              {!resetArmed ? (
+                <button className="text-button danger" type="button" onClick={() => setResetArmed(true)}>
+                  {text.settings.delete}
                 </button>
-                <button className="text-button" type="button" onClick={() => setResetArmed(false)}>
-                  {text.settings.cancel}
-                </button>
-              </div>
-            )}
+              ) : (
+                <div className="reset-confirm" role="group" aria-label={text.settings.deleteGroup}>
+                  <span>{text.settings.deleteQuestion}</span>
+                  <button className="danger-button" type="button" onClick={resetLocalData}>
+                    {text.settings.deleteConfirm}
+                  </button>
+                  <button className="text-button" type="button" onClick={() => setResetArmed(false)}>
+                    {text.settings.cancel}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
           {storageWarning && (
             <p className="storage-warning" role="alert">

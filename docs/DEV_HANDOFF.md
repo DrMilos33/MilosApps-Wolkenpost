@@ -1,6 +1,6 @@
 # Wolkenpost DEV- und Portalübergabe
 
-Stand: 1. August 2026
+Stand: 2. August 2026
 
 ## Öffentlicher DEV-Vertrag
 
@@ -15,7 +15,7 @@ Stand: 1. August 2026
 | Anmeldung | keine |
 | Status | `dev-online` |
 | Shell-Vertrag | `public-app-shell/v2.0.3`, Shared-Commit `ed898412306e22c6ae1b10ee8953df29f8acd627` |
-| Layout-Vertrag | `public-app-layout/v1.0.0`, Profil `guided-flow`, Shared-Commit `bd09643e2767eddba032a82afc550043f3e3b31e` |
+| Layout-Vertrag | `public-app-layout/v1.1.0`, Profil `guided-flow`, Shared-Commit `55b649d997489ca703682679257ac1a5b790bdc7` |
 | Git-Remote | `https://github.com/DrMilos33/MilosApps-Wolkenpost.git` |
 | Hosting | app-eigene GitHub Pages über `.github/workflows/deploy-dev.yml` |
 | öffentliche DEV-URL | `https://drmilos33.github.io/MilosApps-Wolkenpost/` |
@@ -69,6 +69,11 @@ Für den Layout-v1-Piloten ist
 `22af04ef5fe0c7ffc5b6a8474eee588aa0dac827` der unmittelbar vorherige gesunde
 App-/Pages-Stand. Der Layout-Pilot bleibt mit einem normalen Revert auf diesen
 Stand rückrollbar; der getrennte Shell-v2.0.3-Pin bleibt dabei erhalten.
+
+Für die zweite Layoutiteration auf `public-app-layout/v1.1.0` ist
+`b8a537901ca3cb598a4c270d17d76e5e4a2dba01` der unmittelbar vorherige
+portal-verifizierte App-/Pages-Stand. Ein normaler Revert auf diesen Commit
+stellt die v1.0.0-Dichte wieder her, ohne Shell, Shared oder Portal zu ändern.
 
 ## Portalgrenze
 

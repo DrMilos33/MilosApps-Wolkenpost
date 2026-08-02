@@ -208,3 +208,23 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
 - Für andere MilosApps relevant: Ja. Automatisierte Shadow-DOM-Kontrastbefunde
   sollten mit finalen Browserfarben verifiziert, nicht blind ausgeblendet oder
   durch visuell falsche Theme-Ausnahmen kaschiert werden.
+
+## 2026-08-02 – Kompakte Settings brauchen zwei verschiedene Reflowgrenzen
+
+- Datum und geprüfter Stand: 2. August 2026,
+  `public-app-layout/v1.1.0` auf Shared-Commit
+  `55b649d997489ca703682679257ac1a5b790bdc7`.
+- Beobachtung: Horizontal angeordnete Label-/Select-Zeilen senkten die offene
+  Settings-Höhe bei 390 px von 412 auf 339 px. Dieselbe Mindestspalte war im
+  200-Prozent-Fall aber 132 px breit und damit 8 px größer als ihr
+  124-px-Inhaltsbereich.
+- Evidenz oder reproduzierbarer Test: `visual-contract.spec.ts` misst offene
+  Einstellungen, Rootbreite und jedes sichtbare Textelement bei 1440 × 900,
+  390 × 844 sowie 180 × 400 CSS-Pixeln.
+- Änderung und Regressionstest: Normale Mobilbreiten verwenden kompakte
+  horizontale Settings-Zeilen mit unveränderten 44-Pixel-Controls; erst unter
+  240 CSS-Pixeln reflowen die Select-Zeilen wieder einspaltig. Die finale
+  Matrix hat keinen Overflow oder Clippingbefund.
+- Für andere MilosApps relevant: Ja. Ein mobiles Höhenbudget und extremer
+  Textzoom sind unterschiedliche Grenzen; eine einzige Spaltenregel optimiert
+  nicht automatisch beide.

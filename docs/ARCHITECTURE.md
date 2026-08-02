@@ -1,6 +1,6 @@
 # Wolkenpost-Architektur
 
-Stand: 1. August 2026
+Stand: 2. August 2026
 
 ## Stack und Grenze
 
@@ -10,7 +10,7 @@ Stand: 1. August 2026
 - `public-app-shell/v2.0.3` als feste, lokal vendorte Build-Abhängigkeit mit
   Manifest und SHA-256-Lock; kein CDN, kein Runtimeimport und keine gemeinsame
   Datenbank;
-- `public-app-layout/v1.0.0` als davon getrennte, lokal vendorte
+- `public-app-layout/v1.1.0` als davon getrennte, lokal vendorte
   Inhaltslayout-Abhängigkeit mit Profil `guided-flow` und eigenem Lock;
 - Browser-Lokalspeicher ausschließlich für Zeichnung, Einstellungen und den
   groben letzten Startpunkt;
@@ -55,8 +55,8 @@ Exporttexte und zugängliche Namen werden gemeinsam umgeschaltet.
 
 ## Kompaktes Inhaltslayout
 
-`milos-layout.json` pinnt `public-app-layout/v1.0.0` auf Shared-Commit
-`bd09643e2767eddba032a82afc550043f3e3b31e`. Der Shared-Sync erzeugt unter
+`milos-layout.json` pinnt `public-app-layout/v1.1.0` auf Shared-Commit
+`55b649d997489ca703682679257ac1a5b790bdc7`. Der Shared-Sync erzeugt unter
 `vendor/milosapps-layout/v1/` die frameworkneutrale Layout-CSS, die aus den
 app-eigenen Grün-/Creme-Tokens erzeugte Theme-CSS, den portablen Validator und
 `layout-lock.json`. Der Lock bindet genau diese drei Laufzeitartefakte per
@@ -64,11 +64,15 @@ SHA-256; es gibt weder CDN noch Runtimeimport aus dem Shared-Repository. Der
 bestehende Fünf-Artefakt-Lock der App-Shell bleibt davon unabhängig.
 
 Die React-Struktur markiert Intro, Primärarbeit, Schritte, Aktionen, Ergebnis
-und sekundäre Einstellungen semantisch mit den Vertragsattributen. Wolkenpost
-behält Zeichenfläche, Weltkarte und redaktionelle Typografie, verwendet aber
-nur eine gemeinsame visuelle Arbeitsfläche statt verschachtelter Karten. Die
-große Orbit-Wolke ist auf eine kleine unterstützende Dekoration reduziert;
-Darstellung, Bewegung und lokale Daten werden progressiv offengelegt.
+und sekundäre Einstellungen semantisch mit den Vertragsattributen. Die beiden
+fachlich zusammengehörigen Arbeitsblöcke aktivieren mit
+`data-milos-flow="paired"` bewusst den zweispaltigen Desktopfluss; mobil und
+bei hohem Textzoom reflowen sie einspaltig. Wolkenpost behält Zeichenfläche,
+Weltkarte und redaktionelle Typografie, verwendet aber nur eine gemeinsame
+visuelle Arbeitsfläche statt verschachtelter Karten. Die Orbit-Wolke ist mit
+`data-milos-intro-icon` als kompakte Identitätsstütze begrenzt. Darstellung,
+Bewegung, Startton und lokale Löschung verwenden den eigenen kompakten
+Settings-Baustein und werden progressiv offengelegt.
 
 Der Vite-Build kopiert beide Layout-CSS-Dateien unter ihren festen
 Same-Origin-Pfad. Die DEV-Artefaktprüfung vergleicht ihre Hashes mit dem
