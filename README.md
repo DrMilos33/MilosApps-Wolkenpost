@@ -16,8 +16,8 @@ Kartenportal.
 - `public-app-shell/v2.0.3` wird aus dem festen Shared-Commit
   `ed898412306e22c6ae1b10ee8953df29f8acd627` lokal vendort und per
   SHA-256-Lock geprüft; kein CDN und kein Shared-Runtimeimport;
-- `public-app-layout/v1.0.0` wird getrennt aus Shared-Commit
-  `bd09643e2767eddba032a82afc550043f3e3b31e` mit Profil `guided-flow`
+- `public-app-layout/v1.1.0` wird getrennt aus Shared-Commit
+  `55b649d997489ca703682679257ac1a5b790bdc7` mit Profil `guided-flow`
   lokal vendort und über einen eigenen Drei-Artefakt-Lock geprüft;
 - Portal-DEV darf nur über einen dokumentierten Link oder Routingvertrag
   anbinden.

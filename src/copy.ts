@@ -14,8 +14,8 @@ export const copy = {
     },
     hero: {
       eyebrow: 'Zeichnen · Wind · Staunen',
-      heading: 'Schick deine Zeichnung mit dem Wind auf Reisen.',
-      lead: 'Zeichne, wähle einen groben Startpunkt und entdecke eine private Modellroute mit echten Winddaten.',
+      heading: 'Zeichne. Lass es fliegen.',
+      lead: 'Wähle einen groben Startpunkt und verfolge die private Modellroute mit echten Winddaten.',
       start: 'Jetzt loszeichnen',
     },
     objectTypes: {
@@ -98,8 +98,8 @@ export const copy = {
     settings: {
       summary: 'Darstellung, Bewegung und lokale Daten',
       kicker: 'Auf diesem Gerät',
-      heading: 'Ruhig, privat, anpassbar.',
-      description: 'Zeichnung, Einstellungen und grober letzter Start bleiben nur im lokalen Browser.',
+      heading: 'Deine Einstellungen',
+      description: 'Zeichnung, Einstellungen und grober Start bleiben nur in diesem Browser.',
       theme: 'Darstellung',
       themeSystem: 'Wie das Gerät',
       themeLight: 'Hell',
@@ -180,8 +180,8 @@ export const copy = {
     },
     hero: {
       eyebrow: 'Draw · Wind · Wonder',
-      heading: 'Send your drawing travelling with the wind.',
-      lead: 'Draw, choose an approximate start and discover a private model route using real wind data.',
+      heading: 'Draw it. Let it fly.',
+      lead: 'Choose an approximate start and follow the private model route using real wind data.',
       start: 'Start drawing',
     },
     objectTypes: {
@@ -264,8 +264,8 @@ export const copy = {
     settings: {
       summary: 'Appearance, motion and local data',
       kicker: 'On this device',
-      heading: 'Calm, private, adaptable.',
-      description: 'Your drawing, settings and approximate last start stay only in the local browser.',
+      heading: 'Your settings',
+      description: 'Your drawing, settings and approximate start stay only in this browser.',
       theme: 'Appearance',
       themeSystem: 'Follow device',
       themeLight: 'Light',

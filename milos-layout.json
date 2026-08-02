@@ -5,8 +5,8 @@
   "loginRequired": false,
   "layoutContract": {
     "id": "public-app-layout/v1",
-    "version": "1.0.0",
-    "sharedCommit": "bd09643e2767eddba032a82afc550043f3e3b31e",
+    "version": "1.1.0",
+    "sharedCommit": "55b649d997489ca703682679257ac1a5b790bdc7",
     "vendorDirectory": "vendor/milosapps-layout/v1"
   },
   "profile": "guided-flow",
