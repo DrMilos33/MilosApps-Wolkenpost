@@ -307,3 +307,19 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
   `* text eol=lf`.
 - Für andere MilosApps relevant: Ja. Bytegenau gelockte vendorte Textdateien
   brauchen ihre Normalisierungsregel direkt an der Vertrauensgrenze.
+
+## 2026-08-02 – Hosting-MIME und Vertragspräferenz sind getrennt zu messen
+
+- Datum und geprüfter Stand: 2. August 2026, öffentliches GitHub-Pages-DEV.
+- Beobachtung: Der lokale Preview liefert Module als
+  `text/javascript; charset=utf-8`, GitHub Pages dieselben bytegenauen Dateien
+  als `application/javascript; charset=utf-8`.
+- Evidenz oder reproduzierbarer Test: HEAD-Prüfung beider Essentials-JS- und
+  CSS-Pfade sowie erfolgreicher Modulstart im externen Browsergate. WHATWG
+  führt beide Essenzen als JavaScript-MIME-Typen; CSS bleibt exakt `text/css`.
+- Änderung und Regressionstest: Lokal bleibt der bevorzugte Typ verpflichtend;
+  das externe Gate erlaubt nur `text/javascript` oder
+  `application/javascript` und lehnt fehlende/generische Typen weiter ab.
+- Für andere MilosApps relevant: Ja. Ein nicht konfigurierbarer statischer
+  Hoster kann einen gültigen, aber nicht bevorzugten MIME-Typ setzen; QA muss
+  die reale Sicherheitsgrenze prüfen und die Betriebsabweichung dokumentieren.

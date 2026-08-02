@@ -446,6 +446,17 @@ Verbesserungsrunde 3 – Start-, CSP- und Resilienzgate:
   MIME von Same-Origin geladen; strikte `style-src 'self'` erzeugt keine
   Verletzung. Das Pages-Artefakt lehnt `data:`-Inlining und eine Loader-H1
   fail-closed ab.
+- die erste externe Pages-Matrix bestand 43/45 anwendbare Fälle. Die beiden
+  übrigen Befunde waren lokale Testannahmen: eine hart codierte
+  `127.0.0.1`-Share-URL und ein auf GitHub Pages nicht setzbarer CSP-Header.
+  Externe Tests leiten die saubere Share-Basis nun aus ihrem Ziel ab und prüfen
+  Same-Origin-Runtime/MIME/Konsolenereignisse; der strikte CSP-Header bleibt
+  zusätzlich im kontrollierten lokalen Preview-Gate verpflichtend.
+- GitHub Pages liefert die beiden JS-Module mit dem gültigen
+  `application/javascript; charset=utf-8` statt dem lokal erwarteten
+  `text/javascript; charset=utf-8`; beide CSS-Dateien bleiben
+  `text/css; charset=utf-8`. Das externe Gate akzeptiert ausschließlich diese
+  beiden JavaScript-MIME-Essenzen, nicht generische oder fehlende Typen.
 
 Lokale Abschlussevidenz vor dem DEV-Publish:
 

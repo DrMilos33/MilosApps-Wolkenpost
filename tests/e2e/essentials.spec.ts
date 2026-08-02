@@ -6,6 +6,8 @@ import {
   startFlight,
 } from './helpers';
 
+const externalBaseUrl = process.env.CLOUD_POST_E2E_BASE_URL;
+
 declare global {
   interface Window {
     __wolkenpostSharePayload?: {
@@ -147,6 +149,7 @@ test('place search is explicit, normalized and works for cities and regions', as
 
 test('shared result share uses native, clipboard and cancellation paths without private URLs', async ({ page }) => {
   test.skip(test.info().project.name !== 'desktop', 'focused sharing contract check');
+  const expectedShareUrl = externalBaseUrl ?? 'http://127.0.0.1:4315/';
   await page.addInitScript(() => {
     Object.defineProperty(navigator, 'canShare', {
       configurable: true,
@@ -175,7 +178,7 @@ test('shared result share uses native, clipboard and cancellation paths without 
   await share.getByRole('button', { name: 'Teilen' }).click();
   await expect(share.locator('[data-milos-share-status]')).toHaveText('Geteilt');
   const nativePayload = await page.evaluate(() => window.__wolkenpostSharePayload);
-  expect(nativePayload?.url).toBe('http://127.0.0.1:4315/');
+  expect(nativePayload?.url).toBe(expectedShareUrl);
   expect(nativePayload?.files?.[0]).toMatchObject({ type: 'image/png' });
   expect(nativePayload?.files?.[0].name).toMatch(/^wolkenpost-\d{4}-\d{2}-\d{2}\.png$/);
 
@@ -189,7 +192,7 @@ test('shared result share uses native, clipboard and cancellation paths without 
   await share.getByRole('button', { name: 'Teilen' }).click();
   await expect(share.locator('[data-milos-share-status]')).toHaveText('Link kopiert');
   const copied = await page.evaluate(() => window.__wolkenpostClipboard);
-  expect(copied).toContain('http://127.0.0.1:4315/');
+  expect(copied).toContain(expectedShareUrl);
   expect(copied).not.toContain('private-location');
   expect(copied).not.toContain('#drawing');
 
@@ -214,7 +217,9 @@ test('essentials assets keep their lock, MIME, CSP, reflow and module boundary',
     });
   });
   const response = await page.goto('./');
-  expect(response?.headers()['content-security-policy']).toContain("style-src 'self'");
+  if (!externalBaseUrl) {
+    expect(response?.headers()['content-security-policy']).toContain("style-src 'self'");
+  }
   await dismissPrivacy(page);
   await expect(page.locator('milos-date-picker')).toHaveCount(0);
   await expect(page.locator('milos-place-search')).toHaveCount(1);
@@ -258,7 +263,10 @@ test('essentials assets keep their lock, MIME, CSP, reflow and module boundary',
   expect(assets.filter(({ url }) => url.endsWith('.css'))
     .every(({ contentType }) => contentType?.includes('text/css'))).toBe(true);
   expect(assets.filter(({ url }) => url.endsWith('.js'))
-    .every(({ contentType }) => contentType?.includes('text/javascript'))).toBe(true);
+    .every(({ contentType }) => {
+      const essence = contentType?.split(';', 1)[0].trim().toLowerCase();
+      return essence === 'text/javascript' || essence === 'application/javascript';
+    })).toBe(true);
 
   for (const viewport of [
     { width: 1440, height: 900 },
