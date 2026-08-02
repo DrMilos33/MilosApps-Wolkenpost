@@ -438,6 +438,10 @@ Verbesserungsrunde 3 – Start-, CSP- und Resilienzgate:
 - native Share, Clipboard-Fallback und `AbortError`, verweigerte Ortung,
   langsames Netz, Timeout, Offline, App-Resume, Pointer-Abbruch, Reduced Motion,
   Tastatur und Axe wurden gemeinsam regressiert;
+- die erste Linux-CI-Ausführung deckte eine unklare visuelle Testvorbedingung
+  auf: Bei 180 CSS-Pixeln lag der bewusst sichtbare Datenschutzhinweis über den
+  später gemessenen Einstellungen. Der Test prüft und quittiert den Hinweis nun
+  ausdrücklich, bevor er den darunterliegenden Layoutzustand bedient;
 - beide Essentials-CSS-Dateien, Bootstrap und Runtime-JS werden mit korrektem
   MIME von Same-Origin geladen; strikte `style-src 'self'` erzeugt keine
   Verletzung. Das Pages-Artefakt lehnt `data:`-Inlining und eine Loader-H1
