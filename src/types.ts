@@ -10,7 +10,11 @@ export interface Coordinate {
 export interface Place extends Coordinate {
   id: string;
   name: string;
+  region?: string;
   country: string;
+  countryCode?: string;
+  type?: string;
+  timeZone?: string;
 }
 
 export interface DrawingPoint {

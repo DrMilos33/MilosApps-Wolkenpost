@@ -1,6 +1,6 @@
 # Wolkenpost QA-Evidenz
 
-Stand: 2. August 2026, Branch `codex/cloud-post-layout-v1-1`
+Stand: 2. August 2026, Branch `codex/cloud-post-essentials-v1`
 
 Der Miteinander-Product-QA-Workflow wurde nach dem ersten lauffähigen Stand in
 drei vollständigen Runden angewendet. Testdaten wurden lokal und deterministisch
@@ -395,6 +395,77 @@ Build:              Standardbuild PASS
 
 Das aktualisierte app-eigene `preview.png` zeigt denselben verkürzten
 DE-Introtext; Rechtebasis bleibt ein Screenshot ausschließlich der eigenen App.
+
+## Runde 9 – `public-app-essentials/v1.0.0`
+
+Geprüft und integriert wurden der unveränderliche Shared-Pin
+`b09e09008ff05fe87f05bc647a7c4964ff13e6f6`, der Fünf-Artefakt-Lock und die
+Wolkenpost-Module Start, Datenschutz, Teilen und Ortssuche. Das Datumsmodul ist
+bewusst nicht aktiv. Shell v2.0.3 und Layout v1.1.0 bleiben getrennt gepinnt.
+
+Verbesserungsrunde 1 – Fachintegration:
+
+- die bisherige lokale Ortsliste blieb Datenquelle, wurde aber um Region,
+  ISO-Land und Typ ergänzt und in das explizite gemeinsame Such-UI überführt;
+- die Ergebnisdarstellung zeigt Name sowie Region und Land in DE/EN;
+- Teilen verwendet weiter das privacy-sichere PNG, übergibt aber nur eine
+  kanonische App-URL ohne Query, Hash, Koordinaten oder lokalen Zustand;
+- der Datenschutzhinweis benennt lokale Speicherung wahrheitsgemäß, ohne eine
+  Wahl über nicht vorhandenes Tracking vorzutäuschen.
+
+Verbesserungsrunde 2 – sichtbare Browser-QA:
+
+- 390 × 844 und 1440 × 900 wurden hell/dunkel, auf Deutsch und Englisch mit
+  echter Tastaturbedienung der Ortssuche geprüft;
+- ein Sprachwechsel ließ zunächst den deutschen Suchbegriff im zustandseigenen
+  Custom Element stehen. Das Suchelement wird nun beim Localewechsel gezielt
+  neu erzeugt, während der gewählte Fachort lokalisiert erhalten bleibt;
+- die gemeinsamen Such-/Teilen-Controls verwendeten im dunklen App-Theme
+  zunächst helle statische Tokens. App-eigene externe Dark-Tokens beheben den
+  Kontrast ohne Inline-Style oder CSP-Ausnahme;
+- Desktop: Intro 153,73 px, Primärarbeit ab 254,73 px; Mobil 375 px: Intro
+  206,30 px, Primärarbeit ab 343,67 px; jeweils Overflow 0.
+
+Verbesserungsrunde 3 – Start-, CSP- und Resilienzgate:
+
+- ein künstlich verlangsamter Bootstrap belegte einen Race: React konnte sein
+  Ready-Ereignis senden, bevor der Essentials-Listener registriert war. Der
+  Handshake wartet nun deterministisch auf die registrierte Shared-Komponente;
+- der Regressionstest hält die App vor dem Bootstrap sichtbar hinter dem
+  Loader und bestätigt anschließend dessen Entfernung;
+- der Loader verwendet ein `<p>` statt H1–H6, misst maximal 56 px am Desktop
+  und 48 px mobil und bleibt bei einem wirklich ausstehenden App-Bundle stehen;
+- native Share, Clipboard-Fallback und `AbortError`, verweigerte Ortung,
+  langsames Netz, Timeout, Offline, App-Resume, Pointer-Abbruch, Reduced Motion,
+  Tastatur und Axe wurden gemeinsam regressiert;
+- die erste Linux-CI-Ausführung deckte eine unklare visuelle Testvorbedingung
+  auf: Bei 180 CSS-Pixeln lag der bewusst sichtbare Datenschutzhinweis über den
+  später gemessenen Einstellungen. Der Test prüft und quittiert den Hinweis nun
+  ausdrücklich, bevor er den darunterliegenden Layoutzustand bedient;
+- beide Essentials-CSS-Dateien, Bootstrap und Runtime-JS werden mit korrektem
+  MIME von Same-Origin geladen; strikte `style-src 'self'` erzeugt keine
+  Verletzung. Das Pages-Artefakt lehnt `data:`-Inlining und eine Loader-H1
+  fail-closed ab.
+
+Lokale Abschlussevidenz vor dem DEV-Publish:
+
+```text
+Shared-Validatoren: Shell v2.0.3 PASS; Layout v1.1.0 PASS;
+                    Essentials v1.0.0 PASS
+Vitest:             5 Dateien, 20 Tests, 20 bestanden
+Playwright:         132 Kombinationen, 45 bestanden, 87 profilspezifisch
+                    gefiltert, 0 fehlgeschlagen
+Start-Race-Fokus:   12/12 Desktop-/Essentials-/Accessibilityfälle bestanden
+Build:              Standardbuild PASS; Pages-Build PASS
+Pages-Artefakt:     PASS einschließlich 5er-Lock, externer CSS-Grenzen,
+                    Loader-Semantik, PWA-Cache und Production=false
+Diff:               git diff --check PASS
+```
+
+Die enge Vendor-`.gitattributes` liefert für die Essentials-Dateien
+`text: set, eol: lf`. Ein erneuter Sync aus dem fest gepinnten Shared-Checkout
+und der anschließende Validator blieben grün. Die öffentliche Revision und
+Artefaktevidenz folgen im DEV-Handoff nach dem koordinierten Publish.
 
 ## Verbleibende Prüfgrenzen
 

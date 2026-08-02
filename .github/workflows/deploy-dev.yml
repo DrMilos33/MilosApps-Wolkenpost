@@ -31,6 +31,8 @@ jobs:
         run: pnpm verify:shell
       - name: Verify pinned public app layout
         run: pnpm verify:layout
+      - name: Verify pinned public app essentials
+        run: pnpm verify:essentials
       - name: Run logic tests
         run: pnpm test
       - name: Build the isolated DEV artifact

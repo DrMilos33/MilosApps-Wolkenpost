@@ -16,6 +16,7 @@ Stand: 2. August 2026
 | Status | `dev-online` |
 | Shell-Vertrag | `public-app-shell/v2.0.3`, Shared-Commit `ed898412306e22c6ae1b10ee8953df29f8acd627` |
 | Layout-Vertrag | `public-app-layout/v1.1.0`, Profil `guided-flow`, Shared-Commit `55b649d997489ca703682679257ac1a5b790bdc7` |
+| Essentials-Vertrag | `public-app-essentials/v1.0.0`, Shared-Commit `b09e09008ff05fe87f05bc647a7c4964ff13e6f6`, Module Start/Privacy/Share/Place |
 | Git-Remote | `https://github.com/DrMilos33/MilosApps-Wolkenpost.git` |
 | Hosting | app-eigene GitHub Pages über `.github/workflows/deploy-dev.yml` |
 | öffentliche DEV-URL | `https://drmilos33.github.io/MilosApps-Wolkenpost/` |
@@ -78,6 +79,12 @@ stellt die v1.0.0-Dichte wieder her, ohne Shell, Shared oder Portal zu ändern.
 Für den engen Folgepatch der deutschen Mobile-Dichte ist
 `e5d4dd6869d921c8876433a7a860a65077474bd5` der unmittelbar vorherige gesunde
 DEV-Stand und damit der bevorzugte Rollbackpunkt.
+
+Für die Essentials-v1-Übernahme ist
+`46f15c90858ba59aa07436641e7a52a005e06dae` der unmittelbar vorherige
+portal-verifizierte App-/Pages-Stand. Ein normaler Revert auf diesen Commit
+entfernt Startscreen, Datenschutzhinweis, gemeinsame Teilen-/Ortssuche und den
+Essentials-Lock wieder, ohne Shell, Layout, Shared oder Portal zu verändern.
 
 ## Portalgrenze
 

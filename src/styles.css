@@ -113,6 +113,17 @@ milos-app-shell {
   --milos-layout-focus: var(--focus);
 }
 
+:root[data-theme='dark'] body[data-milos-essentials-app='cloud-post'] {
+  --milos-essential-accent: #a8ead1;
+  --milos-essential-accent-contrast: #0e2927;
+  --milos-essential-surface: var(--surface);
+  --milos-essential-surface-soft: var(--surface-soft);
+  --milos-essential-text: var(--ink);
+  --milos-essential-muted: var(--muted);
+  --milos-essential-border: var(--line);
+  --milos-essential-focus: var(--focus);
+}
+
 @media (prefers-color-scheme: dark) {
   :root[data-theme='system'] milos-app-shell {
     --milos-shell-accent: #a8ead1;
@@ -133,6 +144,17 @@ milos-app-shell {
     --milos-layout-accent: #a8ead1;
     --milos-layout-accent-contrast: #0e2927;
     --milos-layout-focus: var(--focus);
+  }
+
+  :root[data-theme='system'] body[data-milos-essentials-app='cloud-post'] {
+    --milos-essential-accent: #a8ead1;
+    --milos-essential-accent-contrast: #0e2927;
+    --milos-essential-surface: var(--surface);
+    --milos-essential-surface-soft: var(--surface-soft);
+    --milos-essential-text: var(--ink);
+    --milos-essential-muted: var(--muted);
+    --milos-essential-border: var(--line);
+    --milos-essential-focus: var(--focus);
   }
 }
 
@@ -435,7 +457,6 @@ button {
 .primary-button,
 .secondary-button,
 .launch-button,
-.location-button,
 .danger-button,
 .text-button {
   border-radius: 999px;
@@ -445,7 +466,6 @@ button {
 
 .primary-button,
 .secondary-button,
-.location-button,
 .danger-button {
   padding: 0.7rem 1rem;
 }
@@ -456,14 +476,12 @@ button {
   color: var(--surface);
 }
 
-.secondary-button,
-.location-button {
+.secondary-button {
   border: 1px solid var(--line);
   background: var(--surface-strong);
 }
 
-.secondary-button:hover,
-.location-button:hover {
+.secondary-button:hover {
   border-color: var(--brand);
 }
 
@@ -480,6 +498,10 @@ button {
 button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+.result-actions milos-share-button {
+  align-self: start;
 }
 
 .world-map {
@@ -526,21 +548,14 @@ button:disabled {
 }
 
 .place-tools {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.7rem;
-  align-items: end;
+  min-width: 0;
+  margin-top: 0.25rem;
 }
 
-.search-field {
-  display: grid;
-  gap: 0.3rem;
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 700;
+.place-tools milos-place-search {
+  width: 100%;
 }
 
-.search-field input,
 .settings-grid select {
   width: 100%;
   min-height: 44px;
@@ -550,48 +565,8 @@ button:disabled {
   color: var(--ink);
 }
 
-.search-field input {
-  padding: 0 0.9rem;
-}
-
-.place-results {
-  display: grid;
-  gap: 0.35rem;
-  margin: 0.5rem 0 0;
-  padding: 0.5rem;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: var(--surface-strong);
-  list-style: none;
-}
-
-.place-results button {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.6rem 0.7rem;
-  border: 0;
-  border-radius: 12px;
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-}
-
-.place-results button:hover,
-.place-results button:focus-visible {
-  background: var(--surface-soft);
-}
-
-.place-results span,
-.no-results {
-  color: var(--muted);
-  font-size: 0.78rem;
-}
-
-.no-results {
-  padding: 0.7rem;
+.place-tools [data-milos-place-locate] {
+  justify-self: start;
 }
 
 .coordinate-controls {
@@ -1000,11 +975,7 @@ button:disabled {
     aspect-ratio: 1.42;
   }
 
-  .place-tools {
-    grid-template-columns: 1fr;
-  }
-
-  .location-button {
+  .place-tools [data-milos-place-locate] {
     width: 100%;
   }
 
@@ -1107,8 +1078,7 @@ button:disabled {
     width: 100%;
   }
 
-  .launch-button,
-  .location-button {
+  .launch-button {
     max-width: 100%;
     justify-content: center;
     text-align: center;

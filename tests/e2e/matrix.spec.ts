@@ -23,8 +23,9 @@ test('complete wind journey is usable without login', async ({ page }) => {
   await expect(page.locator('milos-app-shell').getByText('ohne Anmeldung', { exact: false })).toBeVisible();
 
   await page.getByRole('radio', { name: /Ballon/ }).click();
-  await page.getByLabel('Ort suchen').fill('Tokio');
-  await page.getByRole('button', { name: /Tokio/ }).click();
+  await page.getByLabel('Ort oder Region').fill('Tokio');
+  await page.getByRole('button', { name: 'Suchen' }).click();
+  await page.getByRole('option', { name: /Tokio Tokio · Japan/ }).click();
   await startFlight(page);
 
   await expect(page.getByText('echte Modelldaten')).toBeVisible();

@@ -29,6 +29,13 @@ const LAYOUT_RUNTIME_FILES = [
   'milos-app-layout.css',
   'milos-app-layout-theme.css',
 ] as const;
+const ESSENTIALS_VENDOR_DIRECTORY = 'vendor/milosapps-essentials/v1';
+const ESSENTIALS_RUNTIME_FILES = [
+  'bootstrap.js',
+  'milos-app-essentials.js',
+  'milos-app-essentials.css',
+  'milos-app-essentials-theme.css',
+] as const;
 
 function withBase(base: string, path: string) {
   return `${base}${path.replace(/^\/+/, '')}`;
@@ -51,6 +58,13 @@ function vendoredPublicContracts(): Plugin {
           type: 'asset',
           fileName: `${LAYOUT_VENDOR_DIRECTORY}/${file}`,
           source: await readFile(path.resolve(LAYOUT_VENDOR_DIRECTORY, file)),
+        });
+      }
+      for (const file of ESSENTIALS_RUNTIME_FILES) {
+        this.emitFile({
+          type: 'asset',
+          fileName: `${ESSENTIALS_VENDOR_DIRECTORY}/${file}`,
+          source: await readFile(path.resolve(ESSENTIALS_VENDOR_DIRECTORY, file)),
         });
       }
     },

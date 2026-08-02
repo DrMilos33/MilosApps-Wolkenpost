@@ -27,6 +27,11 @@ import {
   WindRequestError,
 } from './lib/wind';
 import type {
+  MilosPlaceResult,
+  MilosPlaceSearchElement,
+  MilosShareButtonElement,
+} from './milos-app-essentials';
+import type {
   Coordinate,
   DrawingStroke,
   MotionPreference,
@@ -37,13 +42,34 @@ import type {
 } from './types';
 
 type FlightStatus = 'idle' | 'loading' | 'result' | 'error';
-type LocationStatus = 'idle' | 'loading' | 'error';
 
 interface AppProps {
   initialLanguage: SupportedLanguage;
 }
 
 const OFFLINE_SESSION_KEY = 'milosapps.cloud-post.offline-session';
+
+function appShareUrl(): string {
+  return new URL(import.meta.env.BASE_URL, window.location.origin).href;
+}
+
+function placeContext(place: Place): string {
+  return [place.region, place.country].filter(Boolean).join(' · ');
+}
+
+function essentialsPlace(place: Place): MilosPlaceResult {
+  return {
+    id: place.id,
+    name: place.name,
+    region: place.region ?? '',
+    country: place.country,
+    countryCode: place.countryCode ?? '',
+    latitude: place.latitude,
+    longitude: place.longitude,
+    type: place.type ?? 'place',
+    ...(place.timeZone ? { timeZone: place.timeZone } : {}),
+  };
+}
 
 function isFirstVisit(): boolean {
   try {
@@ -136,9 +162,7 @@ export default function App({ initialLanguage: language }: AppProps) {
   const [motion, setMotion] = useState<MotionPreference>(initial.motion);
   const [theme, setTheme] = useState<ThemePreference>(initial.theme);
   const [soundEnabled, setSoundEnabled] = useState(initial.soundEnabled);
-  const [query, setQuery] = useState('');
   const [flightStatus, setFlightStatus] = useState<FlightStatus>('idle');
-  const [locationStatus, setLocationStatus] = useState<LocationStatus>('idle');
   const [errorKind, setErrorKind] = useState<WindRequestError['kind']>('network');
   const [result, setResult] = useState<RouteResult | null>(null);
   const [online, setOnline] = useState(
@@ -150,8 +174,18 @@ export default function App({ initialLanguage: language }: AppProps) {
   const [exporting, setExporting] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
+  const placeSearchRef = useRef<MilosPlaceSearchElement>(null);
+  const shareRef = useRef<MilosShareButtonElement>(null);
 
-  const matchingPlaces = useMemo(() => searchPlaces(query, language), [language, query]);
+  useEffect(() => {
+    let active = true;
+    void customElements.whenDefined('milos-share-button').then(() => {
+      if (active) document.dispatchEvent(new CustomEvent('milosapps:ready'));
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -216,41 +250,58 @@ export default function App({ initialLanguage: language }: AppProps) {
     setStart(place);
     setResult(null);
     setFlightStatus('idle');
-    setQuery('');
     setAnnouncement(text.announcements.startSelected(place.name));
   };
 
   const selectMapCoordinate = (coordinate: Coordinate) =>
     selectStart(namedPlace(coordinate, language));
 
-  const locateMe = () => {
-    if (!navigator.geolocation) {
-      setLocationStatus('error');
-      setAnnouncement(text.announcements.geolocationUnsupported);
-      return;
-    }
-    setLocationStatus('loading');
-    setAnnouncement(text.announcements.geolocationPrompt);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        selectStart(namedPlace({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        }, language));
-        setLocationStatus('idle');
-      },
-      (error) => {
-        setLocationStatus('error');
-        const message = error.code === error.PERMISSION_DENIED
-          ? text.announcements.geolocationDenied
-          : error.code === error.TIMEOUT
-            ? text.announcements.geolocationTimeout
-            : text.announcements.geolocationUnavailable;
-        setAnnouncement(message);
-      },
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 10 * 60 * 1000 },
-    );
-  };
+  useEffect(() => {
+    let cancelled = false;
+    let element: MilosPlaceSearchElement | null = null;
+    const onPlaceChange = (event: Event) => {
+      selectStart((event as CustomEvent<MilosPlaceResult>).detail);
+    };
+
+    void customElements.whenDefined('milos-place-search').then(() => {
+      if (cancelled || !placeSearchRef.current) return;
+      element = placeSearchRef.current;
+      element.setSearchProvider(({ query: placeQuery, locale: requestedLocale, signal }) => {
+        if (signal.aborted) throw new DOMException('cancelled', 'AbortError');
+        return searchPlaces(placeQuery, requestedLocale).map(essentialsPlace);
+      });
+      element.setLocateProvider(({ locale: requestedLocale }) => new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+          setAnnouncement(copy[requestedLocale].announcements.geolocationUnsupported);
+          reject(new DOMException('unsupported', 'NotSupportedError'));
+          return;
+        }
+        setAnnouncement(copy[requestedLocale].announcements.geolocationPrompt);
+        navigator.geolocation.getCurrentPosition(
+          (position) => resolve(essentialsPlace(namedPlace({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          }, requestedLocale))),
+          (error) => {
+            const message = error.code === error.PERMISSION_DENIED
+              ? copy[requestedLocale].announcements.geolocationDenied
+              : error.code === error.TIMEOUT
+                ? copy[requestedLocale].announcements.geolocationTimeout
+                : copy[requestedLocale].announcements.geolocationUnavailable;
+            setAnnouncement(message);
+            reject(error);
+          },
+          { enableHighAccuracy: false, timeout: 8000, maximumAge: 10 * 60 * 1000 },
+        );
+      }));
+      element.addEventListener('milosapps:placechange', onPlaceChange);
+    });
+
+    return () => {
+      cancelled = true;
+      element?.removeEventListener('milosapps:placechange', onPlaceChange);
+    };
+  }, [language]);
 
   const applyResult = (nextResult: RouteResult) => {
     const endLabel = routeEndLabel(nextResult, language);
@@ -323,32 +374,46 @@ export default function App({ initialLanguage: language }: AppProps) {
     }
   };
 
-  const shareImage = async () => {
-    if (!result || exporting) return;
-    setExporting(true);
-    try {
-      const endLabel = routeEndLabel(result, language);
-      const file = await createResultImage({ ...result, endLabel }, strokes, language);
-      const shareData = {
-        title: text.share.title,
-        text: text.share.text(Math.round(result.distanceKm), endLabel),
-        files: [file],
-      };
-      if (navigator.share && (!navigator.canShare || navigator.canShare(shareData))) {
-        await navigator.share(shareData);
-        setAnnouncement(text.announcements.shared);
-      } else {
-        downloadFile(file);
-        setAnnouncement(text.announcements.shareFallback);
-      }
-    } catch (error) {
-      if ((error as DOMException)?.name !== 'AbortError') {
-        setAnnouncement(text.announcements.shareFailed);
-      }
-    } finally {
-      setExporting(false);
-    }
-  };
+  useEffect(() => {
+    if (!result) return;
+    let cancelled = false;
+    let element: MilosShareButtonElement | null = null;
+    const onComplete = (event: Event) => {
+      const method = (event as CustomEvent<{ method?: string }>).detail?.method;
+      setAnnouncement(method === 'clipboard'
+        ? text.announcements.shareCopied
+        : text.announcements.shared);
+    };
+    const onError = () => setAnnouncement(text.announcements.shareFailed);
+
+    void customElements.whenDefined('milos-share-button').then(() => {
+      if (cancelled || !shareRef.current) return;
+      element = shareRef.current;
+      element.setPayloadProvider(async () => {
+        setExporting(true);
+        try {
+          const endLabel = routeEndLabel(result, language);
+          const file = await createResultImage({ ...result, endLabel }, strokes, language);
+          return {
+            title: text.share.title,
+            text: text.share.text(Math.round(result.distanceKm), endLabel),
+            url: appShareUrl(),
+            files: [file],
+          };
+        } finally {
+          setExporting(false);
+        }
+      });
+      element.addEventListener('milosapps:sharecomplete', onComplete);
+      element.addEventListener('milosapps:shareerror', onError);
+    });
+
+    return () => {
+      cancelled = true;
+      element?.removeEventListener('milosapps:sharecomplete', onComplete);
+      element?.removeEventListener('milosapps:shareerror', onError);
+    };
+  }, [language, result, strokes, text.announcements.shareCopied, text.announcements.shareFailed, text.announcements.shared, text.share]);
 
   const resetLocalData = () => {
     clearState();
@@ -505,44 +570,20 @@ export default function App({ initialLanguage: language }: AppProps) {
               <span>
                 <small>{text.map.selected}</small>
                 <strong>{start.name}</strong>
-                <span>{start.country}</span>
+                <span>{placeContext(start)}</span>
               </span>
             </div>
 
             <div className="place-tools">
-              <label className="search-field">
-                <span>{text.map.search}</span>
-                <input
-                  type="search"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder={text.map.placeholder}
-                  autoComplete="off"
-                />
-              </label>
-              <button
-                className="location-button"
-                type="button"
-                onClick={locateMe}
-                disabled={locationStatus === 'loading'}
-              >
-                {locationStatus === 'loading' ? text.map.locating : text.map.locate}
-              </button>
+              <milos-place-search
+                key={language}
+                ref={placeSearchRef}
+                label-de={copy.de.map.search}
+                label-en={copy.en.map.search}
+                placeholder-de={copy.de.map.placeholder}
+                placeholder-en={copy.en.map.placeholder}
+              />
             </div>
-            {query && (
-              <ul className="place-results" aria-label={text.map.suggestions}>
-                {matchingPlaces.length ? matchingPlaces.map((place) => (
-                  <li key={place.id}>
-                    <button type="button" onClick={() => selectStart(place)}>
-                      <strong>{place.name}</strong>
-                      <span>{place.country}</span>
-                    </button>
-                  </li>
-                )) : (
-                  <li className="no-results">{text.map.noResults}</li>
-                )}
-              </ul>
-            )}
 
             <details className="coordinate-controls">
               <summary>{text.map.fineTune}</summary>
@@ -687,9 +728,7 @@ export default function App({ initialLanguage: language }: AppProps) {
               <button className="primary-button" type="button" onClick={saveImage} disabled={exporting}>
                 {exporting ? text.result.exporting : text.result.save}
               </button>
-              <button className="secondary-button" type="button" onClick={shareImage} disabled={exporting}>
-                {text.result.share}
-              </button>
+              <milos-share-button ref={shareRef} primary="" />
               <button
                 className="text-button"
                 type="button"

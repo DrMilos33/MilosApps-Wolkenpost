@@ -1,0 +1,10 @@
+body[data-milos-essentials-app="cloud-post"] {
+  --milos-essential-accent: #1f6658;
+  --milos-essential-accent-contrast: #ffffff;
+  --milos-essential-surface: #fffdf8;
+  --milos-essential-surface-soft: #eaf6f0;
+  --milos-essential-text: #173f35;
+  --milos-essential-muted: #5d746d;
+  --milos-essential-border: #c9dcd4;
+  --milos-essential-focus: #bd4a34;
+}

@@ -20,7 +20,7 @@ test('shell and complete app switch to English and persist across reload', async
   await expect(page).toHaveTitle('Cloud Post – Your drawing travels with the wind');
   await expect(page.getByRole('heading', { level: 1, name: 'Draw it. Let it fly.' })).toBeVisible();
   await expect(page.getByRole('radio', { name: /Balloon floating gently/ })).toBeVisible();
-  await expect(page.getByLabel('Search for a place')).toBeVisible();
+  await expect(page.getByLabel('Place or region')).toBeVisible();
   await page.getByText('Appearance, motion and local data', { exact: true }).click();
   await expect(page.getByLabel('Appearance')).toBeVisible();
   await expect(shell.getByRole('link', { name: /All apps/ }))
@@ -30,8 +30,9 @@ test('shell and complete app switch to English and persist across reload', async
   await expect(shell.getByRole('link', { name: 'Privacy' }))
     .toHaveAttribute('href', 'https://dev.milos-apps.de/datenschutz');
 
-  await page.getByLabel('Search for a place').fill('Tokyo');
-  await page.getByRole('button', { name: /Tokyo Japan/ }).click();
+  await page.getByLabel('Place or region').fill('Tokyo');
+  await page.getByRole('button', { name: 'Search' }).click();
+  await page.getByRole('option', { name: /Tokyo Tokyo · Japan/ }).click();
   await page.getByRole('button', { name: 'Start flight with live wind' }).click();
   await expect(page.getByRole('heading', { name: /Arrived near/ })).toBeVisible();
   await expect(page.getByText('real model data')).toBeVisible();

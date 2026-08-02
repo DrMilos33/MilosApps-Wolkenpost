@@ -36,6 +36,11 @@ for (const visualCase of cases) {
       expect(csp).toContain("style-src 'self'");
     }
 
+    const privacyNotice = page.locator('[data-milos-privacy-notice]');
+    await expect(privacyNotice).toBeVisible();
+    await privacyNotice.locator('[data-milos-privacy-dismiss]').click();
+    await expect(privacyNotice).toBeHidden();
+
     if (visualCase.locale === 'en') {
       await page.locator('milos-app-shell')
         .getByRole('button', { name: 'EN', exact: true })

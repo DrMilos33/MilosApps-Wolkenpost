@@ -54,8 +54,9 @@ test('keeps map and search usable when geolocation is denied', async ({ page, co
   await page.goto('./');
   await page.getByRole('button', { name: 'Meinen Ort verwenden' }).click();
   await expect(page.getByText(/Ortung wurde nicht erlaubt/)).toBeAttached();
-  await page.getByLabel('Ort suchen').fill('Paris');
-  await page.getByRole('button', { name: /Paris/ }).click();
+  await page.getByLabel('Ort oder Region').fill('Paris');
+  await page.getByRole('button', { name: 'Suchen' }).click();
+  await page.getByRole('option', { name: /Paris Île-de-France · Frankreich/ }).click();
   await expect(page.getByText('Gewählter Start').locator('..')).toContainText('Paris');
 });
 
