@@ -6,6 +6,8 @@ import { expectNoHorizontalOverflow, recordConsoleProblems } from './helpers';
 const cases = [
   { name: 'desktop-de', width: 1440, height: 900, locale: 'de', theme: 'system' },
   { name: 'desktop-dark-de', width: 1440, height: 900, locale: 'de', theme: 'dark' },
+  { name: 'mobile-de-375', width: 375, height: 844, locale: 'de', theme: 'system' },
+  { name: 'mobile-de-390', width: 390, height: 844, locale: 'de', theme: 'system' },
   { name: 'mobile-en', width: 390, height: 844, locale: 'en', theme: 'system' },
   // CSS-pixel equivalent of a 360 x 800 viewport at 200% browser zoom.
   { name: 'zoom200-de', width: 180, height: 400, locale: 'de', theme: 'system' },
@@ -114,6 +116,8 @@ for (const visualCase of cases) {
       const settings = document.querySelector<HTMLElement>('.settings-section')!;
       return {
         responses,
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
         introHeight: intro.height,
         primaryTop: primary.top + window.scrollY,
         layoutDisplay: getComputedStyle(document.querySelector<HTMLElement>('[data-milos-layout="compact"]')!).display,
@@ -146,7 +150,9 @@ for (const visualCase of cases) {
       expect(Math.max(layoutContract.introIconWidth, layoutContract.introIconHeight)).toBeLessThanOrEqual(72);
       expect(layoutContract.settingsHeight).toBeLessThanOrEqual(220);
     }
-    if (visualCase.name === 'mobile-en') {
+    if (visualCase.name.startsWith('mobile-')) {
+      expect(layoutContract.clientWidth).toBe(visualCase.width);
+      expect(layoutContract.scrollWidth).toBe(layoutContract.clientWidth);
       expect(layoutContract.introHeight).toBeLessThanOrEqual(220);
       expect(layoutContract.primaryTop).toBeLessThanOrEqual(420);
       expect(layoutContract.h1Size).toBeLessThanOrEqual(36);

@@ -13,9 +13,9 @@ export const copy = {
       offline: 'offline',
     },
     hero: {
-      eyebrow: 'Zeichnen · Wind · Staunen',
+      eyebrow: 'Wolkenpost',
       heading: 'Zeichne. Lass es fliegen.',
-      lead: 'Wähle einen groben Startpunkt und verfolge die private Modellroute mit echten Winddaten.',
+      lead: 'Starte grob. Die private Modellroute folgt echten Winddaten.',
       start: 'Jetzt loszeichnen',
     },
     objectTypes: {
@@ -179,9 +179,9 @@ export const copy = {
       offline: 'offline',
     },
     hero: {
-      eyebrow: 'Draw · Wind · Wonder',
+      eyebrow: 'Cloud Post',
       heading: 'Draw it. Let it fly.',
-      lead: 'Choose an approximate start and follow the private model route using real wind data.',
+      lead: 'Start roughly. The private model route follows real wind data.',
       start: 'Start drawing',
     },
     objectTypes: {

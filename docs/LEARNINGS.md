@@ -228,3 +228,21 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
 - Für andere MilosApps relevant: Ja. Ein mobiles Höhenbudget und extremer
   Textzoom sind unterschiedliche Grenzen; eine einzige Spaltenregel optimiert
   nicht automatisch beide.
+
+## 2026-08-02 – Dichtebudgets müssen die längste Sprache abdecken
+
+- Datum und geprüfter Stand: 2. August 2026, enger Wolkenpost-Folgepatch auf
+  `public-app-layout/v1.1.0`.
+- Beobachtung: Der englische 390-px-Fall erfüllte das 220-px-Introbudget, während
+  Deutsch bei 375 px wegen einer umbrechenden Metazeile 253,59 px erreichte.
+  Overflowtests allein meldeten keinen Fehler.
+- Evidenz oder reproduzierbarer Test: `visual-contract.spec.ts` misst nun DE bei
+  375 und 390 px sowie EN bei 390 px und prüft Clientbreite, Scrollbreite,
+  Introhöhe und Oberkante der Primärarbeit.
+- Änderung und Regressionstest: Die redundante Metazeile wurde sprachlich
+  gekürzt, ebenso der Lead bei unveränderter Datenschutz-/Modellwahrheit. Die
+  neuen DE-Werte liegen bei 206,30/343,67 px (375) und 184,53/321,91 px (390).
+- Für andere MilosApps relevant: Ja. Das Dichtegate einer lokalisierten
+  Oberfläche muss mindestens die längste unterstützte Sprache in jeder
+  kritischen Breite messen; ein kürzerer Sprachfall plus Overflowcheck genügt
+  nicht.
