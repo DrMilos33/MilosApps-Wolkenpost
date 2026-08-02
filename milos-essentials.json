@@ -1,0 +1,48 @@
+{
+  "$schema": "https://milos-apps.de/contracts/public-app-essentials/v1/essentials-manifest.schema.json",
+  "appKey": "cloud-post",
+  "ownerTask": "MilosApps – Wolkenpost",
+  "public": true,
+  "loginRequired": false,
+  "environment": "dev",
+  "productionApproved": false,
+  "entryHtml": "index.html",
+  "integrationFiles": ["index.html", "src/App.tsx", "src/main.tsx"],
+  "loading": {
+    "appName": "Wolkenpost",
+    "iconPath": "icon.svg",
+    "message": {
+      "de": "Wolkenpost wird geöffnet …",
+      "en": "Opening Cloud Post …"
+    }
+  },
+  "privacy": {
+    "mode": "no-cookies",
+    "usesLocalStorage": true,
+    "optionalTracking": false,
+    "privacyUrl": "https://dev.milos-apps.de/datenschutz"
+  },
+  "features": {
+    "startup": true,
+    "privacyNotice": true,
+    "share": true,
+    "datePicker": false,
+    "placeSearch": true
+  },
+  "theme": {
+    "accent": "#1f6658",
+    "accentContrast": "#ffffff",
+    "surface": "#fffdf8",
+    "surfaceSoft": "#eaf6f0",
+    "text": "#173f35",
+    "muted": "#5d746d",
+    "border": "#c9dcd4",
+    "focus": "#bd4a34"
+  },
+  "essentialsContract": {
+    "id": "public-app-essentials/v1",
+    "version": "1.0.0",
+    "sharedCommit": "b09e09008ff05fe87f05bc647a7c4964ff13e6f6",
+    "vendorDirectory": "vendor/milosapps-essentials/v1"
+  }
+}

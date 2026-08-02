@@ -10,6 +10,10 @@ sind mindestens drei Verbesserungsrunden mit dokumentierter Evidenz nötig.
 - Datumsgrenze, Nord-/Südpolnähe und ungültige Datenpunkte;
 - Begrenzung von Schrittweite, Laufzeit und exportierter Genauigkeit;
 - lokale Speicherung, Löschung und Migration des Speicherformats.
+- Essentials-Manifest, Fünf-Artefakt-Lock, Hashes, externe CSS-/JS-Pfade und
+  Service-Worker-Cache;
+- explizite Ortssuche mit normalisiertem Name-/Region-/Land-Ergebnis sowie
+  natives Teilen, Clipboard-Fallback und stiller Nutzerabbruch.
 
 ## Simulierte Nutzung
 
@@ -20,6 +24,10 @@ sind mindestens drei Verbesserungsrunden mit dokumentierter Evidenz nötig.
 - Pointer-Abbruch, Fensterverlust, Rotation und App-Wiederaufnahme;
 - verweigerte Ortung, langsames Netz, Timeout, Offline und veraltete Winddaten;
 - reduzierte Bewegung, 200 Prozent Zoom, Tastatur und Screenreader-Semantik.
+- frischer und künstlich verlangsamter Start, Start-Reihenfolgerace,
+  wahrheitsgemäßer Datenschutzhinweis und Sprachpersistenz;
+- strikte Same-Origin-CSP, korrekte MIME-Typen und kein CSS-/JS-`data:`-Inlining
+  im tatsächlich gebauten DEV-Artefakt.
 
 ## Runden
 

@@ -10,12 +10,22 @@
     />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <link vite-ignore rel="stylesheet" href="./vendor/milosapps-essentials/v1/milos-app-essentials.css" />
+    <link vite-ignore rel="stylesheet" href="./vendor/milosapps-essentials/v1/milos-app-essentials-theme.css" />
     <link vite-ignore rel="stylesheet" href="./vendor/milosapps-layout/v1/milos-app-layout.css" />
     <link vite-ignore rel="stylesheet" href="./vendor/milosapps-layout/v1/milos-app-layout-theme.css" />
     <title>Wolkenpost – Deine Zeichnung reist mit dem Wind</title>
-    <script type="module" vite-ignore src="./vendor/milosapps-shell/v2/bootstrap.js"></script>
   </head>
-  <body>
+  <body data-milos-essentials-loading>
+    <section data-milos-app-loading role="status" aria-live="polite">
+      <div data-milos-loading-card>
+        <img data-milos-loading-icon src="icon.svg" width="52" height="52" alt="" />
+        <span data-milos-loading-brand>MilosApps</span>
+        <p data-milos-loading-title>Wolkenpost</p>
+        <p data-milos-loading-message>Wolkenpost wird geöffnet …</p>
+        <span data-milos-loading-progress aria-hidden="true"></span>
+      </div>
+    </section>
     <milos-app-shell>
       <svg slot="app-icon" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
         <rect width="40" height="40" rx="10" fill="currentColor" />
@@ -32,14 +42,12 @@
         />
       </svg>
       <main id="main" slot="main">
-        <div id="root">
-          <section class="app-loading" aria-label="Wolkenpost wird geladen">
-            <h1>Wolkenpost</h1>
-          </section>
-        </div>
+        <div id="root"><h1>Zeichne. Lass es fliegen.</h1></div>
         <noscript>Wolkenpost benötigt JavaScript für die Zeichenfläche und die Windroute.</noscript>
       </main>
     </milos-app-shell>
+    <script type="module" vite-ignore src="./vendor/milosapps-essentials/v1/bootstrap.js"></script>
+    <script type="module" vite-ignore src="./vendor/milosapps-shell/v2/bootstrap.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

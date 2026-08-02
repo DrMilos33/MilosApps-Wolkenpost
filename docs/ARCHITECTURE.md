@@ -12,6 +12,8 @@ Stand: 2. August 2026
   Datenbank;
 - `public-app-layout/v1.1.0` als davon getrennte, lokal vendorte
   Inhaltslayout-Abhängigkeit mit Profil `guided-flow` und eigenem Lock;
+- `public-app-essentials/v1.0.0` als dritter, separat gepinnter Vertrag für
+  Startscreen, Datenschutz, Teilen und explizite Ortssuche;
 - Browser-Lokalspeicher ausschließlich für Zeichnung, Einstellungen und den
   groben letzten Startpunkt;
 - Service Worker für den App-Shell-Offlinebetrieb;
@@ -80,6 +82,43 @@ Layout-Lock und verlangt beide Pfade im Service-Worker-Cache. Der Browser-Gate
 misst am echten Build `[data-milos-intro]` und
 `[data-milos-primary-work]`, prüft 1440 × 900, 390 × 844 und den
 360 × 800@200-%-Reflow sowie strikte `style-src 'self'` ohne Inline-Ausnahme.
+
+## Öffentliche Essentials
+
+`milos-essentials.json` pinnt `public-app-essentials/v1.0.0` auf den
+unveränderlichen Shared-Commit
+`b09e09008ff05fe87f05bc647a7c4964ff13e6f6`. Der Sync erzeugt unter
+`vendor/milosapps-essentials/v1/` Bootstrap, Web Component, Basis-/Theme-CSS,
+portablen Verifier und `essentials-lock.json`. Der Fünf-Artefakt-Lock bleibt
+von Shell und Layout getrennt. Der Build kopiert alle vier Browserdateien unter
+ihrem festen Same-Origin-Pfad; beide CSS-Dateien bleiben als externe
+`<link>`-Elemente im gebauten HTML. Artefaktprüfung und Service Worker prüfen
+Pfade und SHA-256 fail-closed. Es gibt weder `data:`-Inlining noch CDN- oder
+Shared-Runtimeimport.
+Eine ausschließlich in diesem Vendorordner geltende `.gitattributes` erzwingt
+LF und schützt die bytegenauen Hashes auch bei einem Windows-Recheckout mit
+aktivem `core.autocrlf`.
+
+Der CSS-first Startscreen besitzt nur ein kleines App-Icon und verwendet für
+`data-milos-loading-title` bewusst ein `<p>` statt einer zweiten
+Dokumentüberschrift. Die React-App meldet sich erst nach dem ersten Commit und
+nach Registrierung der vendorten Essentials-Komponente bereit. Dadurch kann
+ein langsam geladener Bootstrap das Ready-Ereignis nicht verpassen; bei einer
+tatsächlich fehlenden Runtime bleibt der Startscreen ehrlich sichtbar.
+
+Der Datenschutzhinweis erklärt ohne Schein-Einwilligung, dass Wolkenpost keine
+Werbe- oder Tracking-Cookies nutzt, aber notwendige Einstellungen und lokale
+App-Daten speichert. Nur das lokale Ausblenden des Hinweises wird persistiert.
+Die gemeinsame Teilen-Funktion erhält das bestehende PNG als Datei und eine
+kanonische URL ohne Query, Hash oder private Zustandsdaten. Sie nutzt natives
+Teilen, Clipboard-Fallback und behandelt Nutzerabbruch still.
+
+Die gemeinsame Ortssuche ist ausschließlich die zugängliche, explizit
+ausgelöste Oberfläche. Ihr Provider bleibt app-eigen und offlinefähig: Er
+sucht in der handkuratierten Ortsliste und normalisiert Ergebnisse zu Name,
+Region und Land. Die getrennte Ortung wird weiterhin erst auf Nutzeraktion
+angefragt und übernimmt keine exakten Koordinaten in Export oder Teil-URL.
+Wolkenpost aktiviert kein Datumsmodul.
 
 ## Windabruf
 

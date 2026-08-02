@@ -55,7 +55,10 @@ export function loadState(storage: Pick<Storage, 'getItem'> = localStorage): Sto
         ? {
             id: String(parsed.lastStart.id ?? 'saved'),
             name: String(parsed.lastStart.name ?? 'Letzter Start'),
+            region: String(parsed.lastStart.region ?? ''),
             country: String(parsed.lastStart.country ?? 'lokal gespeichert'),
+            countryCode: String(parsed.lastStart.countryCode ?? ''),
+            type: String(parsed.lastStart.type ?? 'saved'),
             latitude: Math.max(-85, Math.min(85, parsed.lastStart.latitude)),
             longitude: Math.max(-180, Math.min(180, parsed.lastStart.longitude)),
           }

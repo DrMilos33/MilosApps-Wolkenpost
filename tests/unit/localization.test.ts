@@ -26,6 +26,18 @@ describe('complete app localization', () => {
     });
     expect(searchPlaces('Tokio', 'en')[0]).toMatchObject({ id: 'tokyo', name: 'Tokyo' });
     expect(searchPlaces('Munich', 'de')[0]).toMatchObject({ id: 'munich', name: 'München' });
+    expect(searchPlaces('Bayern', 'de')[0]).toMatchObject({
+      id: 'munich',
+      region: 'Bayern',
+      country: 'Deutschland',
+      countryCode: 'DE',
+      type: 'city',
+    });
+    expect(searchPlaces('California', 'en')[0]).toMatchObject({
+      id: 'san-francisco',
+      region: 'California',
+      country: 'USA',
+    });
   });
 
   it('preserves coordinates while translating saved and nearby places', () => {

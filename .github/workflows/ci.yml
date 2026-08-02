@@ -19,6 +19,7 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium webkit
       - run: pnpm verify:shell
       - run: pnpm verify:layout
+      - run: pnpm verify:essentials
       - run: pnpm test
       - run: pnpm build
       - run: pnpm test:e2e

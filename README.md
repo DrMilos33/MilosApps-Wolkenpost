@@ -19,6 +19,10 @@ Kartenportal.
 - `public-app-layout/v1.1.0` wird getrennt aus Shared-Commit
   `55b649d997489ca703682679257ac1a5b790bdc7` mit Profil `guided-flow`
   lokal vendort und über einen eigenen Drei-Artefakt-Lock geprüft;
+- `public-app-essentials/v1.0.0` wird aus Shared-Commit
+  `b09e09008ff05fe87f05bc647a7c4964ff13e6f6` lokal vendort. Wolkenpost
+  aktiviert den kompakten Startscreen, den wahrheitsgemäßen Datenschutzhinweis,
+  Teilen und die explizite Ortssuche; Datumseingabe bleibt deaktiviert;
 - Portal-DEV darf nur über einen dokumentierten Link oder Routingvertrag
   anbinden.
 
@@ -72,6 +76,7 @@ Quelldatei hat `deploymentRevision: null`.
 ```text
 pnpm verify:shell
 pnpm verify:layout
+pnpm verify:essentials
 pnpm test
 pnpm build
 pnpm build:dev-hosting

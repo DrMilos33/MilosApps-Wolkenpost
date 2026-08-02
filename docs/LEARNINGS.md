@@ -246,3 +246,64 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
   Oberfläche muss mindestens die längste unterstützte Sprache in jeder
   kritischen Breite messen; ein kürzerer Sprachfall plus Overflowcheck genügt
   nicht.
+
+## 2026-08-02 – Ready-Events brauchen einen registrierten Empfänger
+
+- Datum und geprüfter Stand: 2. August 2026,
+  `public-app-essentials/v1.0.0`-Integration.
+- Beobachtung: Separate Module werden nicht zuverlässig in der Reihenfolge
+  ihrer abgeschlossenen Netz- und Abhängigkeitsauswertung bereit. React konnte
+  `milosapps:ready` senden, bevor der vendorte Bootstrap den Listener anlegte;
+  die fertige App blieb dann unter dem Loader blockiert.
+- Evidenz oder reproduzierbarer Test: Der Browser verzögert gezielt nur
+  `vendor/milosapps-essentials/v1/bootstrap.js`, lässt die App rendern und
+  prüft den Übergang nach Freigabe des Bootstrap.
+- Änderung und Regressionstest: Der App-Effekt wartet auf die Registrierung
+  eines benötigten Essentials-Custom-Elements und sendet erst danach Ready.
+  Fehlende Runtime bleibt dadurch ein ehrlicher Ladefehler statt eines
+  versteckten Timeouts.
+- Für andere MilosApps relevant: Ja. Ein einmaliges Event ist nur dann ein
+  sicherer Readiness-Handshake, wenn der Empfänger nachweislich registriert ist.
+
+## 2026-08-02 – Shared-Ortssuche darf die Datenquelle nicht heimlich erweitern
+
+- Datum und geprüfter Stand: 2. August 2026, Essentials-Ortssuche.
+- Beobachtung: Eine gemeinsame Suchoberfläche benötigt ein normalisiertes
+  Ergebnisformat, aber nicht automatisch einen externen Geocoder.
+- Evidenz oder reproduzierbarer Test: Explizite Suche nach Stadt und Region in
+  DE/EN, Ergebnis Name/Region/Land und Netzwerkprüfung ohne zusätzlichen
+  Provideraufruf.
+- Änderung und Regressionstest: Die handkuratierte app-eigene Liste liefert
+  lokal normalisierte Ergebnisse. Geolocation bleibt ein getrennter,
+  nutzerinitiierter Weg; die Wind- und Datenschutzgrenzen ändern sich nicht.
+- Für andere MilosApps relevant: Ja. Gemeinsame UI und gemeinsamer Datendienst
+  sind getrennte Architekturentscheidungen mit eigener Lizenz-/Privacyfolge.
+
+## 2026-08-02 – Externe CSS-Grenzen müssen im Build geprüft werden
+
+- Datum und geprüfter Stand: 2. August 2026, Essentials-Pages-Artefakt.
+- Beobachtung: Ein externer Stylesheet-Link in der Quelle beweist nicht, dass
+  ein Bundler ihn im ausgelieferten HTML beibehält. Ebenso kann ein Loadertext
+  unbeabsichtigt eine zweite H1 erzeugen.
+- Evidenz oder reproduzierbarer Test: `verify-dev-artifact.mjs` liest das
+  gebaute HTML, prüft beide CSS-Links, vier Runtimehashes, Service-Worker-Pfade,
+  MIME im Browser und lehnt `data:`-Inlining sowie H1–H6 am Loader ab.
+- Änderung und Regressionstest: Beide CSS-Dateien bleiben feste
+  Same-Origin-Ressourcen; `data-milos-loading-title` ist ein `<p>`.
+- Für andere MilosApps relevant: Ja. CSP- und Dokumentstrukturverträge gehören
+  als fail-closed Prüfung ins fertige Artefakt, nicht nur in den Quellreview.
+
+## 2026-08-02 – Bytegenaue Vendorlocks brauchen eine lokale EOL-Grenze
+
+- Datum und geprüfter Stand: 2. August 2026, Windows-Sync des
+  Essentials-v1-Vendorordners.
+- Beobachtung: `core.autocrlf` kann Textartefakte beim Checkout umschreiben und
+  damit korrekte, veröffentlichte SHA-256-Locks scheinbar brechen.
+- Evidenz oder reproduzierbarer Test: `git check-attr text eol` meldet für die
+  vendorten JS-/CSS-Dateien `text: set` und `eol: lf`; erneuter Sync und
+  `pnpm verify:essentials` bleiben PASS.
+- Änderung und Regressionstest: Eine enge
+  `vendor/milosapps-essentials/v1/.gitattributes` setzt ausschließlich dort
+  `* text eol=lf`.
+- Für andere MilosApps relevant: Ja. Bytegenau gelockte vendorte Textdateien
+  brauchen ihre Normalisierungsregel direkt an der Vertrauensgrenze.

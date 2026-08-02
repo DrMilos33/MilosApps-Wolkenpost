@@ -17,7 +17,14 @@ const layoutRuntimeFiles = [
   'milos-app-layout.css',
   'milos-app-layout-theme.css',
 ];
-const [index, serviceWorker, manifestText, healthText, integrationText, shellLockText, layoutLockText] = await Promise.all([
+const essentialsDirectory = 'vendor/milosapps-essentials/v1';
+const essentialsRuntimeFiles = [
+  'bootstrap.js',
+  'milos-app-essentials.js',
+  'milos-app-essentials.css',
+  'milos-app-essentials-theme.css',
+];
+const [index, serviceWorker, manifestText, healthText, integrationText, shellLockText, layoutLockText, essentialsLockText] = await Promise.all([
   readFile('dist/index.html', 'utf8'),
   readFile('dist/sw.js', 'utf8'),
   readFile('dist/manifest.webmanifest', 'utf8'),
@@ -25,6 +32,7 @@ const [index, serviceWorker, manifestText, healthText, integrationText, shellLoc
   readFile('dist/integration.json', 'utf8'),
   readFile(`${shellDirectory}/shell-lock.json`, 'utf8'),
   readFile(`${layoutDirectory}/layout-lock.json`, 'utf8'),
+  readFile(`${essentialsDirectory}/essentials-lock.json`, 'utf8'),
 ]);
 const shellArtifacts = await Promise.all(
   shellRuntimeFiles.map((file) => readFile(`dist/${shellDirectory}/${file}`)),
@@ -32,12 +40,16 @@ const shellArtifacts = await Promise.all(
 const layoutArtifacts = await Promise.all(
   layoutRuntimeFiles.map((file) => readFile(`dist/${layoutDirectory}/${file}`)),
 );
+const essentialsArtifacts = await Promise.all(
+  essentialsRuntimeFiles.map((file) => readFile(`dist/${essentialsDirectory}/${file}`)),
+);
 
 const manifest = JSON.parse(manifestText);
 const health = JSON.parse(healthText);
 const integration = JSON.parse(integrationText);
 const shellLock = JSON.parse(shellLockText);
 const layoutLock = JSON.parse(layoutLockText);
+const essentialsLock = JSON.parse(essentialsLockText);
 
 function sha256(content) {
   return `sha256:${createHash('sha256').update(content).digest('hex')}`;
@@ -48,6 +60,12 @@ const checks = [
   [index.includes(`./${shellDirectory}/bootstrap.js`), 'index.html does not load the local vendored shell bootstrap.'],
   [index.includes(`./${layoutDirectory}/milos-app-layout.css`), 'index.html does not load the local vendored layout CSS.'],
   [index.includes(`./${layoutDirectory}/milos-app-layout-theme.css`), 'index.html does not load the local vendored layout theme CSS.'],
+  [index.includes(`./${essentialsDirectory}/milos-app-essentials.css`), 'index.html does not keep the local essentials CSS external.'],
+  [index.includes(`./${essentialsDirectory}/milos-app-essentials-theme.css`), 'index.html does not keep the local essentials theme CSS external.'],
+  [index.includes(`./${essentialsDirectory}/bootstrap.js`), 'index.html does not load the local essentials bootstrap.'],
+  [/<(?:p|span)\b[^>]*data-milos-loading-title/u.test(index), 'Loader title must use a non-heading p or span element.'],
+  [!/<h[1-6]\b[^>]*data-milos-loading-title/u.test(index), 'Loader title must not create a second document heading.'],
+  [!index.includes('data:text/css') && !index.includes('data:text/javascript'), 'index.html inlines a shared runtime instead of keeping it external.'],
   [index.includes(`${BASE}manifest.webmanifest`), 'The manifest URL is not scoped to the DEV base path.'],
   [serviceWorker.includes(`const BASE = "${BASE}";`), 'The service worker does not enforce the DEV base path.'],
   [serviceWorker.includes(`${BASE}index.html`), 'The service worker offline fallback is outside the DEV base path.'],
@@ -79,6 +97,14 @@ const checks = [
   ...layoutRuntimeFiles.map((file) => [
     serviceWorker.includes(`${BASE}${layoutDirectory}/${file}`),
     `The service worker does not cache layout runtime artifact ${file}.`,
+  ]),
+  ...essentialsRuntimeFiles.map((file, index) => [
+    sha256(essentialsArtifacts[index]) === essentialsLock.artifacts[file],
+    `Built essentials runtime artifact ${file} does not match essentials-lock.json.`,
+  ]),
+  ...essentialsRuntimeFiles.map((file) => [
+    serviceWorker.includes(`${BASE}${essentialsDirectory}/${file}`),
+    `The service worker does not cache essentials runtime artifact ${file}.`,
   ]),
 ];
 

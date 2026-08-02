@@ -68,7 +68,10 @@ nutzbar.
 - Weltkonturen: bewusst grobe, von Wolkenpost selbst gezeichnete Polygone;
   keine Kartentiles und kein kopierter Geodatensatz.
 - Ortsliste: kleine handkuratierte Auswahl grob gerundeter, nicht
-  urheberrechtlich geschützter Fakten; keine fremde Such-API.
+  urheberrechtlich geschützter Fakten; keine fremde Such-API. Die gemeinsame
+  Essentials-Ortsoberfläche ändert nur Interaktion und Ausgabeformat. Suche
+  und Normalisierung zu Name, Region und Land bleiben vollständig lokal und
+  fügen keinen Provider, Netzaufruf oder neuen Lizenzgegenstand hinzu.
 - App-Icon, CSS-Gestaltung und Canvas-Export: eigenes Werk.
 - `public/preview.png`: Screenshot des eigenen Builds; enthält ausschließlich
   die oben genannten eigenen Inhalte und Systemschriften.
