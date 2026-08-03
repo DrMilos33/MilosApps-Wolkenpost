@@ -1,6 +1,6 @@
 # Wolkenpost DEV- und Portalübergabe
 
-Stand: 2. August 2026
+Stand: 3. August 2026
 
 ## Öffentlicher DEV-Vertrag
 
@@ -16,7 +16,7 @@ Stand: 2. August 2026
 | Status | `dev-online` |
 | Shell-Vertrag | `public-app-shell/v2.0.3`, Shared-Commit `ed898412306e22c6ae1b10ee8953df29f8acd627` |
 | Layout-Vertrag | `public-app-layout/v1.1.0`, Profil `guided-flow`, Shared-Commit `55b649d997489ca703682679257ac1a5b790bdc7` |
-| Essentials-Vertrag | `public-app-essentials/v1.0.0`, Shared-Commit `b09e09008ff05fe87f05bc647a7c4964ff13e6f6`, Module Start/Privacy/Share/Place |
+| Essentials-Vertrag | `public-app-essentials/v1.1.2`, Shared-Commit `b14aac6107b75f03ff49e74160af7e7e30c29e59`, Module Start/Privacy/Share/Place, sechs bytegenau gelockte Verbraucherartefakte |
 | Git-Remote | `https://github.com/DrMilos33/MilosApps-Wolkenpost.git` |
 | Hosting | app-eigene GitHub Pages über `.github/workflows/deploy-dev.yml` |
 | öffentliche DEV-URL | `https://drmilos33.github.io/MilosApps-Wolkenpost/` |
@@ -85,6 +85,12 @@ Für die Essentials-v1-Übernahme ist
 portal-verifizierte App-/Pages-Stand. Ein normaler Revert auf diesen Commit
 entfernt Startscreen, Datenschutzhinweis, gemeinsame Teilen-/Ortssuche und den
 Essentials-Lock wieder, ohne Shell, Layout, Shared oder Portal zu verändern.
+
+Für die Migration auf `public-app-essentials/v1.1.2` samt erweitertem Flugraum
+und Profilvergleich ist `4d8a090f546a75d705b34671f7f0f103334dcd08`
+der unmittelbar vorherige portal-verifizierte App-/Pages-Stand. Ein normaler
+Revert auf diesen Commit stellt den vorherigen v1.0.0-Stand wieder her; Shell
+v2.0.3, Layout v1.1.0, Shared und Portal bleiben davon unberührt.
 
 ## Portalgrenze
 
