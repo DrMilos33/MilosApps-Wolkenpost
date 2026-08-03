@@ -87,10 +87,12 @@ entfernt Startscreen, Datenschutzhinweis, gemeinsame Teilen-/Ortssuche und den
 Essentials-Lock wieder, ohne Shell, Layout, Shared oder Portal zu verändern.
 
 Für die Migration auf `public-app-essentials/v1.1.3` samt erweitertem Flugraum
-und Profilvergleich ist `4d8a090f546a75d705b34671f7f0f103334dcd08`
+und Profilvergleich ist `ddaffbd268580f8415fb22a47bafef50ee8be6d2`
 der unmittelbar vorherige portal-verifizierte App-/Pages-Stand. Ein normaler
-Revert auf diesen Commit stellt den vorherigen v1.0.0-Stand wieder her; Shell
-v2.0.3, Layout v1.1.0, Shared und Portal bleiben davon unberührt.
+Revert des Karten-Merge-Commits
+`a3ca525f053ec090edca58808e6d9403103fd5ae` stellt den vorherigen
+Essentials-v1.1.2-Flugraum wieder her; Shell v2.0.3, Layout v1.1.0, Shared und
+Portal bleiben davon unberührt.
 
 ## Portalgrenze
 
