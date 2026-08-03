@@ -20,6 +20,7 @@ test('shell and complete app switch to English and persist across reload', async
   await expect(page).toHaveTitle('Cloud Post – Your drawing travels with the wind');
   await expect(page.getByRole('heading', { level: 1, name: 'Your drawing takes off.' })).toBeVisible();
   await expect(page.getByRole('radio', { name: /Balloon floating gently/ })).toBeVisible();
+  await page.getByTestId('map-control-widget').locator(':scope > summary').click();
   await expect(page.getByLabel('Place or region')).toBeVisible();
   await page.getByText('Appearance, motion and local data', { exact: true }).click();
   await expect(page.getByLabel('Appearance')).toBeVisible();
@@ -71,7 +72,9 @@ test('shell is keyboard-visible, touch-sized, no-login and overflow-free', async
   const undersized = await shell.locator('button, a').evaluateAll((controls) => controls
     .filter((control) => {
       const style = getComputedStyle(control);
-      return style.visibility !== 'hidden' && style.display !== 'none';
+      return style.visibility !== 'hidden'
+        && style.display !== 'none'
+        && control.getClientRects().length > 0;
     })
     .map((control) => {
       const bounds = control.getBoundingClientRect();

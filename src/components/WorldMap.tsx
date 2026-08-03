@@ -508,6 +508,48 @@ export function WorldMap({
     });
   };
 
+  const handleWheel = useCallback((event: globalThis.WheelEvent) => {
+    if (Math.abs(event.deltaY) < 0.01) return;
+    event.preventDefault();
+    const current = viewRef.current;
+    const deltaPixels = event.deltaY * (event.deltaMode === 1
+      ? 16
+      : event.deltaMode === 2
+        ? window.innerHeight
+        : 1);
+    const factor = Math.exp(-clamp(deltaPixels, -160, 160) * 0.0025);
+    const nextZoom = clamp(current.zoom * factor, 1, 16);
+    if (Math.abs(nextZoom - current.zoom) < 0.001) return;
+    const cursorCoordinate = coordinateFromClient(event.clientX, event.clientY);
+    const zoomShare = 1 - current.zoom / nextZoom;
+    const longitudeDelta = wrapLongitude(
+      cursorCoordinate.longitude - current.center.longitude,
+    );
+    commitFollowing(false);
+    commitView({
+      center: {
+        latitude: clamp(
+          current.center.latitude
+            + (cursorCoordinate.latitude - current.center.latitude) * zoomShare,
+          -85,
+          85,
+        ),
+        longitude: wrapLongitude(
+          current.center.longitude + longitudeDelta * zoomShare,
+        ),
+      },
+      zoom: nextZoom,
+      mode: 'custom',
+    });
+  }, [commitFollowing, commitView, coordinateFromClient]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+    return () => canvas.removeEventListener('wheel', handleWheel);
+  }, [handleWheel]);
+
   const visibleLandmarks = !result && mapView.zoom >= 2
     ? landmarks.filter((landmark) =>
         coordinateVisibleInViewport(landmark, 1000, 500, mapView, 0.04)).slice(0, 5)
@@ -581,6 +623,7 @@ export function WorldMap({
         data-highlight-count={highlights.length}
         data-progress={reportedProgress.toFixed(2)}
         data-map-zoom={mapView.zoom.toFixed(2)}
+        data-wheel-zoom="enabled"
         data-view-mode={mapView.mode}
         data-auto-fit={result ? 'enabled' : 'idle'}
         data-drag-state={dragging ? 'dragging' : 'idle'}

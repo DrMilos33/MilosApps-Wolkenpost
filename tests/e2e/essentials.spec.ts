@@ -272,6 +272,7 @@ test('no-cookies mode has no banner or consent state and keeps privacy informati
 test('place search is explicit, normalized and works for cities and regions', async ({ page }) => {
   await page.goto('./');
   await dismissPrivacy(page);
+  await page.getByTestId('map-control-widget').locator(':scope > summary').click();
   const placeSearch = page.locator('milos-place-search');
   const input = placeSearch.getByRole('combobox', { name: 'Ort oder Region' });
 
@@ -300,12 +301,14 @@ test('place search is explicit, normalized and works for cities and regions', as
   })).toBeVisible();
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await page.getByTestId('map-control-widget').locator(':scope > summary').click();
   await expect(page.getByRole('combobox', { name: 'Place or region' })).toBeVisible();
 });
 
 test('place search suppresses stale results after replacement, Escape and reconnect', async ({ page }) => {
   test.skip(test.info().project.name !== 'desktop', 'focused place lifecycle check');
   await page.goto('./');
+  await page.getByTestId('map-control-widget').locator(':scope > summary').click();
   await page.evaluate(() => {
     const element = document.querySelector('milos-place-search') as HTMLElement & {
       setSearchProvider(provider: (request: { query: string }) => Promise<unknown[]>): void;

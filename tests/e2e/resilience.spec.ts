@@ -52,6 +52,7 @@ test('keeps map and search usable when geolocation is denied', async ({ page, co
   test.skip(test.info().project.name !== 'desktop', 'focused permission check');
   await context.clearPermissions();
   await page.goto('./');
+  await page.getByTestId('map-control-widget').locator(':scope > summary').click();
   await page.getByRole('button', { name: 'Meinen Ort verwenden' }).click();
   await expect(page.getByText(/Ortung wurde nicht erlaubt/)).toBeAttached();
   await page.getByLabel('Ort oder Region').fill('Paris');

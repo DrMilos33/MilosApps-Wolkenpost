@@ -397,7 +397,6 @@ export default function App({ initialLanguage: language }: AppProps) {
     );
     window.setTimeout(() => {
       resultHeadingRef.current?.focus({ preventScroll: true });
-      resultHeadingRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
     }, 50);
   };
 
@@ -671,14 +670,22 @@ export default function App({ initialLanguage: language }: AppProps) {
             </div>
           </section>
 
-          <section className="step-card drawing-step" id="zeichnen" aria-labelledby="drawing-heading">
-            <div className="step-heading step-heading-inline" data-milos-step>
+          <details
+            className="step-card drawing-step setup-disclosure"
+            id="zeichnen"
+            name="journey-setup"
+            aria-labelledby="drawing-heading"
+            open
+          >
+            <summary className="step-heading step-heading-inline setup-disclosure-summary" data-milos-step>
               <span className="step-number" aria-hidden="true" data-milos-step-index>1</span>
               <div className="step-title-line">
                 <p className="step-kicker">{text.drawing.kicker}</p>
                 <h2 id="drawing-heading">{text.drawing.heading}</h2>
               </div>
-            </div>
+            </summary>
+
+            <div className="setup-disclosure-panel">
 
             <div className="object-picker" role="radiogroup" aria-label={text.drawing.groupLabel}>
               {(Object.keys(text.objectTypes) as ObjectType[]).map((type) => (
@@ -702,91 +709,102 @@ export default function App({ initialLanguage: language }: AppProps) {
               ))}
             </div>
 
-            <div className="outline-selector">
-              <div>
-                <strong>{text.drawing.outlinesHeading}</strong>
-                <span>{text.drawing.outlinesHint}</span>
+            <details className="rail-tools-disclosure outline-disclosure">
+              <summary>{text.drawing.outlinesHeading}</summary>
+              <div className="outline-selector">
+                <div>
+                  <strong>{text.drawing.outlinesHeading}</strong>
+                  <span>{text.drawing.outlinesHint}</span>
+                </div>
+                <OutlinePicker
+                  presets={drawingPresets(objectType)}
+                  labels={text.drawing.outlineLabels[objectType]}
+                  groupLabel={text.drawing.outlinesGroup}
+                  selectedId={selectedPresetId}
+                  onSelect={(preset) => {
+                    const outlineIndex = drawingPresets(objectType).findIndex((entry) => entry.id === preset.id);
+                    setStrokes(drawingPreset(objectType, preset.id));
+                    setSelectedPresetId(preset.id);
+                    clearFlightResult();
+                    setAnnouncement(text.announcements.outlineSelected(
+                      text.drawing.outlineLabels[objectType][outlineIndex],
+                    ));
+                  }}
+                />
               </div>
-              <OutlinePicker
-                presets={drawingPresets(objectType)}
-                labels={text.drawing.outlineLabels[objectType]}
-                groupLabel={text.drawing.outlinesGroup}
-                selectedId={selectedPresetId}
-                onSelect={(preset) => {
-                  const outlineIndex = drawingPresets(objectType).findIndex((entry) => entry.id === preset.id);
-                  setStrokes(drawingPreset(objectType, preset.id));
-                  setSelectedPresetId(preset.id);
-                  clearFlightResult();
-                  setAnnouncement(text.announcements.outlineSelected(
-                    text.drawing.outlineLabels[objectType][outlineIndex],
-                  ));
-                }}
-              />
-            </div>
+            </details>
 
-            <DrawingCanvas
-              strokes={strokes}
-              labels={text.drawing}
-              onChange={(next) => {
-                setStrokes(next);
-                setSelectedPresetId(null);
-                clearFlightResult();
-                setAnnouncement(text.announcements.strokesSaved(next.length));
-              }}
-              onUndo={() => {
-                setStrokes((current) => current.slice(0, -1));
-                setSelectedPresetId(null);
-                clearFlightResult();
-                setAnnouncement(text.announcements.strokeUndone);
-              }}
-            />
-            <div className="drawing-actions" data-milos-actions>
-              <button
-                className="text-button"
-                type="button"
-                disabled={!strokes.length}
-                onClick={() => {
+            <div className="drawing-workspace">
+              <DrawingCanvas
+                strokes={strokes}
+                labels={text.drawing}
+                onChange={(next) => {
+                  setStrokes(next);
+                  setSelectedPresetId(null);
+                  clearFlightResult();
+                  setAnnouncement(text.announcements.strokesSaved(next.length));
+                }}
+                onUndo={() => {
                   setStrokes((current) => current.slice(0, -1));
                   setSelectedPresetId(null);
                   clearFlightResult();
+                  setAnnouncement(text.announcements.strokeUndone);
                 }}
-              >
-                {text.drawing.undo}
-              </button>
-              <button
-                className="text-button"
-                type="button"
-                disabled={!strokes.length}
-                onClick={() => {
-                  setStrokes([]);
-                  setSelectedPresetId(null);
-                  clearFlightResult();
-                  setAnnouncement(text.announcements.canvasCleared);
-                }}
-              >
-                {text.drawing.clear}
-              </button>
+              />
+              <div className="drawing-actions" data-milos-actions>
+                <button
+                  className="text-button"
+                  type="button"
+                  disabled={!strokes.length}
+                  onClick={() => {
+                    setStrokes((current) => current.slice(0, -1));
+                    setSelectedPresetId(null);
+                    clearFlightResult();
+                  }}
+                >
+                  {text.drawing.undo}
+                </button>
+                <button
+                  className="text-button"
+                  type="button"
+                  disabled={!strokes.length}
+                  onClick={() => {
+                    setStrokes([]);
+                    setSelectedPresetId(null);
+                    clearFlightResult();
+                    setAnnouncement(text.announcements.canvasCleared);
+                  }}
+                >
+                  {text.drawing.clear}
+                </button>
+              </div>
             </div>
-          </section>
+            </div>
+          </details>
 
-          <section className="map-control-widget" data-testid="map-control-widget" aria-labelledby="map-heading">
-            <div className="step-heading step-heading-inline map-planner-heading" data-milos-step>
+          <details
+            className="map-control-widget setup-disclosure"
+            name="journey-setup"
+            data-testid="map-control-widget"
+            aria-labelledby="map-heading"
+          >
+            <summary className="step-heading step-heading-inline map-planner-heading setup-disclosure-summary" data-milos-step>
               <span className="step-number" aria-hidden="true" data-milos-step-index>2</span>
               <div className="step-title-line">
                 <p className="step-kicker">{text.map.kicker}</p>
                 <h2 id="map-heading">{text.map.heading}</h2>
               </div>
-              <p className="map-detail">{text.map.detail}</p>
-            </div>
+            </summary>
 
-            <div className="selected-place" aria-live="polite">
-              <span className="place-pin" aria-hidden="true">●</span>
-              <span>
-                <small>{text.map.selected}</small>
-                <strong>{start.name}</strong>
-                <span>{placeContext(start)}</span>
-              </span>
-            </div>
+            <div className="setup-disclosure-panel">
+              <div className="selected-place" aria-live="polite">
+                <span className="place-pin" aria-hidden="true">●</span>
+                <span>
+                  <small>{text.map.selected}</small>
+                  <strong>{start.name}</strong>
+                  <span>{placeContext(start)}</span>
+                </span>
+              </div>
 
             <div className="map-planning-grid">
               <div className="location-planner">
@@ -836,28 +854,11 @@ export default function App({ initialLanguage: language }: AppProps) {
                 </details>
               </div>
             </div>
-
-            <WindScout
-              status={windPreviewStatus}
-              readings={activeWindReadings}
-              objectType={objectType}
-              dataTime={windPreviewSnapshot?.forecastStart}
-              locale={locale}
-              text={text.windScout}
-              error={windPreviewStatus === 'error' ? text.windErrors[windPreviewErrorKind] : undefined}
-              onCheck={() => void inspectWind(start)}
-              onCancel={cancelWindPreview}
-              windBoost={windBoost}
-              estimatedDistanceKm={estimatedDistanceKm}
-              onWindBoostChange={(next) => {
-                setWindBoost(next);
-                clearFlightResult();
-              }}
-            />
-          </section>
+            </div>
+          </details>
 
           <section className="launch-panel" aria-labelledby="launch-heading" data-milos-command-dock>
-            <div>
+            <div className="launch-copy">
               <p className="step-kicker">{text.launch.kicker}</p>
               <h2 id="launch-heading">{text.launch.heading}</h2>
               <p>{text.launch.description}</p>
@@ -883,6 +884,68 @@ export default function App({ initialLanguage: language }: AppProps) {
             )}
             {!strokes.length && <p className="launch-hint">{text.launch.missingDrawing}</p>}
           </section>
+
+          <details className="settings-disclosure rail-settings-disclosure" data-milos-secondary>
+            <summary>{text.settings.summary}</summary>
+            <section className="settings-section" aria-labelledby="settings-heading" data-milos-settings>
+              <div data-milos-settings-intro>
+                <p className="step-kicker">{text.settings.kicker}</p>
+                <h2 id="settings-heading">{text.settings.heading}</h2>
+                <p>{text.settings.description}</p>
+              </div>
+              <div className="settings-grid" data-milos-settings-controls>
+                <label data-milos-settings-control>
+                  {text.settings.theme}
+                  <select value={theme} onChange={(event) => setTheme(event.target.value as ThemePreference)}>
+                    <option value="system">{text.settings.themeSystem}</option>
+                    <option value="light">{text.settings.themeLight}</option>
+                    <option value="dark">{text.settings.themeDark}</option>
+                  </select>
+                </label>
+                <label data-milos-settings-control>
+                  {text.settings.motion}
+                  <select value={motion} onChange={(event) => setMotion(event.target.value as MotionPreference)}>
+                    <option value="system">{text.settings.motionSystem}</option>
+                    <option value="full">{text.settings.motionFull}</option>
+                    <option value="reduced">{text.settings.motionReduced}</option>
+                  </select>
+                </label>
+                <label className="switch-label" data-milos-settings-control>
+                  <span>
+                    {text.settings.sound}
+                    <small>{text.settings.soundHint}</small>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={soundEnabled}
+                    onChange={(event) => setSoundEnabled(event.target.checked)}
+                  />
+                </label>
+                <div className="reset-row" data-milos-settings-danger>
+                  {!resetArmed ? (
+                    <button className="text-button danger" type="button" onClick={() => setResetArmed(true)}>
+                      {text.settings.delete}
+                    </button>
+                  ) : (
+                    <div className="reset-confirm" role="group" aria-label={text.settings.deleteGroup}>
+                      <span>{text.settings.deleteQuestion}</span>
+                      <button className="danger-button" type="button" onClick={resetLocalData}>
+                        {text.settings.deleteConfirm}
+                      </button>
+                      <button className="text-button" type="button" onClick={() => setResetArmed(false)}>
+                        {text.settings.cancel}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {storageWarning && (
+                <p className="storage-warning" role="alert">
+                  {text.settings.storageWarning}
+                </p>
+              )}
+            </section>
+          </details>
           </aside>
 
           <section
@@ -897,25 +960,51 @@ export default function App({ initialLanguage: language }: AppProps) {
                   <span>{result ? text.flightSpace.heading : text.map.detail}</span>
                 </div>
 
-                {mapWind && (
-                  <aside className="map-wind-card" aria-label={text.windScout.heading}>
+                <details className="map-wind-card" data-testid="map-wind-settings">
+                  <summary>
                     <span className="wind-compass is-map" aria-hidden="true">
-                      <span data-bearing-sector={Math.round((((mapWind.bearing % 360) + 360) % 360) / 45) % 8}>
+                      <span data-bearing-sector={Math.round(((((mapWind?.bearing ?? 0) % 360) + 360) % 360) / 45) % 8}>
                         {'\u27a4'}
                       </span>
                     </span>
-                    <span>
+                    <span className="map-wind-summary-copy">
                       <small>{profileLevelText(objectType)}</small>
-                      <strong>{text.flightSpace.windValue(
-                        mapWind.speedKmh,
-                        compassLabel(mapWind.bearing, language),
-                      )}</strong>
+                      <strong>
+                        {mapWind
+                          ? text.flightSpace.windValue(
+                            mapWind.speedKmh,
+                            compassLabel(mapWind.bearing, language),
+                          )
+                          : text.windScout.heading}
+                      </strong>
                       {estimatedDistanceKm !== undefined && (
                         <span>{text.windScout.estimatedRange(estimatedDistanceKm)}</span>
                       )}
                     </span>
-                  </aside>
-                )}
+                    <svg className="map-settings-chevron" viewBox="0 0 20 20" aria-hidden="true">
+                      <path d="m6.5 8 3.5 3.5L13.5 8" />
+                    </svg>
+                  </summary>
+                  <div className="map-wind-settings-panel">
+                    <WindScout
+                      status={windPreviewStatus}
+                      readings={activeWindReadings}
+                      objectType={objectType}
+                      dataTime={windPreviewSnapshot?.forecastStart}
+                      locale={locale}
+                      text={text.windScout}
+                      error={windPreviewStatus === 'error' ? text.windErrors[windPreviewErrorKind] : undefined}
+                      onCheck={() => void inspectWind(start)}
+                      onCancel={cancelWindPreview}
+                      windBoost={windBoost}
+                      estimatedDistanceKm={estimatedDistanceKm}
+                      onWindBoostChange={(next) => {
+                        setWindBoost(next);
+                        clearFlightResult();
+                      }}
+                    />
+                  </div>
+                </details>
 
                 <WorldMap
                   selected={start}
@@ -1150,68 +1239,6 @@ export default function App({ initialLanguage: language }: AppProps) {
             </div>
           </section>
         )}
-
-        <details className="settings-disclosure" data-milos-secondary>
-          <summary>{text.settings.summary}</summary>
-          <section className="settings-section" aria-labelledby="settings-heading" data-milos-settings>
-          <div data-milos-settings-intro>
-            <p className="step-kicker">{text.settings.kicker}</p>
-            <h2 id="settings-heading">{text.settings.heading}</h2>
-            <p>{text.settings.description}</p>
-          </div>
-          <div className="settings-grid" data-milos-settings-controls>
-            <label data-milos-settings-control>
-              {text.settings.theme}
-              <select value={theme} onChange={(event) => setTheme(event.target.value as ThemePreference)}>
-                <option value="system">{text.settings.themeSystem}</option>
-                <option value="light">{text.settings.themeLight}</option>
-                <option value="dark">{text.settings.themeDark}</option>
-              </select>
-            </label>
-            <label data-milos-settings-control>
-              {text.settings.motion}
-              <select value={motion} onChange={(event) => setMotion(event.target.value as MotionPreference)}>
-                <option value="system">{text.settings.motionSystem}</option>
-                <option value="full">{text.settings.motionFull}</option>
-                <option value="reduced">{text.settings.motionReduced}</option>
-              </select>
-            </label>
-            <label className="switch-label" data-milos-settings-control>
-              <span>
-                {text.settings.sound}
-                <small>{text.settings.soundHint}</small>
-              </span>
-              <input
-                type="checkbox"
-                checked={soundEnabled}
-                onChange={(event) => setSoundEnabled(event.target.checked)}
-              />
-            </label>
-            <div className="reset-row" data-milos-settings-danger>
-              {!resetArmed ? (
-                <button className="text-button danger" type="button" onClick={() => setResetArmed(true)}>
-                  {text.settings.delete}
-                </button>
-              ) : (
-                <div className="reset-confirm" role="group" aria-label={text.settings.deleteGroup}>
-                  <span>{text.settings.deleteQuestion}</span>
-                  <button className="danger-button" type="button" onClick={resetLocalData}>
-                    {text.settings.deleteConfirm}
-                  </button>
-                  <button className="text-button" type="button" onClick={() => setResetArmed(false)}>
-                    {text.settings.cancel}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-          {storageWarning && (
-            <p className="storage-warning" role="alert">
-              {text.settings.storageWarning}
-            </p>
-          )}
-          </section>
-        </details>
 
         <aside className="credits-bar" aria-label={text.footer.credits}>
           <a href="https://dev.milos-apps.de/datenschutz" data-milos-privacy-info>
