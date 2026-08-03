@@ -36,6 +36,7 @@ const ESSENTIALS_RUNTIME_FILES = [
   'milos-app-essentials.css',
   'milos-app-essentials-theme.css',
 ] as const;
+const APP_SHELL_CACHE_REVISION = 'essentials-v1.1.5';
 
 function withBase(base: string, path: string) {
   return `${base}${path.replace(/^\/+/, '')}`;
@@ -97,7 +98,7 @@ function appShellServiceWorker(base: string): Plugin {
         .toString(36);
 
       const source = `
-const CACHE = 'wolkenpost-${cacheSignature}';
+const CACHE = 'wolkenpost-${APP_SHELL_CACHE_REVISION}-${cacheSignature}';
 const BASE = ${JSON.stringify(base)};
 const APP_SHELL = ${JSON.stringify(appShell)};
 self.addEventListener('install', (event) => {

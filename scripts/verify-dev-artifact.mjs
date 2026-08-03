@@ -97,8 +97,9 @@ const checks = [
   [sha256(builtIcon) === sha256(sourceIcon), 'Built loading icon is not byte-identical to public/icon.svg.'],
   [thirdPartyNotices.includes('Natural Earth') && thirdPartyNotices.includes('world-atlas 2.0.2'), 'Built artifact is missing the Natural Earth/world-atlas notices.'],
   [serviceWorker.includes(`${BASE}THIRD_PARTY_NOTICES.txt`), 'The service worker does not cache the third-party notices.'],
-  [essentialsLock.version === '1.1.3', 'Essentials lock is not pinned to v1.1.3.'],
-  [essentialsLock.sharedCommit === 'babe74a0e62e1a7f9095648195e54b322a837726', 'Essentials lock contains the wrong Shared commit.'],
+  [serviceWorker.includes("const CACHE = 'wolkenpost-essentials-v1.1.5-"), 'The service worker cache revision was not advanced for the stable Essentials vendor URLs.'],
+  [essentialsLock.version === '1.1.5', 'Essentials lock is not pinned to v1.1.5.'],
+  [essentialsLock.sharedCommit === '2942132ad3bf6cf39edc9f52ed918de6a230be23', 'Essentials lock contains the wrong Shared commit.'],
   [essentialsLock.loadingIconRuntimePath === 'icon.svg', 'Essentials lock contains the wrong icon runtime path.'],
   [JSON.stringify(Object.keys(essentialsLock.artifacts).sort()) === JSON.stringify([...essentialsLockedFiles].sort()), 'Essentials lock must contain exactly six consumer artifacts.'],
   ...shellRuntimeFiles.map((file, index) => [

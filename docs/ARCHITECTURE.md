@@ -15,7 +15,7 @@ Stand: 3. August 2026
   Datenbank;
 - `public-app-layout/v1.1.0` als davon getrennte, lokal vendorte
   Inhaltslayout-Abhängigkeit mit Profil `guided-flow` und eigenem Lock;
-- `public-app-essentials/v1.1.3` als dritter, separat gepinnter Vertrag für
+- `public-app-essentials/v1.1.5` als dritter, separat gepinnter Vertrag für
   Startscreen, Datenschutz, Teilen und explizite Ortssuche;
 - Browser-Lokalspeicher ausschließlich für Zeichnung, Einstellungen und den
   groben letzten Startpunkt;
@@ -89,9 +89,9 @@ misst am echten Build `[data-milos-intro]` und
 
 ## Öffentliche Essentials
 
-`milos-essentials.json` pinnt `public-app-essentials/v1.1.3` auf den
+`milos-essentials.json` pinnt `public-app-essentials/v1.1.5` auf den
 unveränderlichen Shared-Commit
-`babe74a0e62e1a7f9095648195e54b322a837726`. Der Sync erzeugt unter
+`2942132ad3bf6cf39edc9f52ed918de6a230be23`. Der Sync erzeugt unter
 `vendor/milosapps-essentials/v1/` Bootstrap, Web Component, Basis-/Theme-CSS,
 portablen Verifier, das vendorte Manifestschema und `essentials-lock.json`.
 Der Sechs-Artefakt-Lock bleibt
@@ -103,6 +103,13 @@ Shared-Runtimeimport.
 Eine ausschließlich in diesem Vendorordner geltende `.gitattributes` erzwingt
 LF und schützt die bytegenauen Hashes auch bei einem Windows-Recheckout mit
 aktivem `core.autocrlf`.
+
+Das kritische Essentials-CSS begrenzt das app-eigene Shell-Slot-SVG bereits
+vor dem Custom-Element-Upgrade auf 38 × 38 px und hält es bis zum Upgrade
+verborgen. Intrinsische `width`-/`height`-Attribute sichern dieselbe Grenze
+vor, während und nach verzögert geladenem Shell-Komponenten-CSS. Weil die
+Vendor-URLs stabil bleiben, trägt der Service-Worker-Cache für diesen atomaren
+Pinwechsel eine neue `essentials-v1.1.5`-Revision.
 
 Der physische Loader-Iconpfad `public/icon.svg` und die ausgelieferte
 Same-Origin-URL `icon.svg` sind getrennt im Manifest festgelegt. Der

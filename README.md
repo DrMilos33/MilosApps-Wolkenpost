@@ -22,8 +22,8 @@ Kartenportal und keine Navigation.
 - `public-app-layout/v1.1.0` wird getrennt aus Shared-Commit
   `55b649d997489ca703682679257ac1a5b790bdc7` mit Profil `guided-flow`
   lokal vendort und über einen eigenen Drei-Artefakt-Lock geprüft;
-- `public-app-essentials/v1.1.3` wird aus Shared-Commit
-  `babe74a0e62e1a7f9095648195e54b322a837726` lokal vendort. Wolkenpost
+- `public-app-essentials/v1.1.5` wird aus Shared-Commit
+  `2942132ad3bf6cf39edc9f52ed918de6a230be23` lokal vendort. Wolkenpost
   aktiviert den kompakten Startscreen, die dauerhafte wahrheitsgemäße Datenschutzinformation,
   Teilen und die explizite Ortssuche; Datumseingabe bleibt deaktiviert;
 - Portal-DEV darf nur über einen dokumentierten Link oder Routingvertrag

@@ -16,7 +16,7 @@ Stand: 3. August 2026
 | Status | `dev-online` |
 | Shell-Vertrag | `public-app-shell/v2.0.3`, Shared-Commit `ed898412306e22c6ae1b10ee8953df29f8acd627` |
 | Layout-Vertrag | `public-app-layout/v1.1.0`, Profil `guided-flow`, Shared-Commit `55b649d997489ca703682679257ac1a5b790bdc7` |
-| Essentials-Vertrag | `public-app-essentials/v1.1.3`, Shared-Commit `babe74a0e62e1a7f9095648195e54b322a837726`, Module Start/Privacy/Share/Place, sechs bytegenau gelockte Verbraucherartefakte |
+| Essentials-Vertrag | `public-app-essentials/v1.1.5`, Shared-Commit `2942132ad3bf6cf39edc9f52ed918de6a230be23`, Module Start/Privacy/Share/Place, sechs bytegenau gelockte Verbraucherartefakte |
 | Git-Remote | `https://github.com/DrMilos33/MilosApps-Wolkenpost.git` |
 | Hosting | app-eigene GitHub Pages über `.github/workflows/deploy-dev.yml` |
 | öffentliche DEV-URL | `https://drmilos33.github.io/MilosApps-Wolkenpost/` |
@@ -93,6 +93,12 @@ Revert des Karten-Merge-Commits
 `a3ca525f053ec090edca58808e6d9403103fd5ae` stellt den vorherigen
 Essentials-v1.1.2-Flugraum wieder her; Shell v2.0.3, Layout v1.1.0, Shared und
 Portal bleiben davon unberührt.
+
+Für den atomaren Shell-Icon-Übergang auf `public-app-essentials/v1.1.5` ist
+`10304a35bf4acbded2c8d524014cced8ec640e62` der unmittelbar vorherige gesunde
+App-/Pages-Stand. Ein normaler Revert des App-Merge-Commits stellt diesen
+Stand einschließlich seines vorherigen Essentials-Pins wieder her; Shell,
+Layout, Portalroute und Production bleiben unverändert.
 
 ## Portalgrenze
 
