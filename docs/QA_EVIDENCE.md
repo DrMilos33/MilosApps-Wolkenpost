@@ -879,3 +879,9 @@ Fokussierte Regression prueft Desktop und Phone auf Widgetbreite, fehlenden
 inneren Scroll, Ergebnisfokus, relative Kartenposition, Vergleich/Replay,
 200-Prozent-Reflow und horizontalen Overflow. Fachlogik, Windmodell,
 Karteninteraktion, Shared-Pins und Productiongrenze bleiben unveraendert.
+
+Der erste vollstaendige CI-Lauf fand zusaetzlich am iPad-Mini-Profil nach dem
+Flug 792 statt 769 CSS-Pixel Dokumentbreite. Ursache war die zweispaltige
+Desktopanordnung des bereiten Winddocks knapp oberhalb des mobilen Breakpoints.
+Der Dock stapelt deshalb bis 820 Pixel; die gezielte Tablet-Reise besteht danach
+3/3 ohne Overflow.

@@ -1849,6 +1849,27 @@ button:disabled {
 
 }
 
+@media (max-width: 820px) {
+  .map-control-widget {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .map-control-widget .selected-place {
+    border-inline-end: 0;
+    border-block-end: 1px solid var(--line);
+  }
+
+  .map-control-widget .wind-scout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'heading'
+      'reading'
+      'boost'
+      'details'
+      'actions';
+  }
+}
+
 @media (max-width: 760px) {
   .map-canvas-shell,
   .map-canvas-shell:has(.world-map[data-route-lens='visible']) {
