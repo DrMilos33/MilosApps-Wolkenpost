@@ -12,6 +12,7 @@ test.describe('map and flight-detail experience', () => {
     });
 
     await page.goto('./');
+    await page.locator('.outline-disclosure > summary').click();
     const outlineGroup = page.getByRole('radiogroup', { name: 'Umrissvariante' });
     await expect(outlineGroup.getByRole('radio')).toHaveCount(3);
     await expect(outlineGroup.getByRole('radio', { name: 'Haufenwolke' })).toHaveAttribute('aria-checked', 'true');
@@ -22,6 +23,16 @@ test.describe('map and flight-detail experience', () => {
     await expect(outlineGroup.getByRole('radio')).toHaveText(['Rund', 'Tropfen', 'Gestreift']);
     await outlineGroup.getByRole('radio', { name: 'Gestreift' }).click();
     await expect(outlineGroup.getByRole('radio', { name: 'Gestreift' })).toHaveAttribute('aria-checked', 'true');
+
+    const drawingSetup = page.locator('.drawing-step');
+    const startSetup = page.getByTestId('map-control-widget');
+    await expect(drawingSetup).toHaveAttribute('open', '');
+    await startSetup.locator(':scope > summary').click();
+    await expect(startSetup).toHaveAttribute('open', '');
+    await expect(drawingSetup).not.toHaveAttribute('open', '');
+    await drawingSetup.locator(':scope > summary').click();
+    await expect(drawingSetup).toHaveAttribute('open', '');
+    await expect(startSetup).not.toHaveAttribute('open', '');
 
     const geometry = await page.evaluate(() => {
       const drawing = document.querySelector<HTMLElement>('.drawing-step')!.getBoundingClientRect();
@@ -49,7 +60,7 @@ test.describe('map and flight-detail experience', () => {
       `Wide workspace geometry: ${JSON.stringify(geometry)}`,
     ).toBeGreaterThanOrEqual(geometry.clientWidth * 0.94);
     expect(geometry.mapStepLeft).toBeGreaterThanOrEqual(geometry.drawingRight + 12);
-    expect(geometry.drawingWidth).toBeGreaterThanOrEqual(280);
+    expect(geometry.drawingWidth).toBeGreaterThanOrEqual(272);
     expect(geometry.drawingWidth).toBeLessThanOrEqual(360);
     expect(geometry.mapWidth).toBeGreaterThan(900);
     expect(geometry.mapHeight).toBeGreaterThanOrEqual(590);
@@ -61,7 +72,7 @@ test.describe('map and flight-detail experience', () => {
     }));
     expect(widgetGeometry.overflowY).toBe('visible');
     expect(widgetGeometry.scrollHeight).toBeLessThanOrEqual(widgetGeometry.clientHeight + 1);
-    expect(widgetGeometry.width).toBeGreaterThanOrEqual(280);
+    expect(widgetGeometry.width).toBeGreaterThanOrEqual(240);
     expect(widgetGeometry.width).toBeLessThanOrEqual(360);
     await expect(page.locator('.map-overview-card')).toBeVisible();
     await expect(page.locator('.map-overview-card')).toContainText('Berlin');
@@ -76,7 +87,10 @@ test.describe('map and flight-detail experience', () => {
     });
     expect(topOverlayGeometry.overviewRight).toBeLessThanOrEqual(topOverlayGeometry.toolbarLeft - 8);
     const titleLines = await page.locator('.step-title-line, .wind-title-line').evaluateAll((elements) =>
-      elements.map((element) => {
+      elements.filter((element) => {
+        const bounds = element.getBoundingClientRect();
+        return bounds.width > 0 && bounds.height > 0;
+      }).map((element) => {
         const bounds = element.getBoundingClientRect();
         const textChildren = Array.from(element.querySelectorAll(':scope > p, :scope > h2, :scope > h3'));
         return {
@@ -105,6 +119,7 @@ test.describe('map and flight-detail experience', () => {
       .getAttribute('data-visible-landmark-count'))).toBeGreaterThan(0);
     await expect(page.getByTestId('map-landmark-strip')).toBeVisible();
 
+    await page.getByTestId('map-wind-settings').locator(':scope > summary').click();
     await page.getByRole('button', { name: 'Wind an diesem Ort prüfen' }).click();
     await expect(page.locator('.wind-readings [data-wind-level]')).toHaveCount(3);
     await expect(page.locator('.wind-readings [data-wind-level="925hPa"]')).toHaveClass(/is-selected/);
@@ -130,6 +145,9 @@ test.describe('map and flight-detail experience', () => {
     test.skip(test.info().project.name !== 'phone-portrait', 'phone product-detail gate');
     await page.route('https://api.open-meteo.com/**', fulfillWind);
     await page.goto('./');
+    await page.locator('.outline-disclosure > summary').click();
+    await expect(page.getByRole('radiogroup', { name: 'Umrissvariante' }).getByRole('radio')).toHaveCount(3);
+    await page.locator('.outline-disclosure > summary').click();
     const map = page.getByTestId('world-map');
     await map.scrollIntoViewIfNeeded();
     const bounds = await map.boundingBox();
@@ -137,8 +155,7 @@ test.describe('map and flight-detail experience', () => {
     expect(bounds!.width).toBeGreaterThanOrEqual(290);
     expect(bounds!.height).toBeGreaterThanOrEqual(260);
     await expectNoHorizontalOverflow(page);
-    await expect(page.getByTestId('wind-scout')).toBeVisible();
-    await expect(page.getByRole('radiogroup', { name: 'Umrissvariante' }).getByRole('radio')).toHaveCount(3);
+    await expect(page.getByTestId('map-wind-settings')).toBeVisible();
 
     const mapButtons = page.getByTestId('world-map-stage').getByRole('button');
     const buttonCount = await mapButtons.count();
@@ -206,6 +223,18 @@ test.describe('map and flight-detail experience', () => {
     await expect(map).toHaveAttribute('data-drag-state', 'idle');
     await expect(map).toHaveAttribute('data-wind-overlay', 'visible');
 
+    const zoomBeforeWheel = Number(await map.getAttribute('data-map-zoom'));
+    const scrollBeforeWheel = await page.evaluate(() => window.scrollY);
+    await page.mouse.move(
+      bounds!.x + bounds!.width * 0.5,
+      bounds!.y + bounds!.height * 0.5,
+    );
+    await page.mouse.wheel(0, -240);
+    await expect.poll(async () => Number(await map.getAttribute('data-map-zoom')))
+      .toBeGreaterThan(zoomBeforeWheel);
+    await expect(map).toHaveAttribute('data-view-mode', 'custom');
+    expect(await page.evaluate(() => window.scrollY)).toBe(scrollBeforeWheel);
+
     await page.getByRole('button', { name: 'Land fokussieren' }).click();
     await expect(map).toHaveAttribute('data-view-mode', 'country');
     const countryZoom = Number(await map.getAttribute('data-map-zoom'));
@@ -214,12 +243,15 @@ test.describe('map and flight-detail experience', () => {
     await expect.poll(async () => Number(await map.getAttribute('data-map-zoom')))
       .toBeGreaterThan(countryZoom);
 
+    const mapHeightBeforeFlight = (await map.boundingBox())!.height;
+    await page.getByTestId('map-wind-settings').locator(':scope > summary').click();
     await page.getByRole('radio', { name: /Abenteuer/ }).click();
     await expect(page.getByTestId('range-preview')).toContainText('km');
     await page.getByRole('button', { name: 'Flug mit Live-Wind starten' }).click();
     await expect(page.getByTestId('play-wind-result')).toContainText('\u00d710');
     await expect(map).toHaveAttribute('data-auto-fit', 'enabled');
     await expect(map).toHaveAttribute('data-follow-flight', 'true');
+    expect(Math.abs((await map.boundingBox())!.height - mapHeightBeforeFlight)).toBeLessThanOrEqual(1);
   });
 
   test('does not commit a cancelled map drag', async ({ page }) => {

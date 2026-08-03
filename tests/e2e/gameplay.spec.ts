@@ -88,6 +88,7 @@ test('completed and compared flights reflow on mobile and at 200 percent', async
 
   await page.setViewportSize({ width: 180, height: 400 });
   await expectNoHorizontalOverflow(page);
+  await page.getByTestId('map-wind-settings').locator(':scope > summary').click();
   const windScoutWidth = await page.getByTestId('wind-scout').evaluate((element) => ({
     clientWidth: element.clientWidth,
     scrollWidth: element.scrollWidth,

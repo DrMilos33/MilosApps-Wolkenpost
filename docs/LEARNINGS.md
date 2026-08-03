@@ -690,3 +690,29 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
   Informationsraum gestaltet werden. Sekundäre Eingaben gehören in eine
   schmale Steuerspur; wenige zustandsnahe Werte dürfen als klar begrenzte
   Overlays auf der Hauptfläche liegen.
+
+## 2026-08-03 – Breite Kartenbühnen brauchen progressive Steuerung und verankerten Rad-Zoom
+
+- Datum und geprüfter Stand: 3. August 2026, Wide-Stage-Folgeiteration des
+  Kartenarbeitsplatzes.
+- Beobachtung: Eine schmale Steuerleiste wird nicht dadurch ruhig, dass ihre
+  Inhalte nur kleiner gesetzt werden. Wenn Zeichnung, Ortssuche, Start und
+  Einstellungen gleichzeitig offen sind, entsteht trotz großer Karte wieder
+  ein langer Formularstrom. Ein normaler `wheel`-Handler scrollt außerdem die
+  Seite mit oder bleibt wegen passiver Browserbehandlung wirkungslos.
+- Evidenz oder reproduzierbarer Test: Bei 1440 Pixeln misst die Bühne
+  1376 Pixel; die Steuerleiste 278 und die Karte 990,3 × 800 Pixel. Reisender
+  und Start sind als exklusives Akkordeon bedienbar. Der Browserlauf prüft,
+  dass Mausrad-Zoom den Kartenzoom erhöht, auf `custom` wechselt und den
+  Dokument-Scrollstand unverändert lässt. Vor und nach dem Flug bleibt die
+  Kartenhöhe auf ein Pixel genau gleich.
+- Änderung und Regressionstest: Nur der aktuelle Einrichtungsschritt ist
+  geöffnet; Ortssuche, Umrisse, Winddetails und Geräteeinstellungen bleiben
+  gezielt aufklappbar. Der Rad-Zoom wird mit einem nativen
+  `passive: false`-Listener behandelt und auf den Zeigerpunkt verankert. Die
+  responsive Stufe prüft 390 Pixel, 360 × 800 bei 200 Prozent, 44-Pixel-Ziele,
+  Touch-Drag, Tastatur, DE/EN, Offline- und Fehlerzustände.
+- Für andere MilosApps relevant: Ja. Datenbühnen sollten die primäre Fläche
+  dauerhaft stabil halten und sekundäre Steuerung progressiv offenlegen.
+  Gezielter Rad-Zoom braucht eine explizite Scrollgrenze und darf nicht die
+  gesamte Seite bewegen.

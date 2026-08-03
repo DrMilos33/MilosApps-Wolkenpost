@@ -168,7 +168,9 @@ for (const visualCase of cases) {
     const undersizedTargets = await page.locator('button, a').evaluateAll((controls) => controls
       .filter((control) => {
         const style = getComputedStyle(control);
-        return style.display !== 'none' && style.visibility !== 'hidden';
+        return style.display !== 'none'
+          && style.visibility !== 'hidden'
+          && control.getClientRects().length > 0;
       })
       .map((control) => {
         const bounds = control.getBoundingClientRect();

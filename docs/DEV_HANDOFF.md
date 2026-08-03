@@ -100,6 +100,16 @@ App-/Pages-Stand. Ein normaler Revert des App-Merge-Commits stellt diesen
 Stand einschließlich seines vorherigen Essentials-Pins wieder her; Shell,
 Layout, Portalroute und Production bleiben unverändert.
 
+Für den Wide-Stage-Kartenarbeitsplatz ist
+`e2d6cbd9c5a3aff29e12dea5badda7bb3ae53369` der unmittelbar vorherige gesunde
+App-/Pages-Stand. Die Folgeiteration verändert nur app-eigenes Layout,
+Karteninteraktion und deren Regressionstests: getrennte Steuerleiste und
+Kartenkarte, exklusiv aufklappbare Einrichtung, kompakte Kartenoverlays,
+zeigerverankerter Mausrad-Zoom sowie unveränderte Kartenhöhe beim Flugstart.
+Shell-, Layout- und Essentials-Pins, Portalroute, Datenhaltung und Production
+bleiben unverändert. Ein normaler Revert des neuen App-Merge-Commits stellt
+den vorherigen Kartenstand wieder her.
+
 ## Portalgrenze
 
 Die Portalroute `/apps/cloud-post` darf ausschließlich auf die oben genannte
