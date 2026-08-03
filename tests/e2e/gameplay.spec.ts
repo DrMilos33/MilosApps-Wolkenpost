@@ -21,11 +21,8 @@ test('round 1 keeps the flight space visible and makes the model route readable'
   await expect(map).toHaveAttribute('data-route-count', '1');
   await expect(map).toHaveAttribute('data-route-lens', 'visible');
   await expect(map).toHaveAttribute('data-progress', '1.00');
-  await expect(page.locator('.map-canvas-shell')).toHaveCSS('position', 'relative');
-  const headingBounds = await heading.boundingBox();
-  expect(headingBounds).not.toBeNull();
-  expect(headingBounds!.y).toBeGreaterThanOrEqual(64);
-  expect(headingBounds!.y + headingBounds!.height).toBeLessThanOrEqual(300);
+  await expect(page.locator('.map-canvas-shell')).toHaveCSS('position', 'sticky');
+  await expect(map).toBeInViewport();
 
   const readout = page.getByTestId('flight-readout');
   for (const label of ['Start', 'Aktuell', 'Ziel', 'Wind', 'Höhe', 'Zeit']) {
@@ -58,7 +55,7 @@ test('round 2 compares another profile on exactly the same wind snapshot and rep
 
   const activeMap = page.getByTestId('world-map');
   await expect(activeMap).toHaveAttribute('data-route-count', '2');
-  await expect(page.locator('.map-canvas-shell')).toHaveCSS('position', 'relative');
+  await expect(page.locator('.map-canvas-shell')).toHaveCSS('position', 'sticky');
   await expect(page.locator('[data-flight-profile]')).toHaveCount(2);
   await expect(page.locator('[data-flight-profile="cloud"]')).toContainText('Wolke');
   await expect(page.locator('[data-flight-profile="seed"]')).toContainText('Samen');

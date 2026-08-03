@@ -89,6 +89,8 @@ function appShellServiceWorker(base: string): Plugin {
         withBase(base, 'integration.json'),
         withBase(base, 'preview.png'),
         withBase(base, 'THIRD_PARTY_NOTICES.txt'),
+        withBase(base, 'landmarks/eiffel-tower.jpg'),
+        withBase(base, 'landmarks/cologne-cathedral.jpg'),
         ...files,
       ]));
       const cacheSignature = files
@@ -158,7 +160,7 @@ export default defineConfig(({ mode }) => {
       globals: true,
       environment: 'jsdom',
       setupFiles: ['./tests/unit/setup.ts'],
-      include: ['./tests/unit/**/*.test.ts'],
+      include: ['./tests/unit/**/*.test.{ts,tsx}'],
       coverage: {
         reporter: ['text', 'html'],
       },

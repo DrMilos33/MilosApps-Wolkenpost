@@ -3,6 +3,12 @@ export type WindBoost = 1 | 4 | 10;
 export type MotionPreference = 'system' | 'full' | 'reduced';
 export type ThemePreference = 'system' | 'light' | 'dark';
 
+export interface TravelPassport {
+  countries: string[];
+  landmarks: string[];
+  flights: number;
+}
+
 export interface Coordinate {
   latitude: number;
   longitude: number;
@@ -110,4 +116,5 @@ export interface StoredState {
   theme: ThemePreference;
   soundEnabled: boolean;
   windBoost: WindBoost;
+  travelPassport: TravelPassport;
 }

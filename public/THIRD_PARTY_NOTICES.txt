@@ -58,3 +58,14 @@ Wikidata landmark facts
 -----------------------
 The curated place facts are available under CC0 1.0.
 https://www.wikidata.org/wiki/Wikidata:Licensing
+
+Eiffel Tower photo
+------------------
+"Eiffel tower-Paris.jpg" by Edisonblus is licensed under CC BY-SA 3.0.
+https://commons.wikimedia.org/wiki/File:Eiffel_tower-Paris.jpg
+
+Cologne Cathedral photo
+-----------------------
+"Exterior of Cologne Cathedral-.jpg" by Yair-haklai is licensed under
+CC BY-SA 4.0.
+https://commons.wikimedia.org/wiki/File:Exterior_of_Cologne_Cathedral-.jpg

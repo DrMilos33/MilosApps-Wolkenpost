@@ -4,7 +4,7 @@
   "sharedCommit": "2942132ad3bf6cf39edc9f52ed918de6a230be23",
   "appKey": "cloud-post",
   "manifest": "milos-essentials.json",
-  "manifestSha256": "sha256:918a2e9361bf2bbbf0b49f29b803511ac6df74965290ed38fed69054e2d86b0d",
+  "manifestSha256": "sha256:c44d3fa2f9d73c8b869e2553e1f499b3ed4feab24b820221f14cb9ac315ec46a",
   "vendorDirectory": "vendor/milosapps-essentials/v1",
   "runtimeBasePath": "vendor/milosapps-essentials/v1",
   "loadingIconRuntimePath": "icon.svg",

@@ -29,7 +29,7 @@ const essentialsLockedFiles = [
   'verify.mjs',
   'essentials-manifest.schema.json',
 ];
-const [index, serviceWorker, manifestText, healthText, integrationText, shellLockText, layoutLockText, essentialsLockText, sourceIcon, builtIcon, thirdPartyNotices] = await Promise.all([
+const [index, serviceWorker, manifestText, healthText, integrationText, shellLockText, layoutLockText, essentialsLockText, sourceIcon, builtIcon, thirdPartyNotices, sourceEiffelPhoto, builtEiffelPhoto, sourceColognePhoto, builtColognePhoto] = await Promise.all([
   readFile('dist/index.html', 'utf8'),
   readFile('dist/sw.js', 'utf8'),
   readFile('dist/manifest.webmanifest', 'utf8'),
@@ -41,6 +41,10 @@ const [index, serviceWorker, manifestText, healthText, integrationText, shellLoc
   readFile('public/icon.svg'),
   readFile('dist/icon.svg'),
   readFile('dist/THIRD_PARTY_NOTICES.txt', 'utf8'),
+  readFile('public/landmarks/eiffel-tower.jpg'),
+  readFile('dist/landmarks/eiffel-tower.jpg'),
+  readFile('public/landmarks/cologne-cathedral.jpg'),
+  readFile('dist/landmarks/cologne-cathedral.jpg'),
 ]);
 const shellArtifacts = await Promise.all(
   shellRuntimeFiles.map((file) => readFile(`dist/${shellDirectory}/${file}`)),
@@ -95,8 +99,12 @@ const checks = [
   [integration.preview?.path === `${BASE}preview.png`, 'Integration metadata contains the wrong preview path.'],
   [integration.preview?.url === `${DEV_URL}preview.png`, 'Integration metadata contains the wrong preview URL.'],
   [sha256(builtIcon) === sha256(sourceIcon), 'Built loading icon is not byte-identical to public/icon.svg.'],
+  [sha256(builtEiffelPhoto) === sha256(sourceEiffelPhoto), 'Built Eiffel Tower photo is not byte-identical to its licensed source asset.'],
+  [sha256(builtColognePhoto) === sha256(sourceColognePhoto), 'Built Cologne Cathedral photo is not byte-identical to its licensed source asset.'],
   [thirdPartyNotices.includes('Natural Earth') && thirdPartyNotices.includes('world-atlas 2.0.2'), 'Built artifact is missing the Natural Earth/world-atlas notices.'],
+  [thirdPartyNotices.includes('Eiffel tower-Paris.jpg') && thirdPartyNotices.includes('Exterior of Cologne Cathedral-.jpg'), 'Built artifact is missing the landmark photo notices.'],
   [serviceWorker.includes(`${BASE}THIRD_PARTY_NOTICES.txt`), 'The service worker does not cache the third-party notices.'],
+  [serviceWorker.includes(`${BASE}landmarks/eiffel-tower.jpg`) && serviceWorker.includes(`${BASE}landmarks/cologne-cathedral.jpg`), 'The service worker does not cache both licensed landmark photos.'],
   [serviceWorker.includes("const CACHE = 'wolkenpost-essentials-v1.1.5-"), 'The service worker cache revision was not advanced for the stable Essentials vendor URLs.'],
   [essentialsLock.version === '1.1.5', 'Essentials lock is not pinned to v1.1.5.'],
   [essentialsLock.sharedCommit === '2942132ad3bf6cf39edc9f52ed918de6a230be23', 'Essentials lock contains the wrong Shared commit.'],

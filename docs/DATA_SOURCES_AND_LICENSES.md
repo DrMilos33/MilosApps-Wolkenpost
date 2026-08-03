@@ -88,6 +88,31 @@ versioniert; Koordinaten sind bewusst gerundet. Die App meldet nur grobe
 Routennähe innerhalb eines transparent genannten Radius und niemals einen
 exakten Überflug oder Navigation. Zur Laufzeit wird Wikidata nicht aufgerufen.
 
+### Lokal vendorte Fotomomente
+
+Wolkenpost lädt keine fremden Fotos zur Laufzeit. Zwei Motive liegen lokal im
+App-Artefakt und erscheinen nur, wenn die grobe Modellroute das zugehörige
+Wahrzeichen passiert:
+
+- `public/landmarks/eiffel-tower.jpg`: „Eiffel tower-Paris.jpg“ von Edisonblus,
+  [Wikimedia-Commons-Dateiseite](https://commons.wikimedia.org/wiki/File:Eiffel_tower-Paris.jpg),
+  Lizenz CC BY-SA 3.0.
+- `public/landmarks/cologne-cathedral.jpg`: „Exterior of Cologne Cathedral-.jpg“
+  von Yair-haklai,
+  [Wikimedia-Commons-Dateiseite](https://commons.wikimedia.org/wiki/File:Exterior_of_Cologne_Cathedral-.jpg),
+  Lizenz CC BY-SA 4.0.
+
+Die Urheber- und Lizenzangabe ist direkt am sichtbaren Fotomoment verlinkt. Die
+Nutzerzeichnung wird als transparente SVG-Linie über das Foto gelegt; es gibt
+keinen weißen Zeichenflächenblock. Die Montage ist ausdrücklich spielerisch
+und kein Beleg für einen exakten Überflug.
+
+Die offizielle Eiffelturm-Seite trennt Nutzungsrechte am Tagmotiv von den
+Rechten an der nächtlichen Lichtinstallation; verwendet wird ausschließlich
+ein Tagesmotiv. Das Bildarchiv des Kölner Doms verlangt für seine eigenen
+Motive eine gesonderte Rechteklärung. Deshalb stammt das Dommotiv nicht aus dem
+offiziellen Archiv, sondern aus der oben genannten klar lizenzierten Quelle.
+
 ## Eigene Inhalte
 
 - Ortsliste: kleine handkuratierte Auswahl grob gerundeter, nicht
@@ -99,7 +124,8 @@ exakten Überflug oder Navigation. Zur Laufzeit wird Wikidata nicht aufgerufen.
 - `public/preview.png`: Screenshot des eigenen Builds; enthält die dokumentierte
   Natural-Earth-Länderkarte, eigene Gestaltung und Systemschriften, aber keine
   extern nachgeladenen Medien.
-- Keine externen Fotos, Videos, Webcams, Audiodateien oder Webfonts.
+- Keine extern nachgeladenen Fotos, Videos, Webcams, Audiodateien oder
+  Webfonts. Die beiden lokal vendorten Fotomotive sind oben einzeln belegt.
 
 ## Softwareabhängigkeiten
 

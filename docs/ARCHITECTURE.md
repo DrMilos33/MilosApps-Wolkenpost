@@ -70,12 +70,17 @@ bestehende Fünf-Artefakt-Lock der App-Shell bleibt davon unabhängig.
 
 Die React-Struktur markiert Intro, Primärarbeit, Schritte, Aktionen, Ergebnis
 und sekundäre Einstellungen semantisch mit den Vertragsattributen. Die
-Primärarbeit ist bewusst einspaltig: Die Zeichenfläche darf intern am Desktop
-Bedienung und Canvas nebeneinander stellen, die Weltkarte folgt jedoch als
-eigener, vollbreiter Flugraum. Mobil und bei hohem Textzoom reflowen auch die
-Zeichenwerkzeuge einspaltig. Wolkenpost behält Zeichenfläche, Weltkarte und
-redaktionelle Typografie, verwendet aber nur eine gemeinsame visuelle
-Arbeitsfläche statt verschachtelter Karten. Die Orbit-Wolke ist mit
+Primärarbeit nutzt am Desktop ein app-eigenes Arbeitsflächenraster: Eine
+kompakte linke Leiste bündelt Zeichnung, Start, Wind und Startaktion; die
+deutlich breitere rechte Bühne gehört der Karte, dem Ergebnis und dem
+Reisejournal. Das ist kein generischer Mehrspalten-Default des Shared-Vertrags.
+Unter 900 CSS-Pixeln und bei hohem Textzoom reflowt die Arbeitsfläche
+einspaltig. Wolkenpost behält Zeichenfläche, Weltkarte und redaktionelle
+Typografie, verwendet aber nur eine gemeinsame visuelle Arbeitsfläche statt
+verschachtelter Karten oder innerer Scrollcontainer. Vor dem Flug ist die
+Karte groß; nach einem Ergebnis wird sie am Desktop kontrolliert verkleinert
+und haftet oberhalb des fokussierten Ergebnisses, sodass Route und Kennzahlen
+gleichzeitig lesbar bleiben. Die Orbit-Wolke ist mit
 `data-milos-intro-icon` als kompakte Identitätsstütze begrenzt. Darstellung,
 Bewegung, Startton und lokale Löschung verwenden den eigenen kompakten
 Settings-Baustein und werden progressiv offengelegt.

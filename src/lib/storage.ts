@@ -4,6 +4,7 @@ import type {
   ObjectType,
   StoredState,
   ThemePreference,
+  TravelPassport,
   WindBoost,
 } from '../types';
 
@@ -12,6 +13,27 @@ const OBJECT_TYPES: ObjectType[] = ['cloud', 'balloon', 'seed', 'paper-plane'];
 const MOTION_VALUES: MotionPreference[] = ['system', 'full', 'reduced'];
 const THEME_VALUES: ThemePreference[] = ['system', 'light', 'dark'];
 const WIND_BOOST_VALUES: WindBoost[] = [1, 4, 10];
+
+function storedPassport(value: unknown): TravelPassport {
+  const passport = value && typeof value === 'object'
+    ? value as Partial<TravelPassport>
+    : {};
+  return {
+    countries: Array.isArray(passport.countries)
+      ? [...new Set(passport.countries
+          .filter((entry): entry is string => typeof entry === 'string' && /^[A-Z]{2}$/.test(entry)))]
+          .slice(0, 80)
+      : [],
+    landmarks: Array.isArray(passport.landmarks)
+      ? [...new Set(passport.landmarks
+          .filter((entry): entry is string => typeof entry === 'string' && /^[a-z0-9-]+$/.test(entry)))]
+          .slice(0, 120)
+      : [],
+    flights: typeof passport.flights === 'number' && Number.isFinite(passport.flights)
+      ? Math.max(0, Math.min(9999, Math.floor(passport.flights)))
+      : 0,
+  };
+}
 
 export const DEFAULT_STATE: StoredState = {
   version: 1,
@@ -22,6 +44,7 @@ export const DEFAULT_STATE: StoredState = {
   theme: 'system',
   soundEnabled: false,
   windBoost: 1,
+  travelPassport: storedPassport(null),
 };
 
 export function loadState(storage: Pick<Storage, 'getItem'> = localStorage): StoredState {
@@ -76,6 +99,7 @@ export function loadState(storage: Pick<Storage, 'getItem'> = localStorage): Sto
       windBoost: WIND_BOOST_VALUES.includes(parsed.windBoost as WindBoost)
         ? (parsed.windBoost as WindBoost)
         : DEFAULT_STATE.windBoost,
+      travelPassport: storedPassport(parsed.travelPassport),
     };
   } catch {
     return structuredClone(DEFAULT_STATE);

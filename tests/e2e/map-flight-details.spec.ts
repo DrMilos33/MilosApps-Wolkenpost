@@ -28,15 +28,18 @@ test.describe('map and flight-detail experience', () => {
       const mapStep = document.querySelector<HTMLElement>('.map-step')!.getBoundingClientRect();
       const map = document.querySelector<HTMLCanvasElement>('[data-testid="world-map"]')!.getBoundingClientRect();
       return {
-        drawingBottom: drawing.bottom + window.scrollY,
-        mapStepTop: mapStep.top + window.scrollY,
+        drawingRight: drawing.right,
+        mapStepLeft: mapStep.left,
+        drawingWidth: drawing.width,
         mapWidth: map.width,
         mapHeight: map.height,
       };
     });
-    expect(geometry.mapStepTop).toBeGreaterThanOrEqual(geometry.drawingBottom - 2);
-    expect(geometry.mapWidth).toBeGreaterThan(900);
-    expect(geometry.mapHeight).toBeGreaterThan(390);
+    expect(geometry.mapStepLeft).toBeGreaterThanOrEqual(geometry.drawingRight + 12);
+    expect(geometry.drawingWidth).toBeGreaterThanOrEqual(280);
+    expect(geometry.drawingWidth).toBeLessThanOrEqual(360);
+    expect(geometry.mapWidth).toBeGreaterThan(800);
+    expect(geometry.mapHeight).toBeGreaterThanOrEqual(590);
     const widgetGeometry = await page.getByTestId('map-control-widget').evaluate((element) => ({
       overflowY: getComputedStyle(element).overflowY,
       scrollHeight: element.scrollHeight,
@@ -45,7 +48,31 @@ test.describe('map and flight-detail experience', () => {
     }));
     expect(widgetGeometry.overflowY).toBe('visible');
     expect(widgetGeometry.scrollHeight).toBeLessThanOrEqual(widgetGeometry.clientHeight + 1);
-    expect(widgetGeometry.width).toBeGreaterThan(850);
+    expect(widgetGeometry.width).toBeGreaterThanOrEqual(280);
+    expect(widgetGeometry.width).toBeLessThanOrEqual(360);
+    const titleLines = await page.locator('.step-title-line, .wind-title-line').evaluateAll((elements) =>
+      elements.map((element) => {
+        const bounds = element.getBoundingClientRect();
+        const textChildren = Array.from(element.querySelectorAll(':scope > p, :scope > h2, :scope > h3'));
+        return {
+          text: element.textContent?.trim(),
+          flexWrap: getComputedStyle(element).flexWrap,
+          childWhiteSpace: textChildren
+            .map((child) => getComputedStyle(child).whiteSpace),
+          width: bounds.width,
+          scrollWidth: element.scrollWidth,
+        };
+      }),
+    );
+    expect(
+      titleLines.every((line) => (
+        line.flexWrap === 'nowrap'
+        && line.childWhiteSpace.length > 0
+        && line.childWhiteSpace.every((whiteSpace) => whiteSpace === 'nowrap')
+        && line.scrollWidth <= line.width + 1
+      )),
+      `Title lines must stay on one line: ${JSON.stringify(titleLines)}`,
+    ).toBe(true);
     await expect(page.getByTestId('world-map')).toHaveAttribute('data-country-detail', 'natural-earth-110m');
     expect(Number(await page.getByTestId('world-map').getAttribute('data-country-count'))).toBeGreaterThan(170);
     await page.getByRole('button', { name: 'Land fokussieren' }).click();
@@ -63,6 +90,9 @@ test.describe('map and flight-detail experience', () => {
     await page.getByRole('button', { name: 'Flug mit Live-Wind starten' }).click();
     await expect(page.getByRole('heading', { name: /Angekommen nahe/ })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'An diesen Orten ging es vorbei' })).toBeVisible();
+    await expect(page.getByTestId('travel-journal')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Deine gesammelten Stempel' })).toBeVisible();
+    await expect(page.getByText(/1 Flug/)).toBeVisible();
     expect(windRequests).toBe(1);
     expect(consoleProblems).toEqual([]);
   });

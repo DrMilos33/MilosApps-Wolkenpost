@@ -32,7 +32,26 @@ describe('local state', () => {
     expect(result.motion).toBe('system');
     expect(result.theme).toBe('system');
     expect(result.windBoost).toBe(1);
+    expect(result.travelPassport).toEqual({ countries: [], landmarks: [], flights: 0 });
     expect(result.drawing[0].points).toHaveLength(1);
+  });
+
+  it('sanitizes and deduplicates the local travel passport', () => {
+    const storage = {
+      getItem: () => JSON.stringify({
+        version: 1,
+        travelPassport: {
+          countries: ['DE', 'DE', 'fr', '../'],
+          landmarks: ['eiffel-tower', 'eiffel-tower', '../bad'],
+          flights: 10.8,
+        },
+      }),
+    };
+    expect(loadState(storage).travelPassport).toEqual({
+      countries: ['DE'],
+      landmarks: ['eiffel-tower'],
+      flights: 10,
+    });
   });
 
   it('keeps only supported playful wind multipliers', () => {

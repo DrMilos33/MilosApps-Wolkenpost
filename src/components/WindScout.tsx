@@ -79,7 +79,7 @@ export function WindScout({
   return (
     <section className="wind-scout" aria-labelledby="wind-scout-heading" data-testid="wind-scout">
       <div className="wind-scout-heading">
-        <div>
+        <div className="wind-title-line">
           <p className="step-kicker">{text.kicker}</p>
           <h3 id="wind-scout-heading">{text.heading}</h3>
         </div>

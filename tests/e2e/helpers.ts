@@ -48,11 +48,50 @@ export async function startFlight(page: Page) {
 }
 
 export async function expectNoHorizontalOverflow(page: Page) {
-  const sizes = await page.evaluate(() => ({
-    scrollWidth: document.documentElement.scrollWidth,
-    clientWidth: document.documentElement.clientWidth,
-  }));
-  expect(sizes.scrollWidth).toBeLessThanOrEqual(sizes.clientWidth + 1);
+  const sizes = await page.evaluate(() => {
+    const clientWidth = document.documentElement.clientWidth;
+    const shellElements = Array.from(
+      document.querySelector('milos-app-shell')?.shadowRoot?.querySelectorAll<HTMLElement>('*') ?? [],
+    );
+    const offenders = [
+      ...Array.from(document.querySelectorAll<HTMLElement>('body *')),
+      ...shellElements,
+    ]
+      .map((element) => {
+        const bounds = element.getBoundingClientRect();
+        return {
+          selector: `${element.tagName.toLowerCase()}.${element.className}`,
+          left: bounds.left,
+          right: bounds.right,
+          width: bounds.width,
+        };
+      })
+      .filter(({ left, right }) => left < -1 || right > clientWidth + 1)
+      .slice(0, 8);
+    const intrinsicOverflow = [
+      document.documentElement,
+      document.body,
+      ...Array.from(document.querySelectorAll<HTMLElement>('body *')),
+      ...shellElements,
+    ]
+      .filter((element) => element.scrollWidth > element.clientWidth + 1)
+      .map((element) => ({
+        selector: `${element.tagName.toLowerCase()}.${element.className}`,
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+      }))
+      .slice(0, 12);
+    return {
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth,
+      offenders,
+      intrinsicOverflow,
+    };
+  });
+  expect(
+    sizes.scrollWidth,
+    `Horizontal overflow offenders: ${JSON.stringify(sizes.offenders)}; intrinsic: ${JSON.stringify(sizes.intrinsicOverflow)}`,
+  ).toBeLessThanOrEqual(sizes.clientWidth + 1);
 }
 
 export function recordConsoleProblems(page: Page): string[] {
