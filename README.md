@@ -16,8 +16,13 @@ direkt verschiebbar; Pfeiltasten bleiben die gleichwertige Alternative. Nach
 einer neuen Startwahl erscheint der Wind des aktiven Hoehenprofils auch als
 Richtungsfeld auf der Karte. Verlaesst die Figur den sichtbaren Flugraum,
 erweitert die Ansicht automatisch den Ausschnitt. Ein klar als Spielwind
-bezeichneter Faktor kann nur die Flugweite vergroessern; angezeigte
+bezeichneter Faktor kann die Flugweite als reale Strecke, Reise oder Abenteuer
+auf das 1-, 4- oder 10-Fache strecken; angezeigte
 Windgeschwindigkeit und Richtung bleiben die echten Werte des Snapshots.
+Die Karte ist die primaere Flugflaeche: Auf Desktop liegt ein kompaktes
+Wind-/Reichweiten-Widget auf der Karte, mobil dockt es direkt darunter an.
+Im Laenderfokus erscheinen kuratierte Sehenswuerdigkeiten; waehrend des Flugs
+folgt die Kamera der Route und meldet nahe Vorbeifluege als kleine Momente.
 
 ## Feste Grenzen
 

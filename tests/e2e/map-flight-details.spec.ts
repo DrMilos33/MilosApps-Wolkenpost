@@ -39,12 +39,16 @@ test.describe('map and flight-detail experience', () => {
     expect(geometry.mapHeight).toBeGreaterThan(390);
     await expect(page.getByTestId('world-map')).toHaveAttribute('data-country-detail', 'natural-earth-110m');
     expect(Number(await page.getByTestId('world-map').getAttribute('data-country-count'))).toBeGreaterThan(170);
+    await page.getByRole('button', { name: 'Land fokussieren' }).click();
+    await expect.poll(async () => Number(await page.getByTestId('world-map')
+      .getAttribute('data-visible-landmark-count'))).toBeGreaterThan(0);
+    await expect(page.getByTestId('map-landmark-strip')).toBeVisible();
 
     await page.getByRole('button', { name: 'Wind an diesem Ort prüfen' }).click();
-    await expect(page.locator('[data-wind-level]')).toHaveCount(3);
-    await expect(page.locator('[data-wind-level="925hPa"]')).toHaveClass(/is-selected/);
-    await expect(page.locator('[data-wind-level="10m"] strong')).toContainText('km/h');
-    await expect(page.locator('[data-wind-level="925hPa"] strong')).toContainText('nach');
+    await expect(page.locator('.wind-readings [data-wind-level]')).toHaveCount(3);
+    await expect(page.locator('.wind-readings [data-wind-level="925hPa"]')).toHaveClass(/is-selected/);
+    await expect(page.locator('.wind-readings [data-wind-level="10m"] strong')).toContainText('km/h');
+    await expect(page.locator('.wind-primary-reading[data-wind-level="925hPa"] strong')).toContainText('nach');
     expect(windRequests).toBe(1);
 
     await page.getByRole('button', { name: 'Flug mit Live-Wind starten' }).click();
@@ -111,6 +115,7 @@ test.describe('map and flight-detail experience', () => {
     await page.goto('./');
 
     const map = page.getByTestId('world-map');
+    await expect(page.getByTestId('map-control-widget')).toBeVisible();
     const beforeLatitude = Number(await map.getAttribute('data-selected-latitude'));
     await map.scrollIntoViewIfNeeded();
     const bounds = await map.boundingBox();
@@ -141,10 +146,12 @@ test.describe('map and flight-detail experience', () => {
     await expect.poll(async () => Number(await map.getAttribute('data-map-zoom')))
       .toBeGreaterThan(countryZoom);
 
-    await page.getByRole('radio', { name: 'Doppelter Spielwind' }).click();
+    await page.getByRole('radio', { name: /Abenteuer/ }).click();
+    await expect(page.getByTestId('range-preview')).toContainText('km');
     await page.getByRole('button', { name: 'Flug mit Live-Wind starten' }).click();
-    await expect(page.getByTestId('play-wind-result')).toContainText('\u00d72');
+    await expect(page.getByTestId('play-wind-result')).toContainText('\u00d710');
     await expect(map).toHaveAttribute('data-auto-fit', 'enabled');
+    await expect(map).toHaveAttribute('data-follow-flight', 'true');
   });
 
   test('does not commit a cancelled map drag', async ({ page }) => {

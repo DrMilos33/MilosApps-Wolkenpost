@@ -241,7 +241,18 @@ Weltansicht, aus der Natural-Earth-Geometrie abgeleiteter Laenderfokus und
 manueller Zoom nutzen dieselbe Vorwaerts-/Rueckprojektion. Waehlt der Nutzer
 einen engen Ausschnitt und verlaesst die animierte Figur dessen sicheren
 Innenrand, wird der bisher sichtbare Routenabschnitt deterministisch
-eingepasst. Die Kamera zoomt dabei nur heraus und verfremdet keine Koordinate.
+eingepasst. Im aktiven Folge-Modus wird jeder bereits geflogene Routenabschnitt
+neu eingepasst; die Kamera darf hinein- und herauszoomen, veraendert aber keine
+Koordinate. `Gesamte Route zeigen` beendet den Folge-Modus bewusst.
+
+Die Kartenbuehne besitzt ein app-eigenes responsives Bedien-Widget. Es liegt
+auf breiten Viewports als kompakte Kartenkontrolle oben rechts und dockt unter
+760 CSS-Pixeln direkt unter der Karte an. Startort, echter Wind des aktiven
+Hoehenprofils und die spielerische Reichweitenschaetzung stehen damit vor dem
+Start in einem Zusammenhang. Weitere Hoehen sind progressiv aufklappbar.
+Kuratierte CC0-Ortsfakten werden ab Zoomstufe 2 als Kartenpunkte gezeichnet;
+waehrend der Route erscheint hoechstens der zuletzt erreichte Vorbeiflug als
+DOM-Status. Die Berechnung bleibt eine grobe Routennähe, keine Navigation.
 
 Die Figur verwendet einen einzigen Pointer-Events-Zustandsweg fuer Touch,
 Stift und Maus. Pointer Capture sowie Window-Listener im Capture-Modus halten
@@ -250,7 +261,7 @@ den Lauf stabil. Bewegungen werden pro Animation Frame zusammengefasst, erst
 Pfeiltasten verschieben weiterhin in 1-Grad- und mit Umschalt in
 5-Grad-Schritten. Plus, Minus und Pos1 bedienen die Kartenansicht.
 
-Der optionale Spielwind ist ein lokaler Faktor 1, 1,5 oder 2. Er wirkt nur auf
+Der optionale Spielwind ist ein lokaler Faktor 1, 4 oder 10. Er wirkt nur auf
 die pro Simulationsschritt zurueckgelegte Strecke. Route und Distanz reagieren,
 waehrend Punktgeschwindigkeiten, Durchschnitt, Maximum, Windrichtung,
 Quelldaten und Datenzeit unveraendert bleiben. `RouteResult.windBoost` macht

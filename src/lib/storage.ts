@@ -11,7 +11,7 @@ const STORAGE_KEY = 'milosapps.cloud-post.state';
 const OBJECT_TYPES: ObjectType[] = ['cloud', 'balloon', 'seed', 'paper-plane'];
 const MOTION_VALUES: MotionPreference[] = ['system', 'full', 'reduced'];
 const THEME_VALUES: ThemePreference[] = ['system', 'light', 'dark'];
-const WIND_BOOST_VALUES: WindBoost[] = [1, 1.5, 2];
+const WIND_BOOST_VALUES: WindBoost[] = [1, 4, 10];
 
 export const DEFAULT_STATE: StoredState = {
   version: 1,

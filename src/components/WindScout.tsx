@@ -22,8 +22,10 @@ interface WindScoutText {
   boostLegend: string;
   boostDescription: string;
   boostReal: string;
-  boostMedium: string;
-  boostDouble: string;
+  boostJourney: string;
+  boostAdventure: string;
+  moreLevels: string;
+  estimatedRange: (distance: number) => string;
 }
 
 interface WindScoutProps {
@@ -38,6 +40,7 @@ interface WindScoutProps {
   onCancel: () => void;
   windBoost: WindBoost;
   onWindBoostChange: (boost: WindBoost) => void;
+  estimatedDistanceKm?: number;
 }
 
 function compassIndex(bearing: number): number {
@@ -66,8 +69,13 @@ export function WindScout({
   onCancel,
   windBoost,
   onWindBoostChange,
+  estimatedDistanceKm,
 }: WindScoutProps) {
   const selectedLevel = OBJECT_PROFILES[objectType].level;
+  const selectedReading = readings.find((reading) => reading.level === selectedLevel);
+  const selectedDirection = selectedReading
+    ? text.compass[compassIndex(selectedReading.bearing)]
+    : text.compass[0];
   return (
     <section className="wind-scout" aria-labelledby="wind-scout-heading" data-testid="wind-scout">
       <div className="wind-scout-heading">
@@ -81,31 +89,46 @@ export function WindScout({
       </div>
       <p>{text.description}</p>
 
-      {status === 'ready' && readings.length > 0 ? (
-        <div className="wind-readings" role="list">
-          {readings.map((reading) => {
-            const direction = text.compass[compassIndex(reading.bearing)];
-            const selected = reading.level === selectedLevel;
-            return (
-              <article
-                key={reading.level}
-                role="listitem"
-                className={selected ? 'is-selected' : ''}
-                data-wind-level={reading.level}
-              >
-                <header>
-                  <span>{levelLabel(reading.level, text)}</span>
-                  {selected && <small>{text.selectedProfile}</small>}
-                </header>
-                <div className="wind-meter" aria-hidden="true">
-                  <span data-wind-band={speedBand(reading.speedKmh)} />
-                </div>
-                <strong>{text.windValue(reading.speedKmh, direction)}</strong>
-                <small>{text.strength[reading.strength]}</small>
-              </article>
-            );
-          })}
-        </div>
+      {status === 'ready' && readings.length > 0 && selectedReading ? (
+        <>
+          <div className="wind-primary-reading" data-wind-level={selectedReading.level}>
+            <span className="wind-compass is-large" aria-hidden="true">
+              <span data-bearing-sector={compassIndex(selectedReading.bearing)}>{'\u27a4'}</span>
+            </span>
+            <span>
+              <small>{levelLabel(selectedReading.level, text)} · {text.selectedProfile}</small>
+              <strong>{text.windValue(selectedReading.speedKmh, selectedDirection)}</strong>
+              <span>{text.strength[selectedReading.strength]}</span>
+            </span>
+          </div>
+          <details className="wind-more-levels">
+            <summary>{text.moreLevels}</summary>
+            <div className="wind-readings" role="list">
+              {readings.map((reading) => {
+                const direction = text.compass[compassIndex(reading.bearing)];
+                const selected = reading.level === selectedLevel;
+                return (
+                  <article
+                    key={reading.level}
+                    role="listitem"
+                    className={selected ? 'is-selected' : ''}
+                    data-wind-level={reading.level}
+                  >
+                    <header>
+                      <span>{levelLabel(reading.level, text)}</span>
+                      {selected && <small>{text.selectedProfile}</small>}
+                    </header>
+                    <div className="wind-meter" aria-hidden="true">
+                      <span data-wind-band={speedBand(reading.speedKmh)} />
+                    </div>
+                    <strong>{text.windValue(reading.speedKmh, direction)}</strong>
+                    <small>{text.strength[reading.strength]}</small>
+                  </article>
+                );
+              })}
+            </div>
+          </details>
+        </>
       ) : status === 'loading' || status === 'error' ? (
         <div className={`wind-scout-state ${status === 'error' ? 'is-error' : ''}`} role={status === 'error' ? 'alert' : 'status'}>
           {status === 'loading' ? text.loading : error}
@@ -134,8 +157,8 @@ export function WindScout({
         <div className="wind-boost-options" role="radiogroup" aria-label={text.boostLegend}>
           {([
             [1, text.boostReal],
-            [1.5, text.boostMedium],
-            [2, text.boostDouble],
+            [4, text.boostJourney],
+            [10, text.boostAdventure],
           ] as const).map(([boost, label]) => (
             <button
               key={boost}
@@ -150,6 +173,11 @@ export function WindScout({
             </button>
           ))}
         </div>
+        {estimatedDistanceKm !== undefined && (
+          <output className="range-preview" data-testid="range-preview">
+            {text.estimatedRange(estimatedDistanceKm)}
+          </output>
+        )}
       </fieldset>
     </section>
   );

@@ -21,7 +21,7 @@ test('round 1 keeps the flight space visible and makes the model route readable'
   await expect(map).toHaveAttribute('data-route-count', '1');
   await expect(map).toHaveAttribute('data-route-lens', 'visible');
   await expect(map).toHaveAttribute('data-progress', '1.00');
-  await expect(map).toHaveCSS('position', 'sticky');
+  await expect(page.locator('.map-canvas-shell')).toHaveCSS('position', 'sticky');
   const mapBounds = await map.boundingBox();
   expect(mapBounds).not.toBeNull();
   expect(mapBounds!.y).toBeGreaterThanOrEqual(-1);

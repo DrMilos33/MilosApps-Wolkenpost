@@ -14,6 +14,29 @@ Welt.
 4. Flug starten und Route, Profil sowie nahe große Orte/Wahrzeichen verfolgen.
 5. Eine gestaltete Ergebnisansicht bewusst teilen oder lokal speichern.
 
+## Produktstufen nach Nutzerfeedback
+
+Die aktuell testbare erste Stufe konzentriert sich auf den Flug selbst:
+
+- grosse, nicht neben eine zweite Hauptspalte gedrueckte Kartenbuehne;
+- Karten-Widget fuer echten Wind und spielerische Reichweite;
+- Reise- und Abenteuerweite fuer sichtbar laengere Fluege;
+- automatische Flugverfolgung und bewusste Gesamtansicht;
+- erste kuratierte Sehenswuerdigkeiten im Laenderzoom und als Vorbeiflug.
+
+Erst nach dem Nutzertest dieser Stufe folgt die weitere Agenda:
+
+1. lizenzierte Fotopostkarten mit transparent freigestellter Nutzerzeichnung,
+   ohne weissen Zeichenflaechen-Kasten und mit vollstaendig dokumentierten
+   Bildrechten;
+2. Reisepass beziehungsweise Stempel fuer besuchte Laender und Wahrzeichen;
+3. taegliche kleine Missionen und spielerische Aufgaben;
+4. Geisterrouten, Vergleiche und weitere zufaellige Reiseereignisse;
+5. optionale, erst nach Nutzeraktion startende Geraeusmomente.
+
+Diese Punkte sind bewusst nicht Teil der ersten Freigabe: Die Kartenmechanik
+soll zuerst als eigenstaendiger Spielkern vom Nutzer bewertet werden.
+
 ## MVP
 
 - touch- und mausfähige Zeichenfläche mit Rückgängig und Löschen;
