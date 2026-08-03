@@ -55,6 +55,7 @@ export interface WindField {
 export interface RoutePoint extends Coordinate {
   time: number;
   speed: number;
+  bearing: number;
 }
 
 export interface RouteResult {
@@ -67,6 +68,14 @@ export interface RouteResult {
   objectType: ObjectType;
   startLabel: string;
   endLabel: string;
+}
+
+export type WindLevel = '10m' | '925hPa' | '850hPa';
+
+export interface WindSnapshot {
+  fields: Record<WindLevel, WindField>;
+  fetchedAt: string;
+  forecastStart: string;
 }
 
 export interface StoredState {

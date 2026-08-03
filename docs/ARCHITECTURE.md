@@ -1,6 +1,6 @@
 # Wolkenpost-Architektur
 
-Stand: 2. August 2026
+Stand: 3. August 2026
 
 ## Stack und Grenze
 
@@ -12,7 +12,7 @@ Stand: 2. August 2026
   Datenbank;
 - `public-app-layout/v1.1.0` als davon getrennte, lokal vendorte
   Inhaltslayout-Abhängigkeit mit Profil `guided-flow` und eigenem Lock;
-- `public-app-essentials/v1.0.0` als dritter, separat gepinnter Vertrag für
+- `public-app-essentials/v1.1.2` als dritter, separat gepinnter Vertrag für
   Startscreen, Datenschutz, Teilen und explizite Ortssuche;
 - Browser-Lokalspeicher ausschließlich für Zeichnung, Einstellungen und den
   groben letzten Startpunkt;
@@ -85,11 +85,12 @@ misst am echten Build `[data-milos-intro]` und
 
 ## Öffentliche Essentials
 
-`milos-essentials.json` pinnt `public-app-essentials/v1.0.0` auf den
+`milos-essentials.json` pinnt `public-app-essentials/v1.1.2` auf den
 unveränderlichen Shared-Commit
-`b09e09008ff05fe87f05bc647a7c4964ff13e6f6`. Der Sync erzeugt unter
+`b14aac6107b75f03ff49e74160af7e7e30c29e59`. Der Sync erzeugt unter
 `vendor/milosapps-essentials/v1/` Bootstrap, Web Component, Basis-/Theme-CSS,
-portablen Verifier und `essentials-lock.json`. Der Fünf-Artefakt-Lock bleibt
+portablen Verifier, das vendorte Manifestschema und `essentials-lock.json`.
+Der Sechs-Artefakt-Lock bleibt
 von Shell und Layout getrennt. Der Build kopiert alle vier Browserdateien unter
 ihrem festen Same-Origin-Pfad; beide CSS-Dateien bleiben als externe
 `<link>`-Elemente im gebauten HTML. Artefaktprüfung und Service Worker prüfen
@@ -99,16 +100,24 @@ Eine ausschließlich in diesem Vendorordner geltende `.gitattributes` erzwingt
 LF und schützt die bytegenauen Hashes auch bei einem Windows-Recheckout mit
 aktivem `core.autocrlf`.
 
+Der physische Loader-Iconpfad `public/icon.svg` und die ausgelieferte
+Same-Origin-URL `icon.svg` sind getrennt im Manifest festgelegt. Der
+Quell-Validator prüft die physische SVG-Datei; das Pages-Artefakt- und
+HTTP-Gate verlangt `image/svg+xml` und Byteidentität mit der Quelldatei.
+
 Der CSS-first Startscreen besitzt nur ein kleines App-Icon und verwendet für
 `data-milos-loading-title` bewusst ein `<p>` statt einer zweiten
-Dokumentüberschrift. Die React-App meldet sich erst nach dem ersten Commit und
-nach Registrierung der vendorten Essentials-Komponente bereit. Dadurch kann
-ein langsam geladener Bootstrap das Ready-Ereignis nicht verpassen; bei einer
-tatsächlich fehlenden Runtime bleibt der Startscreen ehrlich sichtbar.
+Dokumentüberschrift. Die React-App meldet sich erst nach dem ersten React-
+Commit über die race-sichere API `globalThis.milosAppEssentials.ready()`
+bereit. Der Essentials-Bootstrap ist das erste Modul im Quelldokument und
+puffert die Bereitschaft deterministisch; direkte `milosapps:ready`-Dispatches
+gibt es nicht. Bei einer tatsächlich fehlenden Runtime bleibt der Startscreen
+ehrlich sichtbar.
 
-Der Datenschutzhinweis erklärt ohne Schein-Einwilligung, dass Wolkenpost keine
-Werbe- oder Tracking-Cookies nutzt, aber notwendige Einstellungen und lokale
-App-Daten speichert. Nur das lokale Ausblenden des Hinweises wird persistiert.
+Wolkenpost zeigt in `no-cookies`-Betrieb keinen Banner und keine Schein-
+Einwilligung. Eine dauerhaft sichtbare app-eigene Datenschutzinformation
+verlinkt exakt auf die dokumentierte HTTPS-Adresse; ein früherer Dismiss-
+Schlüssel wird datenminimierend entfernt und nicht neu geschrieben.
 Die gemeinsame Teilen-Funktion erhält das bestehende PNG als Datei und eine
 kanonische URL ohne Query, Hash oder private Zustandsdaten. Sie nutzt natives
 Teilen, Clipboard-Fallback und behandelt Nutzerabbruch still.

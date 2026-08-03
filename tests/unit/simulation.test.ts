@@ -28,6 +28,8 @@ describe('route simulation', () => {
     const second = simulateRoute({ latitude: 52.5, longitude: 13.5 }, 'Berlin', 'cloud', wind);
     expect(second).toEqual(first);
     expect(first.distanceKm).toBeGreaterThan(600);
+    expect(first.points[0].speed).toBe(first.points[1].speed);
+    expect(first.points[0].bearing).toBe(first.points[1].bearing);
   });
 
   it('keeps a weak-wind route at the start', () => {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, type KeyboardEvent, type PointerEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import type {
   Coordinate,
   DrawingStroke,
@@ -15,6 +15,8 @@ import {
 import {
   drawDrawing,
   drawRoute,
+  drawRouteLens,
+  drawWindArrow,
   drawWorldBase,
   WORLD_PALETTES,
 } from '../lib/world-renderer';
@@ -22,27 +24,37 @@ import {
 interface WorldMapProps {
   selected: Coordinate;
   result: RouteResult | null;
+  comparisonResult?: RouteResult | null;
   drawing: DrawingStroke[];
   motion: MotionPreference;
   theme: ThemePreference;
   onSelect: (coordinate: Coordinate) => void;
   label: string;
+  routeLensLabel: string;
+  replayToken?: number;
+  onProgress?: (progress: number) => void;
 }
 
 export function WorldMap({
   selected,
   result,
+  comparisonResult = null,
   drawing,
   motion,
   theme,
   onSelect,
   label,
+  routeLensLabel,
+  replayToken = 0,
+  onProgress,
 }: WorldMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sizeRef = useRef({ width: 1, height: 1 });
   const progressRef = useRef(1);
   const frameRef = useRef<number | null>(null);
   const pointerStartRef = useRef<{ id: number; x: number; y: number } | null>(null);
+  const lastReportedProgressRef = useRef(-1);
+  const [reportedProgress, setReportedProgress] = useState(1);
   const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
   const systemReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
   const isDark = theme === 'dark' || (theme === 'system' && systemDark.matches);
@@ -61,6 +73,67 @@ export function WorldMap({
     let objectPosition = selected;
     if (result) {
       objectPosition = drawRoute(context, result.points, width, height, palette, progressRef.current);
+      const primaryIndex = Math.max(0, Math.min(
+        result.points.length - 1,
+        Math.ceil(result.points.length * progressRef.current) - 1,
+      ));
+      const primaryPoint = result.points[primaryIndex];
+      drawWindArrow(context, objectPosition, primaryPoint.bearing, width, height, palette.route);
+      if (comparisonResult) {
+        const comparisonPosition = drawRoute(
+          context,
+          comparisonResult.points,
+          width,
+          height,
+          palette,
+          progressRef.current,
+          {
+            route: palette.comparisonRoute,
+            halo: palette.comparisonHalo,
+            drawStart: false,
+          },
+        );
+        const comparisonIndex = Math.max(0, Math.min(
+          comparisonResult.points.length - 1,
+          Math.ceil(comparisonResult.points.length * progressRef.current) - 1,
+        ));
+        const comparisonPoint = comparisonResult.points[comparisonIndex];
+        drawWindArrow(
+          context,
+          comparisonPosition,
+          comparisonPoint.bearing,
+          width,
+          height,
+          palette.comparisonRoute,
+        );
+        const marker = projectCoordinate(comparisonPosition, width, height);
+        context.fillStyle = palette.comparisonHalo;
+        context.beginPath();
+        context.arc(marker.x, marker.y, Math.max(7, width / 95), 0, Math.PI * 2);
+        context.fill();
+        context.fillStyle = palette.comparisonRoute;
+        context.beginPath();
+        context.arc(marker.x, marker.y, Math.max(4, width / 180), 0, Math.PI * 2);
+        context.fill();
+      }
+      drawRouteLens(
+        context,
+        [
+          { points: result.points, color: palette.route, halo: palette.routeHalo },
+          ...(comparisonResult
+            ? [{
+                points: comparisonResult.points,
+                color: palette.comparisonRoute,
+                halo: palette.comparisonHalo,
+              }]
+            : []),
+        ],
+        progressRef.current,
+        width,
+        height,
+        palette,
+        routeLensLabel,
+      );
     } else {
       const marker = projectCoordinate(selected, width, height);
       context.fillStyle = palette.routeHalo;
@@ -74,7 +147,7 @@ export function WorldMap({
     }
 
     if (drawing.length) drawDrawing(context, drawing, objectPosition, width, height);
-  }, [drawing, isDark, result, selected]);
+  }, [comparisonResult, drawing, isDark, result, routeLensLabel, selected]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -97,6 +170,9 @@ export function WorldMap({
   useEffect(() => {
     if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);
     progressRef.current = reduced || !result ? 1 : 0;
+    lastReportedProgressRef.current = progressRef.current;
+    setReportedProgress(progressRef.current);
+    onProgress?.(progressRef.current);
     if (reduced || !result) {
       render();
       return;
@@ -107,13 +183,21 @@ export function WorldMap({
     const tick = (time: number) => {
       progressRef.current = clamp((time - startedAt) / duration, 0, 1);
       render();
+      if (
+        progressRef.current === 1
+        || progressRef.current - lastReportedProgressRef.current >= 0.04
+      ) {
+        lastReportedProgressRef.current = progressRef.current;
+        setReportedProgress(progressRef.current);
+        onProgress?.(progressRef.current);
+      }
       if (progressRef.current < 1) frameRef.current = window.requestAnimationFrame(tick);
     };
     frameRef.current = window.requestAnimationFrame(tick);
     return () => {
       if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);
     };
-  }, [reduced, render, result]);
+  }, [comparisonResult, onProgress, reduced, render, replayToken, result]);
 
   useEffect(() => {
     const rerender = () => render();
@@ -166,6 +250,9 @@ export function WorldMap({
       className="world-map"
       data-testid="world-map"
       data-motion={reduced ? 'reduced' : 'full'}
+      data-route-count={result ? (comparisonResult ? '2' : '1') : '0'}
+      data-route-lens={result ? 'visible' : 'hidden'}
+      data-progress={reportedProgress.toFixed(2)}
       aria-label={label}
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}

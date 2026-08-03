@@ -37,9 +37,8 @@ for (const visualCase of cases) {
     }
 
     const privacyNotice = page.locator('[data-milos-privacy-notice]');
-    await expect(privacyNotice).toBeVisible();
-    await privacyNotice.locator('[data-milos-privacy-dismiss]').click();
-    await expect(privacyNotice).toBeHidden();
+    await expect(privacyNotice).toHaveCount(0);
+    await expect(page.locator('[data-milos-privacy-info]')).toBeVisible();
 
     if (visualCase.locale === 'en') {
       await page.locator('milos-app-shell')

@@ -1,5 +1,5 @@
 import type { Coordinate, DrawingStroke, RoutePoint } from '../types';
-import { projectCoordinate, routeSegments } from './geometry';
+import { clamp, projectCoordinate, routeSegments } from './geometry';
 
 type Polygon = Array<[number, number]>;
 
@@ -48,6 +48,8 @@ export interface WorldPalette {
   grid: string;
   route: string;
   routeHalo: string;
+  comparisonRoute: string;
+  comparisonHalo: string;
 }
 
 export const WORLD_PALETTES: Record<'light' | 'dark', WorldPalette> = {
@@ -59,6 +61,8 @@ export const WORLD_PALETTES: Record<'light' | 'dark', WorldPalette> = {
     grid: 'rgba(38, 102, 85, 0.16)',
     route: '#d75f45',
     routeHalo: 'rgba(255, 255, 255, 0.82)',
+    comparisonRoute: '#236c85',
+    comparisonHalo: 'rgba(255, 255, 255, 0.82)',
   },
   dark: {
     oceanTop: '#173f42',
@@ -68,6 +72,8 @@ export const WORLD_PALETTES: Record<'light' | 'dark', WorldPalette> = {
     grid: 'rgba(205, 235, 220, 0.12)',
     route: '#ff9b73',
     routeHalo: 'rgba(13, 35, 39, 0.9)',
+    comparisonRoute: '#7dd8ee',
+    comparisonHalo: 'rgba(13, 35, 39, 0.9)',
   },
 };
 
@@ -123,6 +129,12 @@ export function drawRoute(
   height: number,
   palette: WorldPalette,
   progress = 1,
+  options: {
+    route?: string;
+    halo?: string;
+    drawStart?: boolean;
+    drawTarget?: boolean;
+  } = {},
 ): Coordinate {
   const visibleCount = Math.max(1, Math.ceil(points.length * Math.min(1, Math.max(0, progress))));
   const visible = points.slice(0, visibleCount);
@@ -144,20 +156,177 @@ export function drawRoute(
     }
   };
 
-  renderPath(palette.routeHalo, Math.max(5, width / 120));
-  renderPath(palette.route, Math.max(2.5, width / 260));
+  const routeColor = options.route ?? palette.route;
+  const haloColor = options.halo ?? palette.routeHalo;
+  renderPath(haloColor, Math.max(5, width / 120));
+  renderPath(routeColor, Math.max(2.5, width / 260));
 
   const first = projectCoordinate(points[0], width, height);
-  context.fillStyle = palette.routeHalo;
-  context.beginPath();
-  context.arc(first.x, first.y, Math.max(6, width / 130), 0, Math.PI * 2);
-  context.fill();
-  context.fillStyle = palette.route;
-  context.beginPath();
-  context.arc(first.x, first.y, Math.max(3.5, width / 220), 0, Math.PI * 2);
-  context.fill();
+  if (options.drawStart !== false) {
+    context.fillStyle = haloColor;
+    context.beginPath();
+    context.arc(first.x, first.y, Math.max(6, width / 130), 0, Math.PI * 2);
+    context.fill();
+    context.fillStyle = routeColor;
+    context.beginPath();
+    context.arc(first.x, first.y, Math.max(3.5, width / 220), 0, Math.PI * 2);
+    context.fill();
+  }
+
+  if (options.drawTarget !== false) {
+    const target = projectCoordinate(points.at(-1) ?? points[0], width, height);
+    const radius = Math.max(5, width / 160);
+    context.save();
+    context.translate(target.x, target.y);
+    context.rotate(Math.PI / 4);
+    context.fillStyle = haloColor;
+    context.fillRect(-radius - 2, -radius - 2, (radius + 2) * 2, (radius + 2) * 2);
+    context.fillStyle = routeColor;
+    context.fillRect(-radius, -radius, radius * 2, radius * 2);
+    context.restore();
+  }
 
   return visible.at(-1) ?? points[0];
+}
+
+export function drawWindArrow(
+  context: CanvasRenderingContext2D,
+  coordinate: Coordinate,
+  bearing: number,
+  width: number,
+  height: number,
+  color: string,
+): void {
+  const center = projectCoordinate(coordinate, width, height);
+  const size = Math.max(14, Math.min(22, width / 24));
+  context.save();
+  context.translate(center.x, center.y);
+  context.rotate((bearing * Math.PI) / 180);
+  context.strokeStyle = color;
+  context.fillStyle = color;
+  context.lineWidth = Math.max(2, width / 280);
+  context.beginPath();
+  context.moveTo(0, size * 0.85);
+  context.lineTo(0, -size * 0.75);
+  context.stroke();
+  context.beginPath();
+  context.moveTo(0, -size);
+  context.lineTo(-size * 0.36, -size * 0.48);
+  context.lineTo(size * 0.36, -size * 0.48);
+  context.closePath();
+  context.fill();
+  context.restore();
+}
+
+function longitudeOffset(longitude: number, origin: number): number {
+  return ((((longitude - origin) + 540) % 360) - 180);
+}
+
+export function drawRouteLens(
+  context: CanvasRenderingContext2D,
+  routes: Array<{ points: RoutePoint[]; color: string; halo: string }>,
+  progress: number,
+  width: number,
+  height: number,
+  palette: WorldPalette,
+  label: string,
+): void {
+  const usableRoutes = routes.filter((route) => route.points.length > 1);
+  if (!usableRoutes.length) return;
+
+  const origin = usableRoutes[0].points[0].longitude;
+  const routePoints = usableRoutes.flatMap((route) => route.points);
+  const longitudes = routePoints.map((point) => longitudeOffset(point.longitude, origin));
+  const latitudes = routePoints.map((point) => point.latitude);
+  const longitudeCenter = (Math.min(...longitudes) + Math.max(...longitudes)) / 2;
+  const latitudeCenter = (Math.min(...latitudes) + Math.max(...latitudes)) / 2;
+  const longitudeSpan = Math.max(0.6, Math.max(...longitudes) - Math.min(...longitudes));
+  const latitudeSpan = Math.max(0.6, Math.max(...latitudes) - Math.min(...latitudes));
+
+  const lensWidth = Math.min(width - 20, Math.max(150, width * 0.47));
+  const lensHeight = Math.min(height - 20, Math.max(92, height * 0.42));
+  const left = width - lensWidth - 10;
+  const top = height - lensHeight - 10;
+  const titleHeight = 24;
+  const padding = 10;
+  const plotWidth = lensWidth - padding * 2;
+  const plotHeight = lensHeight - titleHeight - padding;
+  const scale = Math.min(plotWidth / (longitudeSpan * 1.2), plotHeight / (latitudeSpan * 1.2));
+  const project = (point: Coordinate) => ({
+    x: left + lensWidth / 2 + (longitudeOffset(point.longitude, origin) - longitudeCenter) * scale,
+    y: top + titleHeight + plotHeight / 2 - (point.latitude - latitudeCenter) * scale,
+  });
+
+  context.save();
+  context.fillStyle = palette.routeHalo;
+  context.strokeStyle = palette.coast;
+  context.lineWidth = 1;
+  context.beginPath();
+  context.roundRect(left, top, lensWidth, lensHeight, 12);
+  context.fill();
+  context.stroke();
+  context.beginPath();
+  context.rect(left + 1, top + 1, lensWidth - 2, lensHeight - 2);
+  context.clip();
+
+  context.fillStyle = palette.coast;
+  context.font = `700 ${Math.max(10, Math.min(12, width / 44))}px system-ui, sans-serif`;
+  context.fillText(label, left + padding, top + 16, lensWidth - padding * 2);
+
+  usableRoutes.forEach((route) => {
+    const visibleCount = Math.max(1, Math.ceil(route.points.length * clamp(progress, 0, 1)));
+    const visible = route.points.slice(0, visibleCount);
+    const paint = (color: string, lineWidth: number) => {
+      context.strokeStyle = color;
+      context.lineWidth = lineWidth;
+      context.lineCap = 'round';
+      context.lineJoin = 'round';
+      context.beginPath();
+      visible.forEach((point, index) => {
+        const projected = project(point);
+        if (index === 0) context.moveTo(projected.x, projected.y);
+        else context.lineTo(projected.x, projected.y);
+      });
+      context.stroke();
+    };
+    paint(route.halo, 6);
+    paint(route.color, 3);
+
+    const start = project(route.points[0]);
+    context.fillStyle = route.color;
+    context.beginPath();
+    context.arc(start.x, start.y, 4, 0, Math.PI * 2);
+    context.fill();
+
+    const target = project(route.points.at(-1) ?? route.points[0]);
+    context.save();
+    context.translate(target.x, target.y);
+    context.rotate(Math.PI / 4);
+    context.fillRect(-4, -4, 8, 8);
+    context.restore();
+
+    const current = visible.at(-1) ?? route.points[0];
+    const currentPosition = project(current);
+    const currentBearing = current.bearing * Math.PI / 180;
+    context.save();
+    context.translate(currentPosition.x, currentPosition.y);
+    context.rotate(currentBearing);
+    context.strokeStyle = route.color;
+    context.fillStyle = route.color;
+    context.lineWidth = 2;
+    context.beginPath();
+    context.moveTo(0, 7);
+    context.lineTo(0, -7);
+    context.stroke();
+    context.beginPath();
+    context.moveTo(0, -10);
+    context.lineTo(-4, -4);
+    context.lineTo(4, -4);
+    context.closePath();
+    context.fill();
+    context.restore();
+  });
+  context.restore();
 }
 
 export function drawDrawing(

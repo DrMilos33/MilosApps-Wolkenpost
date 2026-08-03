@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://milos-apps.de/contracts/public-app-essentials/v1/essentials-manifest.schema.json",
+  "title": "MilosApps public app essentials manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "appKey", "ownerTask", "public", "loginRequired", "environment", "productionApproved", "entryHtml", "consumerEntryModule", "integrationFiles", "loading", "privacy", "features", "theme", "essentialsContract"],
+  "properties": {
+    "$schema": { "type": "string", "pattern": "^(?![A-Za-z][A-Za-z0-9+.-]*:|//|/|.*\\.\\.).*essentials-manifest\\.schema\\.json$" },
+    "appKey": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "ownerTask": { "type": "string", "minLength": 1 },
+    "public": { "const": true },
+    "loginRequired": { "const": false },
+    "environment": { "enum": ["dev", "production"] },
+    "productionApproved": { "type": "boolean" },
+    "entryHtml": { "type": "string", "pattern": "^(?![A-Za-z]:|/|.*\\.\\.).+\\.html$" },
+    "consumerEntryModule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceFile", "runtimePath"],
+      "properties": {
+        "sourceFile": { "type": "string", "pattern": "^(?![A-Za-z]:|/|.*\\.\\.).+\\.(?:js|mjs|ts|tsx|jsx)$" },
+        "runtimePath": {
+          "description": "Exact module URL in the declared source entryHtml before optional consumer bundling; generated build URLs are verified by the consumer build gate.",
+          "type": "string",
+          "pattern": "^(?![A-Za-z][A-Za-z0-9+.-]*:|//)(?:(?:\\./)|/)?[A-Za-z0-9_~-][A-Za-z0-9._~-]*(?:/[A-Za-z0-9_~-][A-Za-z0-9._~-]*)*$"
+        }
+      }
+    },
+    "integrationFiles": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^(?![A-Za-z]:|/|.*\\.\\.).+\\.(?:html|js|mjs|ts|tsx|jsx)$" }
+    },
+    "loading": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["appName", "iconPath", "message"],
+      "properties": {
+        "appName": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "iconPath": { "type": "string", "pattern": "^(?!https?:|[A-Za-z]:|/|.*\\.\\.).+\\.svg$" },
+        "iconRuntimePath": { "type": "string", "pattern": "^(?![A-Za-z][A-Za-z0-9+.-]*:|//)(?:(?:\\./)|/)?[A-Za-z0-9_~-][A-Za-z0-9._~-]*(?:/[A-Za-z0-9_~-][A-Za-z0-9._~-]*)*\\.svg$" },
+        "message": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["de", "en"],
+          "properties": {
+            "de": { "type": "string", "minLength": 1, "maxLength": 80 },
+            "en": { "type": "string", "minLength": 1, "maxLength": 80 }
+          }
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "usesLocalStorage", "storagePurposes", "optionalTracking", "privacyUrl"],
+      "properties": {
+        "mode": { "enum": ["no-cookies", "essential-only"] },
+        "usesLocalStorage": { "type": "boolean" },
+        "storagePurposes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "purpose", "lifetime", "strictlyNecessary"],
+            "properties": {
+              "key": { "type": "string", "minLength": 1 },
+              "purpose": { "type": "string", "minLength": 1 },
+              "lifetime": { "enum": ["session", "bounded", "until-user-clears"] },
+              "strictlyNecessary": { "const": true }
+            }
+          }
+        },
+        "optionalTracking": { "const": false },
+        "privacyUrl": { "type": "string", "pattern": "^https://(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)+[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?::[0-9]{1,5})?(?:[/?#]\\S*)?$" }
+      }
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["startup", "privacyNotice", "share", "datePicker", "placeSearch", "placeSuggestions"],
+      "properties": {
+        "startup": { "const": true },
+        "privacyNotice": { "type": "boolean" },
+        "share": { "const": true },
+        "datePicker": { "type": "boolean" },
+        "placeSearch": { "type": "boolean" },
+        "placeSuggestions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled", "minChars", "debounceMs", "providerCapability", "evidenceFile"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "minChars": { "type": "integer", "minimum": 2, "maximum": 6 },
+            "debounceMs": { "type": "integer", "minimum": 200, "maximum": 1000 },
+            "providerCapability": { "enum": ["submit-only", "consumer-autocomplete-proxy"] },
+            "evidenceFile": {
+              "type": ["string", "null"],
+              "pattern": "^(?![A-Za-z]:|/|.*\\.\\.).+\\.(?:md|json)$"
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "placeSuggestions": { "properties": { "enabled": { "const": true } } } } },
+          "then": {
+            "properties": {
+              "placeSearch": { "const": true },
+              "placeSuggestions": {
+                "properties": {
+                  "providerCapability": { "const": "consumer-autocomplete-proxy" },
+                  "evidenceFile": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "placeSuggestions": { "properties": { "enabled": { "const": false } } } } },
+          "then": {
+            "properties": {
+              "placeSuggestions": {
+                "properties": {
+                  "providerCapability": { "const": "submit-only" },
+                  "evidenceFile": { "const": null }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "theme": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["accent", "accentContrast", "surface", "surfaceSoft", "text", "muted", "border", "focus"],
+      "properties": {
+        "accent": { "type": "string", "pattern": "^(?:#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})|var\\(--[a-z0-9]+(?:-[a-z0-9]+)*\\))$" },
+        "accentContrast": { "type": "string", "pattern": "^(?:#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})|var\\(--[a-z0-9]+(?:-[a-z0-9]+)*\\))$" },
+        "surface": { "type": "string", "pattern": "^(?:#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})|var\\(--[a-z0-9]+(?:-[a-z0-9]+)*\\))$" },
+        "surfaceSoft": { "type": "string", "pattern": "^(?:#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})|var\\(--[a-z0-9]+(?:-[a-z0-9]+)*\\))$" },
+        "text": { "type": "string", "pattern": "^(?:#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})|var\\(--[a-z0-9]+(?:-[a-z0-9]+)*\\))$" },
+        "muted": { "type": "string", "pattern": "^(?:#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})|var\\(--[a-z0-9]+(?:-[a-z0-9]+)*\\))$" },
+        "border": { "type": "string", "pattern": "^(?:#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})|var\\(--[a-z0-9]+(?:-[a-z0-9]+)*\\))$" },
+        "focus": { "type": "string", "pattern": "^(?:#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})|var\\(--[a-z0-9]+(?:-[a-z0-9]+)*\\))$" }
+      }
+    },
+    "essentialsContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "sharedCommit", "vendorDirectory", "runtimeBasePath"],
+      "properties": {
+        "id": { "const": "public-app-essentials/v1" },
+        "version": { "const": "1.1.2" },
+        "sharedCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "vendorDirectory": { "type": "string", "pattern": "^(?![A-Za-z]:|/|.*\\.\\.).+$" },
+        "runtimeBasePath": { "type": "string", "pattern": "^(?![A-Za-z][A-Za-z0-9+.-]*:|//)(?:(?:\\./)|/)?[A-Za-z0-9_~-][A-Za-z0-9._~-]*(?:/[A-Za-z0-9_~-][A-Za-z0-9._~-]*)*$" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "environment": { "const": "production" } } },
+      "then": { "properties": { "productionApproved": { "const": true } } }
+    },
+    {
+      "if": { "properties": { "environment": { "const": "dev" } } },
+      "then": { "properties": { "productionApproved": { "const": false } } }
+    },
+    {
+      "if": { "properties": { "privacy": { "properties": { "mode": { "const": "no-cookies" } } } } },
+      "then": { "properties": { "features": { "properties": { "privacyNotice": { "const": false } } } } }
+    },
+    {
+      "if": { "properties": { "privacy": { "properties": { "mode": { "const": "essential-only" } } } } },
+      "then": { "properties": { "features": { "properties": { "privacyNotice": { "const": true } } } } }
+    },
+    {
+      "if": { "properties": { "privacy": { "properties": { "usesLocalStorage": { "const": true } } } } },
+      "then": { "properties": { "privacy": { "properties": { "storagePurposes": { "minItems": 1 } } } } }
+    },
+    {
+      "if": { "properties": { "privacy": { "properties": { "usesLocalStorage": { "const": false } } } } },
+      "then": { "properties": { "privacy": { "properties": { "storagePurposes": { "maxItems": 0 } } } } }
+    }
+  ]
+}
