@@ -190,6 +190,7 @@ a {
   --milos-layout-content-max: 96rem;
   --milos-layout-work-max: 88rem;
   min-width: 0;
+  width: 100%;
   padding-block: 0.5rem 0;
   overflow: visible;
 }
@@ -329,10 +330,19 @@ h2 {
 
 .journey-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 1.25rem;
-  margin: 0;
-  align-items: stretch;
+  grid-template-columns: 18rem minmax(0, 1fr);
+  gap: clamp(1rem, 2vw, 1.6rem);
+  width: calc(100% + 4rem);
+  margin-inline: -2rem;
+  padding: 0;
+  align-items: start;
+}
+
+.journey-sidebar {
+  display: grid;
+  min-width: 0;
+  gap: 1rem;
+  align-content: start;
 }
 
 .state-panel,
@@ -349,43 +359,83 @@ h2 {
 }
 
 .map-step {
-  padding-top: 1rem;
-  border-block-start: 1px solid var(--line);
+  padding: 0;
+  border: 0;
 }
 
 .drawing-step {
   display: grid;
-  grid-template-columns: minmax(18rem, 0.82fr) minmax(0, 1.18fr);
-  grid-template-rows: auto auto 1fr auto;
-  gap: 0.75rem 1.25rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.65rem;
 }
 
 .drawing-step > .step-heading {
-  grid-column: 1 / -1;
+  grid-column: 1;
 }
 
 .drawing-step > .object-picker {
   grid-column: 1;
-  grid-row: 2;
 }
 
 .drawing-step > .outline-selector {
   grid-column: 1;
-  grid-row: 3;
 }
 
 .drawing-step > .drawing-board {
-  grid-column: 2;
-  grid-row: 2 / span 2;
+  grid-column: 1;
 }
 
 .drawing-step > .drawing-actions {
-  grid-column: 2;
-  grid-row: 4;
+  grid-column: 1;
 }
 
 .step-heading {
   margin-bottom: 0.65rem;
+}
+
+.step-heading-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0;
+}
+
+.step-title-line,
+.wind-title-line {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 0.38rem;
+}
+
+.step-title-line .step-kicker,
+.wind-title-line .step-kicker {
+  flex: none;
+  margin: 0;
+  font-size: 0.64rem;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+
+.step-title-line h2,
+.wind-title-line h3 {
+  margin: 0;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.map-planner-heading .step-title-line h2,
+.wind-title-line h3 {
+  font-size: 0.72rem;
+}
+
+.map-planner-heading .step-title-line .step-kicker,
+.wind-title-line .step-kicker {
+  font-size: 0.48rem;
 }
 
 .step-number {
@@ -396,7 +446,7 @@ h2 {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.6rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
 }
 
 .outline-selector {
@@ -426,7 +476,7 @@ h2 {
 .outline-option {
   display: grid;
   min-width: 0;
-  min-height: 92px;
+  min-height: 70px;
   justify-items: center;
   gap: 0.25rem;
   padding: 0.45rem;
@@ -451,8 +501,8 @@ h2 {
 }
 
 .outline-option svg {
-  width: 54px;
-  height: 54px;
+  width: 42px;
+  height: 42px;
   overflow: visible;
 }
 
@@ -467,7 +517,7 @@ h2 {
 .object-option {
   display: flex;
   min-width: 0;
-  min-height: 58px;
+  min-height: 54px;
   align-items: center;
   gap: 0.65rem;
   padding: 0.65rem;
@@ -506,6 +556,58 @@ h2 {
   line-height: 1.25;
 }
 
+.journey-sidebar .outline-selector > div:first-child span {
+  display: none;
+}
+
+.journey-sidebar .object-option small {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.journey-sidebar .object-picker {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.journey-sidebar .object-option {
+  position: relative;
+  display: grid;
+  min-height: 66px;
+  place-items: center;
+  gap: 0.2rem;
+  padding: 0.3rem 0.2rem;
+  text-align: center;
+}
+
+.journey-sidebar .object-option strong {
+  font-size: 0.68rem;
+  line-height: 1.1;
+}
+
+.journey-sidebar .object-symbol {
+  width: 28px;
+  height: 28px;
+  flex-basis: 28px;
+  font-size: 1.05rem;
+}
+
+.journey-sidebar .outline-option {
+  min-height: 54px;
+  padding: 0.25rem;
+}
+
+.journey-sidebar .outline-option svg {
+  width: 32px;
+  height: 32px;
+}
+
 .object-symbol {
   display: grid;
   flex: 0 0 34px;
@@ -524,7 +626,7 @@ h2 {
 .drawing-canvas {
   display: block;
   width: 100%;
-  height: clamp(300px, 29vw, 360px);
+  height: 140px;
   border: 1px solid var(--line);
   border-radius: 22px;
   box-shadow: inset 0 2px 12px rgba(44, 89, 74, 0.06);
@@ -554,6 +656,10 @@ h2 {
   gap: 0.6rem;
   align-items: center;
   margin-top: 1rem;
+}
+
+.journey-sidebar .drawing-actions {
+  margin-top: 0;
 }
 
 button {
@@ -620,7 +726,9 @@ button:disabled {
 }
 
 .map-canvas-shell {
-  position: relative;
+  position: sticky;
+  top: 1rem;
+  z-index: 2;
   min-width: 0;
   isolation: isolate;
 }
@@ -672,9 +780,9 @@ button:disabled {
 .world-map {
   display: block;
   width: 100%;
-  aspect-ratio: 2 / 1;
-  min-height: 520px;
-  max-height: 720px;
+  height: clamp(600px, 72vh, 760px);
+  min-height: 600px;
+  max-height: 760px;
   border: 1px solid var(--line);
   border-radius: 22px;
   cursor: crosshair;
@@ -688,46 +796,57 @@ button:disabled {
 }
 
 .map-detail {
-  max-width: 68ch;
-  margin: 0.2rem 0 0;
+  grid-column: 2;
+  margin: 0;
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 0.68rem;
+  line-height: 1.35;
 }
 
 .map-control-widget {
   position: relative;
-  z-index: 4;
+  z-index: 1;
   display: grid;
-  grid-template-columns: minmax(12rem, 0.48fr) minmax(0, 2fr);
-  width: calc(100% - 2rem);
-  margin: -1.25rem 1rem 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  width: 100%;
+  margin: 0;
+  padding-top: 0.9rem;
   overflow: visible;
-  border: 1px solid color-mix(in srgb, var(--line) 86%, transparent);
-  border-radius: 18px;
-  background: var(--surface-strong);
-  box-shadow: 0 14px 32px color-mix(in srgb, var(--ink) 14%, transparent);
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.map-planner-heading {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
 }
 
 .map-control-widget .selected-place {
   width: 100%;
   margin: 0;
-  padding: 0.8rem 0.9rem;
-  border: 0;
-  border-radius: 0;
-  border-inline-end: 1px solid var(--line);
-  background: transparent;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
   box-shadow: none;
 }
 
 .map-control-widget .wind-scout {
-  grid-template-columns: minmax(13rem, 0.85fr) minmax(18rem, 1.15fr);
+  grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
-    'heading boost'
-    'reading boost'
-    'details actions';
+    'heading'
+    'reading'
+    'boost'
+    'details'
+    'actions';
   align-items: start;
   gap: 0.45rem 0.8rem;
-  padding: 0.7rem 0.8rem;
+  padding: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -740,6 +859,23 @@ button:disabled {
 .map-control-widget .wind-more-levels { grid-area: details; }
 .map-control-widget .wind-scout-actions { grid-area: actions; }
 .map-control-widget .wind-boost { grid-area: boost; }
+
+.map-control-widget .wind-scout-heading {
+  min-height: 44px;
+}
+
+.map-control-widget .wind-compass:not(.is-large) {
+  display: none;
+}
+
+.map-control-widget .wind-primary-reading {
+  padding: 0.5rem;
+}
+
+.map-control-widget .wind-more-levels[open] .wind-readings {
+  max-height: 13rem;
+  overflow-y: auto;
+}
 
 .map-landmark-strip,
 .flight-moment {
@@ -1416,6 +1552,17 @@ button:disabled {
   scroll-margin-top: 5.5rem;
 }
 
+@media (min-width: 761px) {
+  .flight-space:has(.result-section) .world-map {
+    height: clamp(340px, 48vh, 430px);
+    min-height: 340px;
+  }
+
+  #result-heading {
+    scroll-margin-top: clamp(365px, 52vh, 455px);
+  }
+}
+
 .model-boundary {
   min-width: 0;
   max-width: 100%;
@@ -1650,6 +1797,220 @@ button:disabled {
   margin-top: 0;
 }
 
+.journey-sidebar .launch-panel {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.9rem;
+  border-radius: 18px;
+}
+
+.journey-sidebar .launch-panel h2 {
+  font-size: 1.05rem;
+}
+
+.journey-sidebar .launch-panel p {
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.journey-sidebar .launch-button,
+.journey-sidebar .loading-actions {
+  width: 100%;
+  min-width: 0;
+}
+
+.travel-journal {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.travel-journal h3,
+.travel-journal h4,
+.travel-journal p,
+.travel-journal figure,
+.travel-journal dl,
+.travel-journal dd {
+  margin: 0;
+}
+
+.travel-journal-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.travel-journal-heading > p {
+  max-width: 34rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-align: end;
+}
+
+.travel-journal-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(15rem, 0.65fr);
+  gap: 0.85rem;
+}
+
+.travel-photo,
+.journey-event,
+.daily-mission,
+.travel-passport {
+  min-width: 0;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--line);
+}
+
+.travel-photo h4,
+.journey-event h4,
+.daily-mission h4,
+.travel-passport h4 {
+  font-size: 0.92rem;
+}
+
+.travel-photo figure {
+  position: relative;
+  min-height: 21rem;
+  margin-top: 0.55rem;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--surface-soft);
+}
+
+.travel-photo img {
+  display: block;
+  width: 100%;
+  height: 21rem;
+  object-fit: cover;
+}
+
+.travel-photo-drawing {
+  position: absolute;
+  z-index: 2;
+  top: 20%;
+  left: 53%;
+  width: min(34%, 15rem);
+  height: min(35%, 10rem);
+  overflow: visible;
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.42));
+}
+
+.travel-photo-drawing polyline {
+  fill: color-mix(in srgb, var(--surface-strong) 72%, transparent);
+  stroke: #ff8f69;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.travel-photo figcaption {
+  position: absolute;
+  z-index: 3;
+  right: 0.55rem;
+  bottom: 0.55rem;
+  left: 0.55rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 11px;
+  background: color-mix(in srgb, #102f29 88%, transparent);
+  color: #fffdf8;
+  font-size: 0.66rem;
+  backdrop-filter: blur(8px);
+}
+
+.travel-photo figcaption a {
+  flex: none;
+  font-weight: 800;
+}
+
+.travel-photo-empty {
+  display: grid;
+  min-height: 12rem;
+  place-items: center;
+  align-content: center;
+  gap: 0.45rem;
+  margin-top: 0.55rem;
+  padding: 1.25rem;
+  border: 1px dashed var(--line);
+  border-radius: 16px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.travel-photo-empty > span {
+  color: var(--accent);
+  font-size: 2.4rem;
+}
+
+.travel-journal-details {
+  display: grid;
+  gap: 0.85rem;
+  align-content: start;
+}
+
+.journey-event,
+.daily-mission,
+.travel-passport {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.journey-event > p,
+.daily-mission > p,
+.travel-passport > p,
+.travel-passport dd {
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.42;
+}
+
+.journey-event > strong {
+  color: var(--accent);
+}
+
+.daily-mission > span {
+  width: fit-content;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.daily-mission.is-complete > span {
+  border-color: var(--brand);
+  background: var(--surface-soft);
+  color: var(--brand);
+}
+
+.travel-passport dl {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.travel-passport dl > div {
+  padding-left: 0.55rem;
+  border-left: 2px solid var(--accent);
+}
+
+.travel-passport dt {
+  color: var(--ink);
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .settings-section {
   margin: 0;
   padding-block: 0.5rem;
@@ -1787,6 +2148,12 @@ button:disabled {
 
   .journey-layout {
     grid-template-columns: 1fr;
+    width: 100%;
+    margin-inline: 0;
+  }
+
+  .journey-sidebar {
+    display: grid;
   }
 
   .drawing-step {
@@ -1804,10 +2171,9 @@ button:disabled {
   }
 
   .map-step {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-inline-start: 0;
-    border-block-start: 1px solid var(--line);
+    margin-top: 0;
+    padding-top: 0;
+    border: 0;
   }
 
   .flight-space .result-section {
@@ -1894,11 +2260,11 @@ button:disabled {
   .map-control-widget {
     position: relative;
     inset: auto;
-    z-index: 4;
+    z-index: 1;
     grid-template-columns: minmax(0, 1fr);
-    width: calc(100% - 1rem);
+    width: 100%;
     max-height: none;
-    margin: -1rem 0.5rem 0;
+    margin: 0;
     overflow: visible;
     backdrop-filter: none;
   }
@@ -1962,8 +2328,29 @@ button:disabled {
 
   .world-map {
     min-height: 320px;
+    height: auto;
     max-height: none;
     aspect-ratio: 1.28;
+  }
+
+  .travel-journal-heading,
+  .travel-photo figcaption {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .travel-journal-heading > p {
+    text-align: start;
+  }
+
+  .travel-journal-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .travel-photo figure,
+  .travel-photo img {
+    min-height: 17rem;
+    height: 17rem;
   }
 
   .map-view-toolbar output {
@@ -2145,6 +2532,16 @@ button:disabled {
     gap: 0.5rem;
   }
 
+  .step-title-line,
+  .wind-title-line {
+    flex-wrap: wrap;
+  }
+
+  .step-title-line h2,
+  .wind-title-line h3 {
+    white-space: normal;
+  }
+
   .step-number {
     flex-basis: 32px;
     width: 32px;
@@ -2158,6 +2555,7 @@ button:disabled {
   }
 
   .object-picker,
+  .journey-sidebar .object-picker,
   .outline-picker {
     grid-template-columns: minmax(0, 1fr);
   }

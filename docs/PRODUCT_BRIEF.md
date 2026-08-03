@@ -16,26 +16,23 @@ Welt.
 
 ## Produktstufen nach Nutzerfeedback
 
-Die aktuell testbare erste Stufe konzentriert sich auf den Flug selbst:
+Die aktuell testbare Stufe verbindet den Flugkern mit einer ersten spielerischen
+Reiseschicht:
 
-- grosse, nicht neben eine zweite Hauptspalte gedrueckte Kartenbuehne;
-- Karten-Widget fuer echten Wind und spielerische Reichweite;
-- Reise- und Abenteuerweite fuer sichtbar laengere Fluege;
-- automatische Flugverfolgung und bewusste Gesamtansicht;
-- erste kuratierte Sehenswuerdigkeiten im Laenderzoom und als Vorbeiflug.
+- große rechte Kartenbühne mit einer ruhigen linken Steuerleiste;
+- echter Wind und getrennte spielerische Reise-/Abenteuerweite;
+- automatische Flugverfolgung, Länderzoom und bewusste Gesamtansicht;
+- kuratierte Sehenswürdigkeiten im Länderzoom und als Vorbeiflug;
+- lokal vendorte, klar lizenzierte Fotomomente mit transparenter
+  Nutzerzeichnung;
+- lokaler Reisepass für Länder- und Wahrzeichenstempel;
+- reproduzierbare Reiseereignisse und wechselnde Tagesmissionen;
+- Vergleichs-/Geisterroute auf demselben Winddatenstand;
+- optionaler prozeduraler Startton ausschließlich nach Nutzeraktion.
 
-Erst nach dem Nutzertest dieser Stufe folgt die weitere Agenda:
-
-1. lizenzierte Fotopostkarten mit transparent freigestellter Nutzerzeichnung,
-   ohne weissen Zeichenflaechen-Kasten und mit vollstaendig dokumentierten
-   Bildrechten;
-2. Reisepass beziehungsweise Stempel fuer besuchte Laender und Wahrzeichen;
-3. taegliche kleine Missionen und spielerische Aufgaben;
-4. Geisterrouten, Vergleiche und weitere zufaellige Reiseereignisse;
-5. optionale, erst nach Nutzeraktion startende Geraeusmomente.
-
-Diese Punkte sind bewusst nicht Teil der ersten Freigabe: Die Kartenmechanik
-soll zuerst als eigenstaendiger Spielkern vom Nutzer bewertet werden.
+Nach dem direkten Nutzertest können Fotomotivabdeckung, Missionstypen und
+Reiseereignisse erweitert werden. Neue Bildmotive benötigen weiterhin eine
+einzeln dokumentierte, für lokale Bearbeitung geeignete Lizenz.
 
 ## MVP
 
@@ -72,7 +69,8 @@ soll zuerst als eigenstaendiger Spielkern vom Nutzer bewertet werden.
 
 ## Daten und Datenschutz
 
-Zeichnung, Einstellungen und optional der letzte grobe Startort bleiben lokal.
+Zeichnung, Einstellungen, Reisepass und optional der letzte grobe Startort
+bleiben lokal.
 Externe Anfragen werden auf die fachlich notwendige Orts- und Zeitgenauigkeit
 begrenzt. Quelle, Datenstand, Attribution und ein möglicher Demo-/Fallbackmodus
 müssen sichtbar und ehrlich sein.

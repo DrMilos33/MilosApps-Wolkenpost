@@ -27,7 +27,7 @@
     "storagePurposes": [
       {
         "key": "milosapps.cloud-post.state",
-        "purpose": "Bewahrt die selbst erstellte Zeichnung, das Flugobjekt, den groben Startpunkt sowie Darstellungs-, Bewegungs- und Tonpräferenzen für die ausdrücklich angebotene lokale Wiederaufnahme und Offline-Nutzung.",
+        "purpose": "Bewahrt die selbst erstellte Zeichnung, das Flugobjekt, den groben Startpunkt, Darstellungs-, Bewegungs- und Tonpräferenzen sowie den lokalen Reisepass für die ausdrücklich angebotene Wiederaufnahme, das Sammelspiel und die Offline-Nutzung.",
         "lifetime": "until-user-clears",
         "strictlyNecessary": true
       },

@@ -3,6 +3,7 @@ import { DrawingCanvas } from './components/DrawingCanvas';
 import { FlightReadout } from './components/FlightReadout';
 import { OutlinePicker } from './components/OutlinePicker';
 import { RouteHighlights } from './components/RouteHighlights';
+import { TravelJournal } from './components/TravelJournal';
 import { WindScout } from './components/WindScout';
 import { WorldMap } from './components/WorldMap';
 import { copy, type SupportedLanguage } from './copy';
@@ -18,6 +19,7 @@ import {
 import { createResultImage, downloadFile } from './lib/export';
 import { haversineKm, roundedCoordinateLabel } from './lib/geometry';
 import { routeHighlights } from './lib/route-highlights';
+import { updateTravelPassport } from './lib/travel-journal';
 import { OBJECT_PROFILES, simulateRoute } from './lib/simulation';
 import {
   clearState,
@@ -174,6 +176,7 @@ export default function App({ initialLanguage: language }: AppProps) {
   const [theme, setTheme] = useState<ThemePreference>(initial.theme);
   const [soundEnabled, setSoundEnabled] = useState(initial.soundEnabled);
   const [windBoost, setWindBoost] = useState<WindBoost>(initial.windBoost);
+  const [travelPassport, setTravelPassport] = useState(initial.travelPassport);
   const [flightStatus, setFlightStatus] = useState<FlightStatus>('idle');
   const [errorKind, setErrorKind] = useState<WindRequestError['kind']>('network');
   const [result, setResult] = useState<RouteResult | null>(null);
@@ -266,11 +269,12 @@ export default function App({ initialLanguage: language }: AppProps) {
         theme,
         soundEnabled,
         windBoost,
+        travelPassport,
       });
       setStorageWarning(!saved);
     }, 250);
     return () => window.clearTimeout(timeout);
-  }, [motion, objectType, soundEnabled, start, strokes, theme, windBoost]);
+  }, [motion, objectType, soundEnabled, start, strokes, theme, travelPassport, windBoost]);
 
   useEffect(() => () => {
     abortRef.current?.abort();
@@ -368,10 +372,12 @@ export default function App({ initialLanguage: language }: AppProps) {
 
   const applyResult = (nextResult: RouteResult, snapshot: WindSnapshot) => {
     const endLabel = routeEndLabel(nextResult, language);
+    const discoveries = routeHighlights(nextResult, language, text.map);
     setWindSnapshot(snapshot);
     setResult(nextResult);
     setComparisonResult(null);
     setComparisonObjectType(defaultComparisonType(nextResult.objectType));
+    setTravelPassport((current) => updateTravelPassport(current, nextResult, discoveries));
     setFlightStatus('result');
     setAnnouncement(
       text.announcements.routeReady(Math.round(nextResult.distanceKm), endLabel),
@@ -558,6 +564,7 @@ export default function App({ initialLanguage: language }: AppProps) {
     setTheme(DEFAULT_STATE.theme);
     setSoundEnabled(DEFAULT_STATE.soundEnabled);
     setWindBoost(DEFAULT_STATE.windBoost);
+    setTravelPassport(DEFAULT_STATE.travelPassport);
     setResult(null);
     setComparisonResult(null);
     setWindSnapshot(null);
@@ -637,10 +644,11 @@ export default function App({ initialLanguage: language }: AppProps) {
         </section>
 
         <div className="journey-layout" data-milos-primary-work data-milos-panel>
+          <aside className="journey-sidebar" aria-label={text.map.plannerLabel}>
           <section className="step-card drawing-step" id="zeichnen" aria-labelledby="drawing-heading">
-            <div className="step-heading" data-milos-step>
+            <div className="step-heading step-heading-inline" data-milos-step>
               <span className="step-number" aria-hidden="true" data-milos-step-index>1</span>
-              <div>
+              <div className="step-title-line">
                 <p className="step-kicker">{text.drawing.kicker}</p>
                 <h2 id="drawing-heading">{text.drawing.heading}</h2>
               </div>
@@ -653,6 +661,7 @@ export default function App({ initialLanguage: language }: AppProps) {
                   className={`object-option ${objectType === type ? 'is-selected' : ''}`}
                   role="radio"
                   aria-checked={objectType === type}
+                  aria-label={`${text.objectTypes[type].label} ${text.objectTypes[type].hint}`}
                   onClick={() => changeObjectType(type)}
                   type="button"
                 >
@@ -660,8 +669,8 @@ export default function App({ initialLanguage: language }: AppProps) {
                     {type === 'cloud' ? '☁' : type === 'balloon' ? '◉' : type === 'seed' ? '❧' : '➤'}
                   </span>
                   <span>
-                    <strong>{text.objectTypes[type].label}</strong>
-                    <small>{text.objectTypes[type].hint}</small>
+                    <strong>{text.objectTypes[type].shortLabel}</strong>
+                    <small className="sr-only">{text.objectTypes[type].hint}</small>
                   </span>
                 </button>
               ))}
@@ -734,16 +743,123 @@ export default function App({ initialLanguage: language }: AppProps) {
             </div>
           </section>
 
-          <section className="step-card map-step" aria-labelledby="map-heading">
-            <div className="step-heading" data-milos-step>
+          <section className="map-control-widget" data-testid="map-control-widget" aria-labelledby="map-heading">
+            <div className="step-heading step-heading-inline map-planner-heading" data-milos-step>
               <span className="step-number" aria-hidden="true" data-milos-step-index>2</span>
-              <div>
+              <div className="step-title-line">
                 <p className="step-kicker">{text.map.kicker}</p>
                 <h2 id="map-heading">{text.map.heading}</h2>
-                <p className="map-detail">{text.map.detail}</p>
+              </div>
+              <p className="map-detail">{text.map.detail}</p>
+            </div>
+
+            <div className="selected-place" aria-live="polite">
+              <span className="place-pin" aria-hidden="true">●</span>
+              <span>
+                <small>{text.map.selected}</small>
+                <strong>{start.name}</strong>
+                <span>{placeContext(start)}</span>
+              </span>
+            </div>
+
+            <div className="map-planning-grid">
+              <div className="location-planner">
+                <div className="place-tools">
+                  <milos-place-search
+                    key={language}
+                    ref={placeSearchRef}
+                    label-de={copy.de.map.search}
+                    label-en={copy.en.map.search}
+                    placeholder-de={copy.de.map.placeholder}
+                    placeholder-en={copy.en.map.placeholder}
+                  />
+                </div>
+
+                <details className="coordinate-controls">
+                  <summary>{text.map.fineTune}</summary>
+                  <div>
+                    <label>
+                      {text.map.latitude} <output>{start.latitude.toFixed(0)}°</output>
+                      <input
+                        type="range"
+                        min="-85"
+                        max="85"
+                        step="1"
+                        value={start.latitude}
+                        onChange={(event) => selectMapCoordinate({
+                          latitude: Number(event.target.value),
+                          longitude: start.longitude,
+                        })}
+                      />
+                    </label>
+                    <label>
+                      {text.map.longitude} <output>{start.longitude.toFixed(0)}°</output>
+                      <input
+                        type="range"
+                        min="-180"
+                        max="180"
+                        step="1"
+                        value={start.longitude}
+                        onChange={(event) => selectMapCoordinate({
+                          latitude: start.latitude,
+                          longitude: Number(event.target.value),
+                        })}
+                      />
+                    </label>
+                  </div>
+                </details>
               </div>
             </div>
 
+            <WindScout
+              status={windPreviewStatus}
+              readings={activeWindReadings}
+              objectType={objectType}
+              dataTime={windPreviewSnapshot?.forecastStart}
+              locale={locale}
+              text={text.windScout}
+              error={windPreviewStatus === 'error' ? text.windErrors[windPreviewErrorKind] : undefined}
+              onCheck={() => void inspectWind(start)}
+              onCancel={cancelWindPreview}
+              windBoost={windBoost}
+              estimatedDistanceKm={estimatedDistanceKm}
+              onWindBoostChange={(next) => {
+                setWindBoost(next);
+                clearFlightResult();
+              }}
+            />
+          </section>
+
+          <section className="launch-panel" aria-labelledby="launch-heading" data-milos-command-dock>
+            <div>
+              <p className="step-kicker">{text.launch.kicker}</p>
+              <h2 id="launch-heading">{text.launch.heading}</h2>
+              <p>{text.launch.description}</p>
+            </div>
+            {flightStatus === 'loading' ? (
+              <div className="loading-actions" role="status">
+                <span className="wind-loader" aria-hidden="true" />
+                <span>{text.launch.loading}</span>
+                <button type="button" className="text-button on-dark" onClick={cancelFlight}>
+                  {text.launch.cancel}
+                </button>
+              </div>
+            ) : (
+              <button
+                className="launch-button"
+                type="button"
+                onClick={startLiveFlight}
+                disabled={!strokes.length}
+              >
+                <span>{text.launch.start}</span>
+                <span aria-hidden="true">→</span>
+              </button>
+            )}
+            {!strokes.length && <p className="launch-hint">{text.launch.missingDrawing}</p>}
+          </section>
+          </aside>
+
+          <section className="step-card map-step" aria-label={text.flightSpace.heading}>
             <div className="flight-space" ref={flightSpaceRef} data-testid="flight-space">
               <div className="map-canvas-shell">
                 <WorldMap
@@ -764,35 +880,6 @@ export default function App({ initialLanguage: language }: AppProps) {
                   onProgress={reportFlightProgress}
                 />
               </div>
-
-              <aside className="map-control-widget" data-testid="map-control-widget">
-                <div className="selected-place" aria-live="polite">
-                  <span className="place-pin" aria-hidden="true">●</span>
-                  <span>
-                    <small>{text.map.selected}</small>
-                    <strong>{start.name}</strong>
-                    <span>{placeContext(start)}</span>
-                  </span>
-                </div>
-
-                <WindScout
-                  status={windPreviewStatus}
-                  readings={activeWindReadings}
-                  objectType={objectType}
-                  dataTime={windPreviewSnapshot?.forecastStart}
-                  locale={locale}
-                  text={text.windScout}
-                  error={windPreviewStatus === 'error' ? text.windErrors[windPreviewErrorKind] : undefined}
-                  onCheck={() => void inspectWind(start)}
-                  onCancel={cancelWindPreview}
-                  windBoost={windBoost}
-                  estimatedDistanceKm={estimatedDistanceKm}
-                  onWindBoostChange={(next) => {
-                    setWindBoost(next);
-                    clearFlightResult();
-                  }}
-                />
-              </aside>
 
               {result && (
                 <section className="result-section" aria-labelledby="result-heading" data-milos-result>
@@ -951,86 +1038,21 @@ export default function App({ initialLanguage: language }: AppProps) {
                   </div>
                 </section>
               )}
-            </div>
-
-            <div className="map-planning-grid">
-              <div className="location-planner">
-                <div className="place-tools">
-                  <milos-place-search
-                    key={language}
-                    ref={placeSearchRef}
-                    label-de={copy.de.map.search}
-                    label-en={copy.en.map.search}
-                    placeholder-de={copy.de.map.placeholder}
-                    placeholder-en={copy.en.map.placeholder}
-                  />
-                </div>
-
-                <details className="coordinate-controls">
-                  <summary>{text.map.fineTune}</summary>
-                  <div>
-                    <label>
-                      {text.map.latitude} <output>{start.latitude.toFixed(0)}°</output>
-                      <input
-                        type="range"
-                        min="-85"
-                        max="85"
-                        step="1"
-                        value={start.latitude}
-                        onChange={(event) => selectMapCoordinate({
-                          latitude: Number(event.target.value),
-                          longitude: start.longitude,
-                        })}
-                      />
-                    </label>
-                    <label>
-                      {text.map.longitude} <output>{start.longitude.toFixed(0)}°</output>
-                      <input
-                        type="range"
-                        min="-180"
-                        max="180"
-                        step="1"
-                        value={start.longitude}
-                        onChange={(event) => selectMapCoordinate({
-                          latitude: start.latitude,
-                          longitude: Number(event.target.value),
-                        })}
-                      />
-                    </label>
-                  </div>
-                </details>
-              </div>
+              {result && (
+                <TravelJournal
+                  result={result}
+                  comparisonResult={comparisonResult}
+                  highlights={activeRouteHighlights}
+                  strokes={strokes}
+                  passport={travelPassport}
+                  language={language}
+                  locale={locale}
+                  text={text.travelJournal}
+                />
+              )}
             </div>
           </section>
         </div>
-
-        <section className="launch-panel" aria-labelledby="launch-heading" data-milos-command-dock>
-          <div>
-            <p className="step-kicker">{text.launch.kicker}</p>
-            <h2 id="launch-heading">{text.launch.heading}</h2>
-            <p>{text.launch.description}</p>
-          </div>
-          {flightStatus === 'loading' ? (
-            <div className="loading-actions" role="status">
-              <span className="wind-loader" aria-hidden="true" />
-              <span>{text.launch.loading}</span>
-              <button type="button" className="text-button on-dark" onClick={cancelFlight}>
-                {text.launch.cancel}
-              </button>
-            </div>
-          ) : (
-            <button
-              className="launch-button"
-              type="button"
-              onClick={startLiveFlight}
-              disabled={!strokes.length}
-            >
-              <span>{text.launch.start}</span>
-              <span aria-hidden="true">→</span>
-            </button>
-          )}
-          {!strokes.length && <p className="launch-hint">{text.launch.missingDrawing}</p>}
-        </section>
 
         {flightStatus === 'error' && (
           <section className="state-panel error-panel" role="alert" aria-labelledby="wind-error-heading" data-milos-result>

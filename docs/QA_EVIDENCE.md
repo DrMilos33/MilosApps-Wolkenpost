@@ -885,3 +885,61 @@ Flug 792 statt 769 CSS-Pixel Dokumentbreite. Ursache war die zweispaltige
 Desktopanordnung des bereiten Winddocks knapp oberhalb des mobilen Breakpoints.
 Der Dock stapelt deshalb bis 820 Pixel; die gezielte Tablet-Reise besteht danach
 3/3 ohne Overflow.
+
+## Reise-Arbeitsplatz und Agenda-Paket
+
+Dieser Abschnitt ersetzt die frühere Follow-up-Aussage, die Karte bleibe
+grundsätzlich relativ und weitere Spielmodule seien pausiert. Der direkte
+Nutzervergleich mit „Irgendwo ist gerade“ führte zu einem klaren
+Arbeitsplatzprinzip: Auf breiten Viewports steht links eine ruhige, 288 Pixel
+breite Steuerspur; rechts erhält die Karte den verbleibenden Raum. Auf kleinen
+Viewports bleibt die lineare Lesereihenfolge erhalten.
+
+### Sichtbare Runde 1 – Start und Planung
+
+- 1440 × 1000: Arbeitsbereich 1152 Pixel, linke Steuerspur 288 Pixel,
+  Kartenfläche 836 × 600 Pixel; kein horizontaler Overflow und kein innerer
+  Widget-Scroll.
+- „Dein Reisender · Was fliegt heute?“, „Der Startpunkt · Wo geht die Reise
+  los?“ sowie „Wind vor dem Start · Wie kräftig trägt der Wind hier?“ bleiben
+  jeweils in einer kompakten Titelzeile.
+- Der erste Reflow-Lauf fand bei 180 CSS-Pixeln vier nur rund 32 Pixel breite
+  Objekttasten. Die Auswahl wird dort nun einspaltig; alle sichtbaren Ziele
+  messen wieder mindestens 44 Pixel. Der gezielte 360 × 800@200-%-Lauf ist
+  danach ohne Überlauf oder geclippten sichtbaren Text grün.
+
+### Sichtbare Runde 2 – Flug, Ergebnis und Reisejournal
+
+Ein echter Open-Meteo-Flug ab München wurde im In-App-Browser ausgeführt. Vor
+dem Ergebnis ist die Karte 600 Pixel hoch; im Ergebniszustand wird sie zum
+kompakten Leserahmen von 345,6 Pixeln. Kartenunterkante 361,6 Pixel und
+Ergebnistitel-Oberkante 374,5 Pixel belegen, dass Fokus und Ergebnis nicht mehr
+hinter der sticky Karte liegen. Dokumentbreite blieb bei 1265/1265 Pixeln.
+
+Das neue Reisejournal zeigt danach den lokalen Reisepass, eine reproduzierbare
+Tagesmission und ein aus demselben Snapshot abgeleitetes Reiseereignis. Eine
+Fotopostkarte erscheint ausschließlich, wenn die Modellroute an einem dafür
+vorhandenen, klar lizenzierten Motiv vorbeiführt; sonst wird die fehlende
+Fotogelegenheit ehrlich benannt. Die Nutzerzeichnung liegt dabei als
+transparente SVG-Spur über dem lokalen JPEG statt als weißer Screenshotblock.
+
+### Automatisierte Evidenz
+
+- Vitest: 10 Dateien, 38/38 PASS einschließlich Speicherung, Mission,
+  Reisepass, reproduzierbarem Ereignis und Fotopostkarten-Markup.
+- Essentials v1.1.5, Shell v2.0.3 und Layout v1.1.0: Verifier jeweils PASS.
+- Build: TypeScript/Vite PASS.
+- Karten-, Gameplay-, Accessibility-/Export-/PWA- und Shell-Gate auf Desktop
+  und Phone: 17/17 anwendbare Fälle PASS.
+- Eingabematrix Smartphone hoch/quer, Tablet und Desktop: 12/12 PASS.
+- Essentials-/Place-/Lifecycle-Gates sowie sechs visuelle Vertragsfälle:
+  30 zusätzliche anwendbare Läufe PASS; darin DE/EN, Dark Mode, 375/390,
+  320-Reflow, 360×800@200 %, Keyboard/Pointer/Pointer-Abbruch, Offline und
+  Share-Abbruch.
+- Der DEV-Artefaktprüfer verlangt beide lokalen Fotodateien bytegleich im
+  Build, die zugehörigen Drittanbieterhinweise und beide Offline-Cachepfade.
+
+Prüfgrenzen bleiben ehrlich: Die Landmarken-Fotomontage ist nur für die zwei
+lokal vendorten Motive Eiffelturm und Kölner Dom verfügbar. Route, Wind und
+„vorbeigeflogen“-Hinweise sind weiterhin eine spielerische Modellierung, keine
+Navigation oder exakte Ballistik.

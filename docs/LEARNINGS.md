@@ -588,3 +588,45 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
   Kartenflaeche schuetzen, Controls progressiv in einen normalen Dokument-Dock
   auslagern und Sticky-Verhalten gegen den anschliessenden Lesefluss testen.
   Diese Erkenntnis ersetzt fuer Wolkenpost die fruehere Sticky-Empfehlung.
+
+## 2026-08-03 – Sticky-Karten brauchen einen zustandsabhängigen Leserahmen
+
+- Datum und geprüfter Stand: 3. August 2026, neue Reise-Arbeitsfläche und zwei
+  sichtbare Produkt-QA-Runden.
+- Beobachtung: Eine dauerhaft 600 Pixel hohe sticky Karte hielt die Route im
+  Blick, ließ das darunterliegende Ergebnis aber vollständig hinter der Karte
+  durchlaufen. Eine grundsätzlich nicht haftende Karte verschwand dagegen
+  beim Start aus der Wahrnehmung. Beide Extremzustände verschlechterten den
+  Lesefluss.
+- Evidenz oder reproduzierbarer Test: Im echten 1280-Pixel-Browser lag das
+  Ergebnis zunächst bei y=-190 bis 584 hinter der sticky Karte (y=16 bis 616).
+  Nach der Korrektur misst die Ergebnis-Karte 345,6 Pixel Höhe, der fokussierte
+  Ergebnistitel liegt bei y=374,5 und die Karte endet bei y=361,6; Dokumentbreite
+  bleibt 1265/1265.
+- Änderung und Regressionstest: Vor dem Flug bleibt die rechte Bühne 600 Pixel
+  hoch. Sobald ein Ergebnis existiert, wird sie auf 340–430 Pixel begrenzt und
+  der Fokus mit demselben dynamischen Abstand genau darunter gescrollt. Mobil
+  bleibt die Karte im normalen Fluss. Gameplay, Responsive- und Fokusgate
+  prüfen beide Zustände.
+- Für andere MilosApps relevant: Ja. Sticky Visualisierungen sollten Höhe und
+  Scroll-Offset an den Ergebniszustand koppeln; „immer sticky“ und „nie sticky“
+  sind bei interaktiven Arbeitsflächen oft gleichermaßen unzureichend.
+
+## 2026-08-03 – Sammelspiele brauchen dieselbe Datenschutz-Löschgrenze wie der Kernzustand
+
+- Datum und geprüfter Stand: 3. August 2026, Reisepass-/Missionsiteration.
+- Beobachtung: Länder- und Wahrzeichenstempel wirken wie harmlose Spielwerte,
+  sind aber trotzdem dauerhafte Endgerätedaten. Ein separater Schlüssel oder
+  eine separate Löschung hätte die bestehende klare Datenschutzgrenze
+  aufgeweicht.
+- Evidenz oder reproduzierbarer Test: Der versionierte App-Zustand sanitisiert
+  Ländercodes, Wahrzeichenkennungen und Flugzahl, begrenzt deren Umfang und
+  wird gemeinsam mit Zeichnung und Einstellungen gelöscht. Manifest, sichtbare
+  Einstellungstexte und Speicherinventar nennen den Reisepass ausdrücklich.
+- Änderung und Regressionstest: Der Reisepass liegt im vorhandenen
+  `milosapps.cloud-post.state`; die bestehende Aktion „Lokale Daten löschen“
+  setzt ihn mit zurück. Unit-Tests prüfen unbekannte, doppelte und ungültige
+  Werte.
+- Für andere MilosApps relevant: Ja. Lokale Fortschrittswerte gehören in das
+  erklärte Zweckinventar und in denselben vorhersehbaren Löschfluss wie andere
+  App-Daten.
