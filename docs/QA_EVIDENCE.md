@@ -969,3 +969,35 @@ Das responsive Gate belegt 1440×1000, 390×844, 375×844, 320 CSS-Pixel und
 360×800@200 % ohne horizontalen Overflow. Der Desktop-Geometrievertrag verlangt
 mindestens 94 Prozent Fensterbreite und eine Kartenbreite über 900 Pixel;
 Mobilreihenfolge, Touchziele, Intro- und Einstellungsbudgets bleiben unverändert.
+
+## Erster redaktioneller Kartenentwurf
+
+Das ausgewählte Nutzer-Mockup wurde als zusammenhängender Arbeitsplatz
+umgesetzt. Das große Intro oberhalb der Facharbeit entfällt: Status, kurze
+Einordnung, Reisender, Start, Wind und Startaktion bilden die linke
+Steuerspur. Die rechte Bühne gehört der Karte. Flugraumtitel, Land-/Weltansicht,
+separate Zoomsteuerung, Windlesung und ein dreiteiliger laufender Flugstatus
+liegen als begrenzte Ebenen direkt auf der Karte; die detaillierte Auswertung
+und das Reisejournal bleiben vollständig im nachfolgenden Lesefluss.
+
+Die erste sichtbare Runde fand ein um 52 Pixel zu hohes Intro, eine überbreite
+Windtitelzeile und 42 statt 44 Pixel große Zoomziele. Nach der Korrektur misst
+das Intro 199,2 Pixel am Desktop beziehungsweise 194,8 Pixel bei 375/390 CSS-
+Pixeln. Die Karte misst bei 1440 × 900 1074,8 × 820 Pixel, die Steuerspur
+290,2 Pixel und der Arbeitsplatz 1408 Pixel. Die Titel bleiben ohne
+Scrollüberlauf einzeilig; die beiden oberen Kartenebenen überlappen nicht.
+
+Die zweite Runde prüft den gestarteten Flug: Windkarte und laufender
+Flugstatus erscheinen auf der Karte, Route und Ergebnis bleiben gleichzeitig
+lesbar, Vergleich/Replay verwendet weiterhin denselben Snapshot. 390 × 844,
+320 CSS-Pixel und das 360 × 800@200-%-Äquivalent bleiben ohne horizontalen
+Overflow. Der automatisierte Kontrastlauf fand genau eine neue 4,49:1-Stelle
+im Startkicker; sie verwendet nun den kontraststärkeren Brandton und besteht
+in Hell und Dunkel.
+
+Abschlussgate des lokalen Branches: Vitest 38/38, TypeScript-/Vite-Build PASS
+und vollständige Playwright-Matrix 55/55 anwendbare Fälle PASS (117 bewusst
+profilbedingt übersprungen). Enthalten sind Smartphone hoch/quer, Tablet,
+Desktop, Pointer-Abbruch, Tastatur, Wind-/Ortfehler, Offline/PWA/Resume,
+DE/EN-Persistenz, Hell/Dunkel, Reduced Motion, Export, Vergleich/Replay sowie
+die neue Kartenoverlay-Geometrie.

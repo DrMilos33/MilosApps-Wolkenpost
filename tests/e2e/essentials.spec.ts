@@ -87,7 +87,7 @@ test('fresh and delayed startup stays compact until the app is truly ready', asy
   releaseApp();
   await navigation;
   await expect(loader).toBeHidden();
-  await expect(page.getByRole('heading', { name: 'Zeichne. Lass es fliegen.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Deine Zeichnung hebt ab.' })).toBeVisible();
 });
 
 test('shell app icon stays 38px through the custom-element CSS transition', async ({ page }) => {
@@ -241,7 +241,7 @@ test('startup stays honest while bootstrap is delayed and hands off once ready',
 
   releaseBootstrap();
   await navigation;
-  await expect(page.getByRole('heading', { name: 'Zeichne. Lass es fliegen.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Deine Zeichnung hebt ab.' })).toBeVisible();
   await expect(loader).toBeHidden();
   expect(consoleProblems).toEqual([]);
 });

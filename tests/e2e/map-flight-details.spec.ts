@@ -63,6 +63,18 @@ test.describe('map and flight-detail experience', () => {
     expect(widgetGeometry.scrollHeight).toBeLessThanOrEqual(widgetGeometry.clientHeight + 1);
     expect(widgetGeometry.width).toBeGreaterThanOrEqual(280);
     expect(widgetGeometry.width).toBeLessThanOrEqual(360);
+    await expect(page.locator('.map-overview-card')).toBeVisible();
+    await expect(page.locator('.map-overview-card')).toContainText('Berlin');
+    await expect(page.locator('.map-zoom-controls')).toBeVisible();
+    const topOverlayGeometry = await page.evaluate(() => {
+      const overview = document.querySelector<HTMLElement>('.map-overview-card')!.getBoundingClientRect();
+      const toolbar = document.querySelector<HTMLElement>('.map-view-toolbar')!.getBoundingClientRect();
+      return {
+        overviewRight: overview.right,
+        toolbarLeft: toolbar.left,
+      };
+    });
+    expect(topOverlayGeometry.overviewRight).toBeLessThanOrEqual(topOverlayGeometry.toolbarLeft - 8);
     const titleLines = await page.locator('.step-title-line, .wind-title-line').evaluateAll((elements) =>
       elements.map((element) => {
         const bounds = element.getBoundingClientRect();
@@ -98,10 +110,14 @@ test.describe('map and flight-detail experience', () => {
     await expect(page.locator('.wind-readings [data-wind-level="925hPa"]')).toHaveClass(/is-selected/);
     await expect(page.locator('.wind-readings [data-wind-level="10m"] strong')).toContainText('km/h');
     await expect(page.locator('.wind-primary-reading[data-wind-level="925hPa"] strong')).toContainText('nach');
+    await expect(page.locator('.map-wind-card')).toBeVisible();
+    await expect(page.locator('.map-wind-card')).toContainText('km/h');
     expect(windRequests).toBe(1);
 
     await page.getByRole('button', { name: 'Flug mit Live-Wind starten' }).click();
     await expect(page.getByRole('heading', { name: /Angekommen nahe/ })).toBeVisible();
+    await expect(page.getByTestId('map-flight-hud')).toBeVisible();
+    await expect(page.getByTestId('map-flight-hud')).toContainText('Aktuell');
     await expect(page.getByRole('heading', { name: 'An diesen Orten ging es vorbei' })).toBeVisible();
     await expect(page.getByTestId('travel-journal')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Deine gesammelten Stempel' })).toBeVisible();
