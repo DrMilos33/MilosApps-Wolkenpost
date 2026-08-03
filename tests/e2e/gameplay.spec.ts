@@ -97,8 +97,17 @@ test('completed and compared flights reflow on mobile and at 200 percent', async
   const windScoutWidth = await page.getByTestId('wind-scout').evaluate((element) => ({
     clientWidth: element.clientWidth,
     scrollWidth: element.scrollWidth,
+    overflowingChildren: [...element.querySelectorAll<HTMLElement>('*')]
+      .filter((child) => child.scrollWidth > child.clientWidth + 1)
+      .map((child) => ({
+        className: child.className,
+        clientWidth: child.clientWidth,
+        scrollWidth: child.scrollWidth,
+        tagName: child.tagName,
+      })),
   }));
-  expect(windScoutWidth.scrollWidth).toBeLessThanOrEqual(windScoutWidth.clientWidth + 1);
+  expect(windScoutWidth.scrollWidth, JSON.stringify(windScoutWidth))
+    .toBeLessThanOrEqual(windScoutWidth.clientWidth + 1);
   const clipped = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>(
     '.flight-space *, .comparison-lab *, .result-actions *',
   )].filter((element) => {

@@ -2080,7 +2080,7 @@ button:disabled {
 
   .map-control-widget .selected-place,
   .map-control-widget .wind-scout {
-    padding-inline: 0.4rem;
+    padding-inline: 0.2rem;
   }
 
   .map-control-widget .place-pin {
@@ -2094,6 +2094,7 @@ button:disabled {
   }
 
   .map-control-widget .wind-scout > *,
+  .map-control-widget .wind-scout *,
   .map-control-widget .wind-boost,
   .map-control-widget .wind-boost-options,
   .map-control-widget .wind-primary-reading,
@@ -2101,6 +2102,20 @@ button:disabled {
   .map-control-widget .wind-scout-actions {
     width: 100%;
     min-width: 0;
+  }
+
+  .map-control-widget .wind-more-levels,
+  .map-control-widget .wind-more-levels summary,
+  .map-control-widget .wind-boost legend {
+    max-width: 100%;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .map-control-widget .wind-boost,
+  .map-control-widget .wind-primary-reading {
+    padding-inline: 0.45rem;
   }
 
   .map-control-widget .wind-scout-heading,
