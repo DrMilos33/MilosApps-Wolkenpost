@@ -75,7 +75,7 @@ test('fresh and delayed startup stays compact until the app is truly ready', asy
   await expect(page.getByRole('heading', { name: 'Zeichne. Lass es fliegen.' })).toBeVisible();
 });
 
-test('startup handshake survives an app-before-bootstrap loading race', async ({ page }) => {
+test('startup stays honest while bootstrap is delayed and hands off once ready', async ({ page }) => {
   test.skip(test.info().project.name !== 'desktop', 'focused startup race regression');
   let releaseBootstrap!: () => void;
   const bootstrapReleased = new Promise<void>((resolve) => { releaseBootstrap = resolve; });
@@ -87,10 +87,11 @@ test('startup handshake survives an app-before-bootstrap loading race', async ({
   const navigation = page.goto('./', { waitUntil: 'domcontentloaded' });
   const loader = page.locator('[data-milos-app-loading]');
   await expect(loader).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Zeichne. Lass es fliegen.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Zeichne. Lass es fliegen.' })).toBeHidden();
 
   releaseBootstrap();
   await navigation;
+  await expect(page.getByRole('heading', { name: 'Zeichne. Lass es fliegen.' })).toBeVisible();
   await expect(loader).toBeHidden();
 });
 
@@ -237,7 +238,17 @@ test('shared result share uses native, clipboard and cancellation paths without 
   await expect(share.locator('[data-milos-share-status]')).toHaveAttribute('data-visible', 'false');
   await expect.poll(() => page.evaluate(() => Boolean(window.__wolkenpostSharePayload))).toBe(true);
   await expect(page.locator('p.sr-only[aria-live="polite"]')).not.toContainText('Geteilt');
-  const initialShareBounds = await share.boundingBox();
+  const measureShareGeometry = () => share.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    const container = element.parentElement!.getBoundingClientRect();
+    return {
+      width: bounds.width,
+      height: bounds.height,
+      offsetX: bounds.x - container.x,
+      offsetY: bounds.y - container.y,
+    };
+  });
+  const initialShareGeometry = await measureShareGeometry();
   const nativePayload = await page.evaluate(() => window.__wolkenpostSharePayload);
   expect(nativePayload?.url).toBe(expectedShareUrl);
   expect(nativePayload?.files?.[0]).toMatchObject({ type: 'image/png' });
@@ -252,8 +263,7 @@ test('shared result share uses native, clipboard and cancellation paths without 
   });
   await share.getByRole('button', { name: 'Teilen' }).click();
   await expect(share.locator('[data-milos-share-status]')).toHaveText('Link kopiert');
-  const fallbackShareBounds = await share.boundingBox();
-  expect(fallbackShareBounds).toEqual(initialShareBounds);
+  expect(await measureShareGeometry()).toEqual(initialShareGeometry);
   const copied = await page.evaluate(() => window.__wolkenpostClipboard);
   expect(copied).toContain(expectedShareUrl);
   expect(copied).not.toContain('private-location');
@@ -267,7 +277,7 @@ test('shared result share uses native, clipboard and cancellation paths without 
   });
   await share.getByRole('button', { name: 'Teilen' }).click();
   await expect(share.locator('[data-milos-share-status]')).toHaveText('');
-  expect(await share.boundingBox()).toEqual(initialShareBounds);
+  expect(await measureShareGeometry()).toEqual(initialShareGeometry);
 });
 
 test('pending share is invalidated by disconnect and reconnect', async ({ page }) => {
