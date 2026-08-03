@@ -53,20 +53,26 @@ test.describe('map and flight-detail experience', () => {
     const titleLines = await page.locator('.step-title-line, .wind-title-line').evaluateAll((elements) =>
       elements.map((element) => {
         const bounds = element.getBoundingClientRect();
+        const textChildren = Array.from(element.querySelectorAll(':scope > p, :scope > h2, :scope > h3'));
         return {
+          text: element.textContent?.trim(),
           flexWrap: getComputedStyle(element).flexWrap,
-          childWhiteSpace: Array.from(element.children)
+          childWhiteSpace: textChildren
             .map((child) => getComputedStyle(child).whiteSpace),
           width: bounds.width,
           scrollWidth: element.scrollWidth,
         };
       }),
     );
-    expect(titleLines.every((line) => (
-      line.flexWrap === 'nowrap'
-      && line.childWhiteSpace.every((whiteSpace) => whiteSpace === 'nowrap')
-      && line.scrollWidth <= line.width + 1
-    ))).toBe(true);
+    expect(
+      titleLines.every((line) => (
+        line.flexWrap === 'nowrap'
+        && line.childWhiteSpace.length > 0
+        && line.childWhiteSpace.every((whiteSpace) => whiteSpace === 'nowrap')
+        && line.scrollWidth <= line.width + 1
+      )),
+      `Title lines must stay on one line: ${JSON.stringify(titleLines)}`,
+    ).toBe(true);
     await expect(page.getByTestId('world-map')).toHaveAttribute('data-country-detail', 'natural-earth-110m');
     expect(Number(await page.getByTestId('world-map').getAttribute('data-country-count'))).toBeGreaterThan(170);
     await page.getByRole('button', { name: 'Land fokussieren' }).click();

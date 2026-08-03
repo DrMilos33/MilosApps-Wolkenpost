@@ -405,15 +405,15 @@ h2 {
   display: flex;
   min-width: 0;
   align-items: baseline;
-  gap: 0.38rem;
+  gap: 0.24rem;
 }
 
 .step-title-line .step-kicker,
 .wind-title-line .step-kicker {
   flex: none;
   margin: 0;
-  font-size: 0.64rem;
-  letter-spacing: 0.07em;
+  font-size: 0.6rem;
+  letter-spacing: 0.045em;
   white-space: nowrap;
 }
 
@@ -421,7 +421,7 @@ h2 {
 .wind-title-line h3 {
   margin: 0;
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 800;
   letter-spacing: -0.015em;
   line-height: 1.15;
@@ -2438,7 +2438,7 @@ button:disabled {
 
 @media (max-width: 390px) {
   milos-app-shell {
-    --milos-shell-gutter: 0.5rem;
+    --milos-shell-gutter: 0.25rem;
   }
 
   .flight-space,

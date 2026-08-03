@@ -68,15 +68,29 @@ export async function expectNoHorizontalOverflow(page: Page) {
       })
       .filter(({ left, right }) => left < -1 || right > clientWidth + 1)
       .slice(0, 8);
+    const intrinsicOverflow = [
+      document.documentElement,
+      document.body,
+      ...Array.from(document.querySelectorAll<HTMLElement>('body *')),
+      ...shellElements,
+    ]
+      .filter((element) => element.scrollWidth > element.clientWidth + 1)
+      .map((element) => ({
+        selector: `${element.tagName.toLowerCase()}.${element.className}`,
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+      }))
+      .slice(0, 12);
     return {
       scrollWidth: document.documentElement.scrollWidth,
       clientWidth,
       offenders,
+      intrinsicOverflow,
     };
   });
   expect(
     sizes.scrollWidth,
-    `Horizontal overflow offenders: ${JSON.stringify(sizes.offenders)}`,
+    `Horizontal overflow offenders: ${JSON.stringify(sizes.offenders)}; intrinsic: ${JSON.stringify(sizes.intrinsicOverflow)}`,
   ).toBeLessThanOrEqual(sizes.clientWidth + 1);
 }
 
