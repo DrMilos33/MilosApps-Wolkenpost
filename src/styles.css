@@ -90,6 +90,7 @@ milos-app-shell {
   --milos-shell-muted: var(--muted);
   --milos-shell-border: var(--line);
   --milos-shell-focus: var(--focus);
+  --milos-shell-content-max: 100rem;
 }
 
 :root[data-theme='dark'] milos-app-shell {
@@ -332,8 +333,8 @@ h2 {
   display: grid;
   grid-template-columns: 20rem minmax(0, 1fr);
   gap: clamp(1rem, 2vw, 1.6rem);
-  width: calc(100% + 4rem);
-  margin-inline: -2rem;
+  width: calc(100% + 2rem);
+  margin-inline: -1rem;
   padding: 0;
   align-items: start;
 }

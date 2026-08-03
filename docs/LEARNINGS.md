@@ -649,3 +649,20 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
   nötigen Shadow-DOM-Reflowraum.
 - Für andere MilosApps relevant: Ja. Einzeiligkeitsgates sollten Zeilenstruktur
   und verfügbare Breite prüfen, nicht eine OS-abhängige absolute Pixelhöhe.
+
+## 2026-08-03 – Datenflächen brauchen eine app-eigene Shellbreite
+
+- Datum und geprüfter Stand: 3. August 2026, breiter Reise-Arbeitsplatz.
+- Beobachtung: Eine allgemeine 72-rem-Inhaltsgrenze war für Textseiten ruhig,
+  ließ bei der kartenbetonten Wolkenpost auf 1440 Pixeln aber 288 Pixel
+  ungenutzten Außenraum. Die Hauptaufgabe wirkte dadurch unnötig schmal.
+- Evidenz oder reproduzierbarer Test: Vorher maß die Karte 804 Pixel, nach dem
+  app-eigenen `--milos-shell-content-max`-Token 1060,4 Pixel. Der gesamte
+  Arbeitsplatz misst 1408/1440 Pixel bei weiterhin 320 Pixel breiter Steuerung.
+- Änderung und Regressionstest: Nur der dokumentierte Shell-Token und der
+  app-eigene Außenabstand wurden geändert; Vendorbytes und Locks blieben
+  unverändert. Das Gate prüft Fensteranteil, Kartenbreite sowie 390-, 320- und
+  200-Prozent-Reflow.
+- Für andere MilosApps relevant: Ja. Karten, Boards und Editoren sollten den
+  vorgesehenen app-eigenen Breitentoken nutzen, statt Datenflächen in einer
+  lesetextorientierten Standardbreite zu belassen.

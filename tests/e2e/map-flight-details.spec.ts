@@ -27,18 +27,31 @@ test.describe('map and flight-detail experience', () => {
       const drawing = document.querySelector<HTMLElement>('.drawing-step')!.getBoundingClientRect();
       const mapStep = document.querySelector<HTMLElement>('.map-step')!.getBoundingClientRect();
       const map = document.querySelector<HTMLCanvasElement>('[data-testid="world-map"]')!.getBoundingClientRect();
+      const workspace = document.querySelector<HTMLElement>('.journey-layout')!.getBoundingClientRect();
+      const shell = document.querySelector<HTMLElement>('milos-app-shell')!;
+      const shellContainers = Array.from(shell.shadowRoot!.querySelectorAll<HTMLElement>('.container'))
+        .map((element) => ({ tag: element.parentElement?.tagName, width: element.getBoundingClientRect().width }));
       return {
+        clientWidth: document.documentElement.clientWidth,
         drawingRight: drawing.right,
         mapStepLeft: mapStep.left,
         drawingWidth: drawing.width,
         mapWidth: map.width,
         mapHeight: map.height,
+        shellContainers,
+        shellContentMax: getComputedStyle(shell).getPropertyValue('--milos-shell-content-max').trim(),
+        workspaceWidth: workspace.width,
       };
     });
+    console.info(`[workspace-geometry] ${JSON.stringify(geometry)}`);
+    expect(
+      geometry.workspaceWidth,
+      `Wide workspace geometry: ${JSON.stringify(geometry)}`,
+    ).toBeGreaterThanOrEqual(geometry.clientWidth * 0.94);
     expect(geometry.mapStepLeft).toBeGreaterThanOrEqual(geometry.drawingRight + 12);
     expect(geometry.drawingWidth).toBeGreaterThanOrEqual(280);
     expect(geometry.drawingWidth).toBeLessThanOrEqual(360);
-    expect(geometry.mapWidth).toBeGreaterThan(800);
+    expect(geometry.mapWidth).toBeGreaterThan(900);
     expect(geometry.mapHeight).toBeGreaterThanOrEqual(590);
     const widgetGeometry = await page.getByTestId('map-control-widget').evaluate((element) => ({
       overflowY: getComputedStyle(element).overflowY,

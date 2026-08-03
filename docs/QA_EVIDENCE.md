@@ -954,3 +954,18 @@ ohne die Karte auf normalen Mobilbreiten einzuengen.
 Das Titelgate prüft eine gemeinsame `nowrap`-Zeile samt fehlendem
 Scrollüberlauf statt einer betriebssystemspezifischen absoluten Höhe. Die
 gezielte Regression besteht 320, 375, 390 und 360×800@200 %.
+
+## Breiter Desktop-Arbeitsplatz
+
+Das Nutzerfeedback nach der ersten öffentlichen Runde zeigte, dass die
+72-rem-Shellgrenze für diese kartenbetonte App zu viel ungenutzten Außenraum
+ließ. Wolkenpost setzt deshalb ausschließlich den dokumentierten app-eigenen
+Shell-Token auf 100 rem; Shell v2.0.3 und seine Vendorbytes bleiben unverändert.
+Die Arbeitsfläche wahrt 16 Pixel Außenabstand und nutzt bei 1440 Pixeln
+1408 Pixel. Die linke Steuerspur bleibt lesbare 320 Pixel breit, während die
+Karte von 804 auf 1060,4 Pixel wächst.
+
+Das responsive Gate belegt 1440×1000, 390×844, 375×844, 320 CSS-Pixel und
+360×800@200 % ohne horizontalen Overflow. Der Desktop-Geometrievertrag verlangt
+mindestens 94 Prozent Fensterbreite und eine Kartenbreite über 900 Pixel;
+Mobilreihenfolge, Touchziele, Intro- und Einstellungsbudgets bleiben unverändert.
