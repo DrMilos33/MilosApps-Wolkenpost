@@ -851,3 +851,37 @@ Automatisierte Evidenz vor dem finalen Publish:
 - visuelles Vertragsgate Desktop, Dark, 375, 390, EN und 360x800@200 Prozent
   6/6 PASS;
 - Accessibility/Export/PWA und Resilienz jeweils 6/6 anwendbare Faelle PASS.
+
+## Design-Follow-up - ruhige Kartenbuehne und kompakte Ergebnisse
+
+Der direkte Nutzerscreenshot zeigte trotz funktionaler Karte drei sichtbare
+Probleme: ein zu grosser Windbereich ueber der Route, einen inneren
+Scrollbalken im Widget und eine sticky Kartenbuehne, die den Ergebnistext beim
+Seitenscrollen verdraengte. Die Agenda fuer weitere Spielmodule bleibt deshalb
+bewusst pausiert; dieser Stand aendert nur Layout und Lesefluss.
+
+Sichtbare Runde 1 am lokalen Build: Die Arbeitsflaeche nutzt am
+1280-Pixel-Browser 56,5 Pixel Aussenabstand und 1152 Pixel Inhaltsbreite. Die
+Karte misst 994 x 520 Pixel. Der verbundene Start-/Winddock liegt ausserhalb
+der Kartenflaeche, misst im bereiten Windzustand 962 x rund 231 Pixel und hat
+keinen inneren Scrollbereich (`overflow-y: visible`, Client/Scroll identisch).
+Die Toolbar bleibt frei auf der Karte; reale Windwerte und die getrennte
+Spielweite bleiben vollstaendig erhalten.
+
+Sichtbare Runde 2 bei 390 x 844: Karte, Startort, Windentscheidung und Suche
+stapeln in einer durchgehenden Lesereihenfolge ohne horizontales Clipping. Die
+Ergebnisflaeche verwendet am Desktop ein kompaktes Zweispaltenraster, faellt
+mobil auf eine Spalte zurueck und behaelt vier Kennzahlen als 2-x-2-Gruppe. Die
+Karte bleibt beim Ergebnis relativ statt sticky; der programmatisch fokussierte
+Ergebnistitel wird mit Headerabstand in den sichtbaren Bereich gescrollt.
+
+Fokussierte Regression prueft Desktop und Phone auf Widgetbreite, fehlenden
+inneren Scroll, Ergebnisfokus, relative Kartenposition, Vergleich/Replay,
+200-Prozent-Reflow und horizontalen Overflow. Fachlogik, Windmodell,
+Karteninteraktion, Shared-Pins und Productiongrenze bleiben unveraendert.
+
+Der erste vollstaendige CI-Lauf fand zusaetzlich am iPad-Mini-Profil nach dem
+Flug 792 statt 769 CSS-Pixel Dokumentbreite. Ursache war die zweispaltige
+Desktopanordnung des bereiten Winddocks knapp oberhalb des mobilen Breakpoints.
+Der Dock stapelt deshalb bis 820 Pixel; die gezielte Tablet-Reise besteht danach
+3/3 ohne Overflow.

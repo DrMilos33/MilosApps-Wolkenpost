@@ -87,7 +87,7 @@ export function WindScout({
           <span data-bearing-sector={readings.length ? compassIndex(readings.find((reading) => reading.level === selectedLevel)?.bearing ?? 0) : 0}>➤</span>
         </span>
       </div>
-      <p>{text.description}</p>
+      {status !== 'ready' && <p className="wind-scout-description">{text.description}</p>}
 
       {status === 'ready' && readings.length > 0 && selectedReading ? (
         <>
@@ -103,6 +103,7 @@ export function WindScout({
           </div>
           <details className="wind-more-levels">
             <summary>{text.moreLevels}</summary>
+            <p className="wind-detail-copy">{text.description}</p>
             <div className="wind-readings" role="list">
               {readings.map((reading) => {
                 const direction = text.compass[compassIndex(reading.bearing)];

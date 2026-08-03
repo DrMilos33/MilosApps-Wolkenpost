@@ -565,3 +565,26 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
   am gesamten Flugraum; alle drei Gameplay-Runden sind gruen.
 - Fuer andere MilosApps relevant: Ja. Neue Werkzeugleisten um Sticky-Inhalte
   muessen gegen den tatsaechlichen Scroll-/Containing-Block regressiert werden.
+
+## 2026-08-03 - Kartenpraesenz braucht keinen verschachtelten Scrollbereich
+
+- Datum und gepruefter Stand: 3. August 2026, Design-Follow-up nach direktem
+  Nutzerscreenshot.
+- Beobachtung: Das Wind-Overlay hielt die Karte zwar sichtbar, belegte im
+  bereiten Zustand aber fast ein Drittel der Kartenflaeche und erzeugte einen
+  eigenen vertikalen Scrollbereich. Zusammen mit der sticky Ergebniskarte war
+  der Seitenkontext beim Lesen kaum noch erkennbar.
+- Evidenz oder reproduzierbarer Test: Der alte Screenshot zeigt Toolbar-Wrap,
+  ueberlagerte Route und einen sichtbaren inneren Scrollbalken. Der neue
+  Desktop-Dock misst 962 Pixel Breite, rund 231 Pixel Hoehe im bereiten Zustand,
+  `overflow-y: visible` und `scrollHeight == clientHeight`; die Dokumentbreite
+  bleibt 1265/1265.
+- Aenderung und Regressionstest: Die App-Arbeitsflaeche nutzt breitere
+  Viewport-Gutters. Karte und Toolbar bleiben frei; Start, Wind und Spielweite
+  sitzen als flacher verbundener Dock darunter. Ergebnisse sind zweispaltig
+  verdichtet, die Karte ist nicht mehr sticky und der Ergebnisfokus respektiert
+  den festen Header. Mobil stapelt derselbe Dock ohne inneres Scrollen.
+- Fuer andere MilosApps relevant: Ja. Bei datenreichen Karten zuerst die
+  Kartenflaeche schuetzen, Controls progressiv in einen normalen Dokument-Dock
+  auslagern und Sticky-Verhalten gegen den anschliessenden Lesefluss testen.
+  Diese Erkenntnis ersetzt fuer Wolkenpost die fruehere Sticky-Empfehlung.
