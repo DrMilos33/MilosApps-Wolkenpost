@@ -2769,7 +2769,7 @@ button:disabled {
 }
 
 .journey-layout {
-  grid-template-columns: clamp(19rem, 23vw, 22rem) minmax(0, 1fr);
+  grid-template-columns: clamp(21rem, 25.5vw, 23rem) minmax(0, 1fr);
   gap: 0;
   width: calc(100% + 2rem);
   margin-inline: -1rem;
@@ -3270,7 +3270,7 @@ button:disabled {
 
 @media (max-width: 1100px) and (min-width: 901px) {
   .journey-layout {
-    grid-template-columns: 19rem minmax(0, 1fr);
+    grid-template-columns: 21rem minmax(0, 1fr);
   }
 
   .journey-sidebar {
@@ -3390,8 +3390,20 @@ button:disabled {
 
   .journey-sidebar {
     gap: 0.9rem;
+    min-width: 0;
+    max-width: 100%;
     padding: 0.9rem;
     border-radius: 19px 19px 0 0;
+  }
+
+  .step-title-line,
+  .wind-title-line {
+    max-width: 100%;
+  }
+
+  .step-title-line .step-kicker,
+  .wind-title-line .step-kicker {
+    display: none;
   }
 
   .hero {
