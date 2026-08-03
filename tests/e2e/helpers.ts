@@ -14,8 +14,21 @@ export function windResponse(requestUrl: string) {
     longitude: longitudes[nodeIndex],
     hourly: {
       time: times,
-      [variables[0]]: times.map((_, timeIndex) => 10 + nodeIndex * 0.25 + timeIndex * 0.02),
-      [variables[1]]: times.map((_, timeIndex) => 250 + ((nodeIndex + timeIndex) % 18)),
+      ...Object.fromEntries(variables.map((variable) => {
+        const levelFactor = variable.includes('850hPa')
+          ? 1.45
+          : variable.includes('925hPa')
+            ? 1.12
+            : 0.62;
+        const isDirection = variable.includes('direction');
+        return [
+          variable,
+          times.map((_, timeIndex) => isDirection
+            ? (variable.includes('10m') ? 130 : variable.includes('925hPa') ? 205 : 250)
+              + ((nodeIndex + timeIndex) % 18)
+            : (10 + nodeIndex * 0.25 + timeIndex * 0.02) * levelFactor),
+        ];
+      })),
     },
   }));
 }

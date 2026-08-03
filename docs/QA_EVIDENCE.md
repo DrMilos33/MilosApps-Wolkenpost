@@ -1,6 +1,6 @@
 # Wolkenpost QA-Evidenz
 
-Stand: 2. August 2026, Branch `codex/cloud-post-essentials-v1`
+Stand: 3. August 2026, Branch `codex/cloud-post-essentials-v1-1-gameplay`
 
 Der Miteinander-Product-QA-Workflow wurde nach dem ersten lauffähigen Stand in
 drei vollständigen Runden angewendet. Testdaten wurden lokal und deterministisch
@@ -477,6 +477,137 @@ Die enge Vendor-`.gitattributes` liefert für die Essentials-Dateien
 `text: set, eol: lf`. Ein erneuter Sync aus dem fest gepinnten Shared-Checkout
 und der anschließende Validator blieben grün. Die öffentliche Revision und
 Artefaktevidenz folgen im DEV-Handoff nach dem koordinierten Publish.
+
+## Runde 10 – Gameplay-Vertiefung und Essentials-v1.1-Migrationskandidat
+
+Basis ist der öffentlich gesunde DEV-Stand
+`4d8a090f546a75d705b34671f7f0f103334dcd08`. Die Produktänderungen liegen
+lokal auf `codex/cloud-post-essentials-v1-1-gameplay`. Nach den zentralen
+Verifier- und Hostingpfad-Audits ist der Zwischenvendor vollständig durch den
+unveränderlichen Pin `public-app-essentials/v1.1.2` / Shared
+`b14aac6107b75f03ff49e74160af7e7e30c29e59` ersetzt.
+
+### Produkt-/User-Test-Runde 1 – der Flugraum bleibt verständlich
+
+Simulierte frische Nutzerin, reale Aufgabe: Ohne Vorwissen eine Wolke zeichnen,
+Berlin als groben Start verwenden, einen Live-Flug starten und danach Start,
+aktuellen Punkt, Ziel, Wind, Höhe und Zeit erklären können, ohne die Route aus
+dem Blick zu verlieren.
+
+Baseline-Befunde:
+
+- Das frühere Ergebnis stand nach dem Startbereich als eigene Ergebniskarte;
+  Weltkarte und Ergebnis waren nicht als ein zusammenhängender Flugraum
+  erkennbar.
+- Ein realer 198–209-km-Flug war auf der vollständigen Weltprojektion nur wenige
+  Pixel lang und wurde teilweise vom gezeichneten Flugobjekt verdeckt.
+- Der erste Animationsframe zeigte `0 km/h`, obwohl der erste berechnete
+  Windvektor bereits vorlag.
+
+Änderungen:
+
+- Die Ergebnis- und Replayoberfläche sitzt direkt unter der weiterhin sichtbaren
+  Weltkarte. Nach dem Start wird der Flugraum gescrollt und nur die
+  Ergebnisüberschrift mit `preventScroll` fokussiert.
+- Ein kompakter, klar als „Routenlupe · vergrößert“ bezeichneter Kartenausschnitt
+  macht kurze reale Routen sichtbar, ohne die globale Karte oder geografische
+  Distanzen umzudefinieren. Start, Ziel, aktuelle Position und Windpfeil haben
+  getrennte Marker.
+- Ein strukturiertes Flugreadout zeigt Start, Aktuell, Ziel, Windrichtung und
+  -stärke, Höhenband und verstrichene Zeit. Der Startpunkt übernimmt den ersten
+  realen Windwert statt eines künstlichen Nullwerts.
+- Die aktive Flugkarte bleibt während tieferer Ergebnisinteraktion sticky; vor
+  einem Flug bleibt die Karte eine normale, nicht-sticky Startpunkteingabe.
+- Direkt am Flugraum steht die Modellgrenze: spielerische Advektion aus groben
+  Windpunkten, keine exakte Ballistik, Navigation oder Wetterwarnung.
+
+Tests und Ergebnis:
+
+- sichtbare Browserprüfung 1440 × 900 mit echtem Open-Meteo-Liveabruf:
+  Ergebnisfokus `result-heading`, Karte vollständig im Viewport, 0 horizontaler
+  Overflow, reale Route 208 km;
+- sichtbare Browserprüfung 390 × 844: Karte bei `top=8`, `bottom=214,33`,
+  Routenlupe lesbar, Ergebnis direkt anschließend, 0 horizontaler Overflow;
+- automatisiert: Kartenfokus, `data-route-lens=visible`, sticky-Grenze,
+  sechs Readout-Felder, Windwert ungleich Null und Modellhinweis.
+
+Outcome: Die Nutzerin kann die Route und ihren Modellcharakter direkt im
+Flugraum lesen; der Fokus verschiebt sie nicht mehr zu einer abgetrennten
+Ergebniskarte.
+
+### Produkt-/User-Test-Runde 2 – Vorhersagen, vergleichen, wiederholen
+
+Simulierter frischer Nutzer, reale Aufgabe: Nach dem ersten Wolkenflug auf
+demselben Datenstand vorhersagen, wie ein Samen fliegt, den Vergleich starten,
+die Ursache des Unterschieds benennen und beide Flüge erneut abspielen.
+
+Baseline-Befund: Nach einem einzelnen Ergebnis gab es nur Export/Teilen und
+„Noch eine Reise“. Ein zweites Profil erforderte einen kompletten Neustart und
+einen neuen Netzabruf; ein fairer Ursache-Wirkungs-Vergleich war unmöglich.
+
+Änderungen:
+
+- Ein Live-Start lädt 10 m, 925 hPa und 850 hPa gebündelt in genau einem
+  Open-Meteo-Abruf und bindet alle Profile an denselben `forecastStart` und
+  `fetchedAt`.
+- Vor dem Vergleich nennt die UI das andere Höhenband und die Flugdauer. Erst
+  die bewusste Aktion „Profil vergleichen“ simuliert lokal das zweite Profil.
+- Zwei kontrastierende Routen und Readout-Zeilen, die gemeinsame Datenzeit,
+  die Distanzdifferenz sowie die Ursache „Windhöhe, Flugdauer und Driftprofil“
+  machen Wirkung und unveränderte Randbedingungen sichtbar.
+- „Beide Flüge wiederholen“ startet ausschließlich die Darstellung neu; es
+  erzeugt weder Zufall noch einen weiteren Netzabruf.
+
+Tests und Ergebnis:
+
+- deterministische Unit-Prüfung des Drei-Höhen-Snapshots und identischer
+  Datenzeiten; ein Netzabruf für alle sechs Windvariablen;
+- automatisierte Browseraufgabe: exakt ein Windrequest vor und nach Vergleich
+  und Replay, zwei Profilzeilen (`cloud`, `seed`), zwei Routen, Vorhersage,
+  Ursache und Animationsreset;
+- sichtbare Mobile-Prüfung 390 × 844 mit echtem Live-Snapshot: Wolke 208 km,
+  Samen 196 km kürzer, zwei deutlich getrennte Linien in der Routenlupe,
+  Karte während der Vergleichsaktion bei `top=8`, `bottom=214,33`,
+  `data-progress=1.00`, 0 Overflow;
+- fokussierter lokaler Browserlauf nach den Korrekturen: 11/11 Tests grün;
+  zusätzlicher 180 × 400-CSS-Pixel-Reflow (entspricht der 360 × 800-
+  200-%-Grenze) ohne geclippte Flugraum-, Vergleichs- oder Aktionsinhalte.
+
+Outcome: Der zweite Flug ist ein fairer, erklärbarer Vergleich auf demselben
+Daten-Snapshot. Unterschiedliche Profile erzeugen sichtbar unterschiedliche
+Routen; Vorhersage und Replay schaffen einen natürlichen Wiederholungsreiz,
+ohne die Modellgrenze zu verschleiern.
+
+### Datenschutzbefund der v1.1-Migration
+
+Das zweckweise Inventar steht in `docs/PRIVACY_STORAGE_INVENTORY.md`. Wolkenpost
+hat keine Cookies, kein Tracking und keine optionale Speicherung; daher gibt es
+keinen Banner. Ein nicht notwendiger Session-Offline-Merker wurde entfernt.
+Notwendig bleiben ausschließlich der lokale App-/Sprachzustand und der
+versionierte PWA-Assetcache. Die Datenschutzinformation ist dauerhaft sichtbar.
+
+### Finales lokales Gate auf v1.1.2
+
+- Shared-Validatoren: Shell v2.0.3 PASS, Layout v1.1.0 PASS und Essentials
+  v1.1.2 PASS; der Essentials-Lock enthält exakt sechs Artefakte einschließlich
+  vendortem Schema und portablem Verifier.
+- Vitest: 22/22; Standard- und GitHub-Pages-Build PASS.
+- Playwright: 50 anwendbare Fälle PASS, 102 bewusst profilbedingt übersprungen,
+  0 Fehler. Enthalten sind Smartphone hoch/quer, Tablet, Desktop, Maus,
+  Pointer-Abbruch, Tastatur, Offline/Resume, Timeout, verweigerte Ortung,
+  Reduced Motion, Axe, DE/EN-Persistenz und der exakte 180 × 400-CSS-Pixel-
+  Reflowfall für 360 × 800 bei 200 %.
+- Pages-Artefakt: PASS für vier externe Essentials-Runtimedateien, CSP/MIME,
+  Service-Worker-Cache und alle sechs Quell-Lockdateien. `public/icon.svg` und
+  `dist/icon.svg` sind byteidentisch mit SHA-256
+  `35b7213e031d3c749f3f38996934b20c559c983204e0b150a22119c935c05a59`.
+- Sichtbare Abschlussprüfung: Desktop 1440 × 900 mit echtem Open-Meteo-Abruf
+  (229-km-Wolkenflug, 14-km-Samenvergleich), Modellgrenze, Vorhersage und
+  Ursache lesbar; Mobil 390 × 844 beziehungsweise 375 CSS-Pixel mit Karte
+  `top=12,39`, `bottom=218,72`, Ergebnisfokus `result-heading`, Routenlupe und
+  0 Overflow; schmaler Reflow ohne geclippte Flugraum-/Aktionsinhalte.
+- Deutsch/Englisch einschließlich Reload, permanente Datenschutzinformation,
+  No-Login-Grenze und Browserkonsole blieben fehlerfrei.
 
 ## Verbleibende Prüfgrenzen
 

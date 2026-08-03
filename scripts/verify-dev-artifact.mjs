@@ -24,7 +24,12 @@ const essentialsRuntimeFiles = [
   'milos-app-essentials.css',
   'milos-app-essentials-theme.css',
 ];
-const [index, serviceWorker, manifestText, healthText, integrationText, shellLockText, layoutLockText, essentialsLockText] = await Promise.all([
+const essentialsLockedFiles = [
+  ...essentialsRuntimeFiles,
+  'verify.mjs',
+  'essentials-manifest.schema.json',
+];
+const [index, serviceWorker, manifestText, healthText, integrationText, shellLockText, layoutLockText, essentialsLockText, sourceIcon, builtIcon] = await Promise.all([
   readFile('dist/index.html', 'utf8'),
   readFile('dist/sw.js', 'utf8'),
   readFile('dist/manifest.webmanifest', 'utf8'),
@@ -33,6 +38,8 @@ const [index, serviceWorker, manifestText, healthText, integrationText, shellLoc
   readFile(`${shellDirectory}/shell-lock.json`, 'utf8'),
   readFile(`${layoutDirectory}/layout-lock.json`, 'utf8'),
   readFile(`${essentialsDirectory}/essentials-lock.json`, 'utf8'),
+  readFile('public/icon.svg'),
+  readFile('dist/icon.svg'),
 ]);
 const shellArtifacts = await Promise.all(
   shellRuntimeFiles.map((file) => readFile(`dist/${shellDirectory}/${file}`)),
@@ -42,6 +49,9 @@ const layoutArtifacts = await Promise.all(
 );
 const essentialsArtifacts = await Promise.all(
   essentialsRuntimeFiles.map((file) => readFile(`dist/${essentialsDirectory}/${file}`)),
+);
+const essentialsLockedArtifacts = await Promise.all(
+  essentialsLockedFiles.map((file) => readFile(`${essentialsDirectory}/${file}`)),
 );
 
 const manifest = JSON.parse(manifestText);
@@ -63,6 +73,7 @@ const checks = [
   [index.includes(`./${essentialsDirectory}/milos-app-essentials.css`), 'index.html does not keep the local essentials CSS external.'],
   [index.includes(`./${essentialsDirectory}/milos-app-essentials-theme.css`), 'index.html does not keep the local essentials theme CSS external.'],
   [index.includes(`./${essentialsDirectory}/bootstrap.js`), 'index.html does not load the local essentials bootstrap.'],
+  [index.includes('icon.svg'), 'index.html does not load the app-owned runtime icon.'],
   [/<(?:p|span)\b[^>]*data-milos-loading-title/u.test(index), 'Loader title must use a non-heading p or span element.'],
   [!/<h[1-6]\b[^>]*data-milos-loading-title/u.test(index), 'Loader title must not create a second document heading.'],
   [!index.includes('data:text/css') && !index.includes('data:text/javascript'), 'index.html inlines a shared runtime instead of keeping it external.'],
@@ -82,6 +93,11 @@ const checks = [
   [integration.healthcheck?.url === `${DEV_URL}health.json`, 'Integration metadata contains the wrong health URL.'],
   [integration.preview?.path === `${BASE}preview.png`, 'Integration metadata contains the wrong preview path.'],
   [integration.preview?.url === `${DEV_URL}preview.png`, 'Integration metadata contains the wrong preview URL.'],
+  [sha256(builtIcon) === sha256(sourceIcon), 'Built loading icon is not byte-identical to public/icon.svg.'],
+  [essentialsLock.version === '1.1.2', 'Essentials lock is not pinned to v1.1.2.'],
+  [essentialsLock.sharedCommit === 'b14aac6107b75f03ff49e74160af7e7e30c29e59', 'Essentials lock contains the wrong Shared commit.'],
+  [essentialsLock.loadingIconRuntimePath === 'icon.svg', 'Essentials lock contains the wrong icon runtime path.'],
+  [JSON.stringify(Object.keys(essentialsLock.artifacts).sort()) === JSON.stringify([...essentialsLockedFiles].sort()), 'Essentials lock must contain exactly six consumer artifacts.'],
   ...shellRuntimeFiles.map((file, index) => [
     sha256(shellArtifacts[index]) === shellLock.artifacts[file],
     `Built shell runtime artifact ${file} does not match shell-lock.json.`,
@@ -105,6 +121,10 @@ const checks = [
   ...essentialsRuntimeFiles.map((file) => [
     serviceWorker.includes(`${BASE}${essentialsDirectory}/${file}`),
     `The service worker does not cache essentials runtime artifact ${file}.`,
+  ]),
+  ...essentialsLockedFiles.map((file, index) => [
+    sha256(essentialsLockedArtifacts[index]) === essentialsLock.artifacts[file],
+    `Vendored essentials artifact ${file} does not match essentials-lock.json.`,
   ]),
 ];
 

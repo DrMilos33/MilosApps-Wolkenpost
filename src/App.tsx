@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DrawingCanvas } from './components/DrawingCanvas';
+import { FlightReadout } from './components/FlightReadout';
 import { WorldMap } from './components/WorldMap';
 import { copy, type SupportedLanguage } from './copy';
 import { drawingPreset } from './data/drawing-presets';
@@ -12,7 +13,7 @@ import {
 } from './data/places';
 import { createResultImage, downloadFile } from './lib/export';
 import { haversineKm, roundedCoordinateLabel } from './lib/geometry';
-import { simulateRoute } from './lib/simulation';
+import { OBJECT_PROFILES, simulateRoute } from './lib/simulation';
 import {
   clearState,
   DEFAULT_STATE,
@@ -21,8 +22,8 @@ import {
   STORAGE_KEY,
 } from './lib/storage';
 import {
-  createDemoWindField,
-  fetchWindField,
+  createDemoWindSnapshot,
+  fetchWindSnapshot,
   OPEN_METEO_ATTRIBUTION_URL,
   WindRequestError,
 } from './lib/wind';
@@ -39,15 +40,20 @@ import type {
   Place,
   RouteResult,
   ThemePreference,
+  WindSnapshot,
 } from './types';
+
+declare global {
+  var milosAppEssentials: {
+    ready(): void;
+  };
+}
 
 type FlightStatus = 'idle' | 'loading' | 'result' | 'error';
 
 interface AppProps {
   initialLanguage: SupportedLanguage;
 }
-
-const OFFLINE_SESSION_KEY = 'milosapps.cloud-post.offline-session';
 
 function appShareUrl(): string {
   return new URL(import.meta.env.BASE_URL, window.location.origin).href;
@@ -79,23 +85,6 @@ function isFirstVisit(): boolean {
   }
 }
 
-function hasOfflineSessionMarker(): boolean {
-  try {
-    return sessionStorage.getItem(OFFLINE_SESSION_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
-
-function updateOfflineSessionMarker(offline: boolean): void {
-  try {
-    if (offline) sessionStorage.setItem(OFFLINE_SESSION_KEY, '1');
-    else sessionStorage.removeItem(OFFLINE_SESSION_KEY);
-  } catch {
-    // The visible connectivity state remains useful when storage is unavailable.
-  }
-}
-
 function namedPlace(coordinate: Coordinate, language: SupportedLanguage): Place {
   const coarse = coarseCoordinate(coordinate);
   const nearest = nearestPlace(coarse);
@@ -119,6 +108,12 @@ function routeEndLabel(result: RouteResult, language: SupportedLanguage): string
   const end = result.points.at(-1) ?? result.points[0];
   const place = localizePlace(nearestPlace(end), language, copy[language].map);
   return copy[language].result.near(place.name);
+}
+
+function defaultComparisonType(primary: ObjectType): ObjectType {
+  if (primary === 'cloud') return 'seed';
+  if (primary === 'balloon') return 'paper-plane';
+  return 'cloud';
 }
 
 function playWindTone(): void {
@@ -165,26 +160,29 @@ export default function App({ initialLanguage: language }: AppProps) {
   const [flightStatus, setFlightStatus] = useState<FlightStatus>('idle');
   const [errorKind, setErrorKind] = useState<WindRequestError['kind']>('network');
   const [result, setResult] = useState<RouteResult | null>(null);
-  const [online, setOnline] = useState(
-    navigator.onLine && !hasOfflineSessionMarker(),
+  const [comparisonResult, setComparisonResult] = useState<RouteResult | null>(null);
+  const [comparisonObjectType, setComparisonObjectType] = useState<ObjectType>(
+    defaultComparisonType(initial.objectType),
   );
+  const [windSnapshot, setWindSnapshot] = useState<WindSnapshot | null>(null);
+  const [flightProgress, setFlightProgress] = useState(1);
+  const [replayToken, setReplayToken] = useState(0);
+  const [online, setOnline] = useState(navigator.onLine);
   const [announcement, setAnnouncement] = useState<string>(text.announcements.ready);
   const [storageWarning, setStorageWarning] = useState(false);
   const [resetArmed, setResetArmed] = useState(false);
   const [exporting, setExporting] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
+  const flightSpaceRef = useRef<HTMLDivElement>(null);
   const placeSearchRef = useRef<MilosPlaceSearchElement>(null);
   const shareRef = useRef<MilosShareButtonElement>(null);
+  const reportFlightProgress = useCallback((progress: number) => {
+    setFlightProgress(progress);
+  }, []);
 
   useEffect(() => {
-    let active = true;
-    void customElements.whenDefined('milos-share-button').then(() => {
-      if (active) document.dispatchEvent(new CustomEvent('milosapps:ready'));
-    });
-    return () => {
-      active = false;
-    };
+    globalThis.milosAppEssentials.ready();
   }, []);
 
   useEffect(() => {
@@ -204,12 +202,10 @@ export default function App({ initialLanguage: language }: AppProps) {
 
   useEffect(() => {
     const onOnline = () => {
-      updateOfflineSessionMarker(false);
       setOnline(true);
       setAnnouncement(text.announcements.connectionRestored);
     };
     const onOffline = () => {
-      updateOfflineSessionMarker(true);
       setOnline(false);
       setAnnouncement(text.announcements.offline);
     };
@@ -239,17 +235,24 @@ export default function App({ initialLanguage: language }: AppProps) {
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
+  const clearFlightResult = () => {
+    setResult(null);
+    setComparisonResult(null);
+    setWindSnapshot(null);
+    setFlightProgress(1);
+    setFlightStatus('idle');
+  };
+
   const changeObjectType = (next: ObjectType) => {
     setObjectType(next);
-    setResult(null);
-    setFlightStatus('idle');
+    setComparisonObjectType(defaultComparisonType(next));
+    clearFlightResult();
     setAnnouncement(text.announcements.objectSelected(text.objectTypes[next].label));
   };
 
   const selectStart = (place: Place) => {
     setStart(place);
-    setResult(null);
-    setFlightStatus('idle');
+    clearFlightResult();
     setAnnouncement(text.announcements.startSelected(place.name));
   };
 
@@ -303,14 +306,20 @@ export default function App({ initialLanguage: language }: AppProps) {
     };
   }, [language]);
 
-  const applyResult = (nextResult: RouteResult) => {
+  const applyResult = (nextResult: RouteResult, snapshot: WindSnapshot) => {
     const endLabel = routeEndLabel(nextResult, language);
+    setWindSnapshot(snapshot);
     setResult(nextResult);
+    setComparisonResult(null);
+    setComparisonObjectType(defaultComparisonType(nextResult.objectType));
     setFlightStatus('result');
     setAnnouncement(
       text.announcements.routeReady(Math.round(nextResult.distanceKm), endLabel),
     );
-    window.setTimeout(() => resultHeadingRef.current?.focus(), 50);
+    window.setTimeout(() => {
+      flightSpaceRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
+      resultHeadingRef.current?.focus({ preventScroll: true });
+    }, 50);
   };
 
   const startLiveFlight = async () => {
@@ -320,15 +329,20 @@ export default function App({ initialLanguage: language }: AppProps) {
     abortRef.current = controller;
     setFlightStatus('loading');
     setResult(null);
+    setComparisonResult(null);
+    setWindSnapshot(null);
     setAnnouncement(text.announcements.liveLoading);
     if (soundEnabled) playWindTone();
     try {
-      const field = await fetchWindField(start, objectType, {
+      const snapshot = await fetchWindSnapshot(start, {
         signal: controller.signal,
         timeoutMs: qaTimeout(),
       });
       if (abortRef.current !== controller) return;
-      applyResult(simulateRoute(start, start.name, objectType, field));
+      applyResult(
+        simulateRoute(start, start.name, objectType, snapshot.fields[OBJECT_PROFILES[objectType].level]),
+        snapshot,
+      );
     } catch (error) {
       if (abortRef.current !== controller) return;
       const requestError = error instanceof WindRequestError
@@ -352,8 +366,23 @@ export default function App({ initialLanguage: language }: AppProps) {
   const startDemoFlight = () => {
     if (!strokes.length) return;
     if (soundEnabled) playWindTone();
-    const field = createDemoWindField(start, objectType);
-    applyResult(simulateRoute(start, start.name, objectType, field));
+    const snapshot = createDemoWindSnapshot(start);
+    applyResult(
+      simulateRoute(start, start.name, objectType, snapshot.fields[OBJECT_PROFILES[objectType].level]),
+      snapshot,
+    );
+  };
+
+  const startComparisonFlight = () => {
+    if (!result || !windSnapshot || comparisonObjectType === result.objectType) return;
+    const field = windSnapshot.fields[OBJECT_PROFILES[comparisonObjectType].level];
+    const next = simulateRoute(start, start.name, comparisonObjectType, field);
+    setComparisonResult(next);
+    setReplayToken((current) => current + 1);
+    setAnnouncement(text.announcements.comparisonReady(
+      text.objectTypes[comparisonObjectType].label,
+      Math.round(next.distanceKm),
+    ));
   };
 
   const saveImage = async () => {
@@ -380,9 +409,7 @@ export default function App({ initialLanguage: language }: AppProps) {
     let element: MilosShareButtonElement | null = null;
     const onComplete = (event: Event) => {
       const method = (event as CustomEvent<{ method?: string }>).detail?.method;
-      setAnnouncement(method === 'clipboard'
-        ? text.announcements.shareCopied
-        : text.announcements.shared);
+      if (method === 'clipboard') setAnnouncement(text.announcements.shareCopied);
     };
     const onError = () => setAnnouncement(text.announcements.shareFailed);
 
@@ -413,7 +440,7 @@ export default function App({ initialLanguage: language }: AppProps) {
       element?.removeEventListener('milosapps:sharecomplete', onComplete);
       element?.removeEventListener('milosapps:shareerror', onError);
     };
-  }, [language, result, strokes, text.announcements.shareCopied, text.announcements.shareFailed, text.announcements.shared, text.share]);
+  }, [language, result, strokes, text.announcements.shareCopied, text.announcements.shareFailed, text.share]);
 
   const resetLocalData = () => {
     clearState();
@@ -425,10 +452,25 @@ export default function App({ initialLanguage: language }: AppProps) {
     setTheme(DEFAULT_STATE.theme);
     setSoundEnabled(DEFAULT_STATE.soundEnabled);
     setResult(null);
+    setComparisonResult(null);
+    setWindSnapshot(null);
+    setComparisonObjectType(defaultComparisonType(DEFAULT_STATE.objectType));
+    setFlightProgress(1);
     setFlightStatus('idle');
     setResetArmed(false);
     setAnnouncement(text.announcements.dataDeleted);
   };
+
+  const profileLevelText = (type: ObjectType): string => {
+    const level = OBJECT_PROFILES[type].level;
+    if (level === '10m') return text.flightSpace.level10m;
+    if (level === '925hPa') return text.flightSpace.level925hPa;
+    return text.flightSpace.level850hPa;
+  };
+
+  const comparisonDistance = result && comparisonResult
+    ? Math.abs(Math.round(comparisonResult.distanceKm - result.distanceKm))
+    : 0;
 
   return (
     <div
@@ -494,14 +536,12 @@ export default function App({ initialLanguage: language }: AppProps) {
               labels={text.drawing}
               onChange={(next) => {
                 setStrokes(next);
-                setResult(null);
-                setFlightStatus('idle');
+                clearFlightResult();
                 setAnnouncement(text.announcements.strokesSaved(next.length));
               }}
               onUndo={() => {
                 setStrokes((current) => current.slice(0, -1));
-                setResult(null);
-                setFlightStatus('idle');
+                clearFlightResult();
                 setAnnouncement(text.announcements.strokeUndone);
               }}
             />
@@ -511,8 +551,7 @@ export default function App({ initialLanguage: language }: AppProps) {
                 type="button"
                 onClick={() => {
                   setStrokes((current) => [...current, ...drawingPreset(objectType)].slice(-80));
-                  setResult(null);
-                  setFlightStatus('idle');
+                  clearFlightResult();
                   setAnnouncement(text.announcements.outlineAdded(text.objectTypes[objectType].label));
                 }}
               >
@@ -524,8 +563,7 @@ export default function App({ initialLanguage: language }: AppProps) {
                 disabled={!strokes.length}
                 onClick={() => {
                   setStrokes((current) => current.slice(0, -1));
-                  setResult(null);
-                  setFlightStatus('idle');
+                  clearFlightResult();
                 }}
               >
                 {text.drawing.undo}
@@ -536,8 +574,7 @@ export default function App({ initialLanguage: language }: AppProps) {
                 disabled={!strokes.length}
                 onClick={() => {
                   setStrokes([]);
-                  setResult(null);
-                  setFlightStatus('idle');
+                  clearFlightResult();
                   setAnnouncement(text.announcements.canvasCleared);
                 }}
               >
@@ -555,15 +592,169 @@ export default function App({ initialLanguage: language }: AppProps) {
               </div>
             </div>
 
-            <WorldMap
-              selected={start}
-              result={result}
-              drawing={strokes}
-              motion={motion}
-              theme={theme}
-              onSelect={selectMapCoordinate}
-              label={text.map.canvasLabel}
-            />
+            <div className="flight-space" ref={flightSpaceRef} data-testid="flight-space">
+              <WorldMap
+                selected={start}
+                result={result}
+                comparisonResult={comparisonResult}
+                drawing={strokes}
+                motion={motion}
+                theme={theme}
+                onSelect={selectMapCoordinate}
+                label={text.map.canvasLabel}
+                routeLensLabel={text.flightSpace.routeLens}
+                replayToken={replayToken}
+                onProgress={reportFlightProgress}
+              />
+
+              {result && (
+                <section className="result-section" aria-labelledby="result-heading" data-milos-result>
+                  <div className="flight-space-heading">
+                    <div>
+                      <p className="step-kicker">{text.flightSpace.kicker}</p>
+                      <h2 id="result-heading" ref={resultHeadingRef} tabIndex={-1}>
+                        {text.result.arrived(routeEndLabel(result, language))}
+                      </h2>
+                    </div>
+                    <span className={`source-badge ${result.source.kind === 'demo' ? 'is-demo' : ''}`}>
+                      {result.source.kind === 'live' ? text.result.liveData : text.result.demoData}
+                    </span>
+                  </div>
+                  <p className="model-boundary">{text.flightSpace.modelBoundary}</p>
+
+                  <FlightReadout
+                    primary={result}
+                    comparison={comparisonResult}
+                    progress={flightProgress}
+                    language={language}
+                    startLabel={start.name}
+                  />
+
+                  <div className="flight-toolbar" data-milos-actions>
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={() => setReplayToken((current) => current + 1)}
+                    >
+                      {comparisonResult ? text.comparison.replayBoth : text.flightSpace.replay}
+                    </button>
+                    <span>
+                      {text.comparison.sameSnapshot}: {' '}
+                      <strong>
+                        {new Date(result.source.forecastStart).toLocaleString(locale, {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                          timeZone: 'UTC',
+                        })} UTC
+                      </strong>
+                    </span>
+                  </div>
+
+                  <section className="comparison-lab" aria-labelledby="comparison-heading">
+                    <div>
+                      <p className="step-kicker">{text.comparison.kicker}</p>
+                      <h3 id="comparison-heading">{text.comparison.heading}</h3>
+                      <p>{text.comparison.description}</p>
+                    </div>
+                    <div className="comparison-controls">
+                      <label>
+                        {text.comparison.select}
+                        <select
+                          value={comparisonObjectType}
+                          onChange={(event) => {
+                            setComparisonObjectType(event.target.value as ObjectType);
+                            setComparisonResult(null);
+                          }}
+                        >
+                          {(Object.keys(text.objectTypes) as ObjectType[])
+                            .filter((type) => type !== result.objectType)
+                            .map((type) => (
+                              <option key={type} value={type}>{text.objectTypes[type].label}</option>
+                            ))}
+                        </select>
+                      </label>
+                      <div className="comparison-prediction">
+                        <small>{text.comparison.prediction}</small>
+                        <strong>{text.objectTypes[comparisonObjectType].label}</strong>
+                        <span>
+                          {text.comparison.predictionLead} {profileLevelText(comparisonObjectType)}, {' '}
+                          {OBJECT_PROFILES[comparisonObjectType].hours.toLocaleString(locale)} h.
+                        </span>
+                      </div>
+                      <button className="primary-button" type="button" onClick={startComparisonFlight}>
+                        {text.comparison.compare}
+                      </button>
+                    </div>
+                    {comparisonResult && (
+                      <div className="comparison-outcome" role="status">
+                        <small>{text.comparison.outcome}</small>
+                        <strong>
+                          {text.comparison.distanceDifference(
+                            text.objectTypes[comparisonResult.objectType].label,
+                            comparisonDistance,
+                            comparisonResult.distanceKm >= result.distanceKm
+                              ? text.comparison.farther
+                              : text.comparison.shorter,
+                          )}
+                        </strong>
+                        <span>{text.comparison.cause}</span>
+                      </div>
+                    )}
+                  </section>
+
+                  <div className="result-metrics">
+                    <article>
+                      <small>{text.result.distance}</small>
+                      <strong>{Math.round(result.distanceKm).toLocaleString(locale)} km</strong>
+                    </article>
+                    <article>
+                      <small>{text.result.duration}</small>
+                      <strong>{result.durationHours.toLocaleString(locale)} h</strong>
+                    </article>
+                    <article>
+                      <small>{text.result.average}</small>
+                      <strong>{Math.round(result.averageSpeedKmh)} km/h</strong>
+                    </article>
+                    <article>
+                      <small>{text.result.maximum}</small>
+                      <strong>{Math.round(result.maxSpeedKmh)} km/h</strong>
+                    </article>
+                  </div>
+                  <div className="result-source">
+                    <div>
+                      <span>{text.result.source}</span>
+                      <strong>
+                        {result.source.kind === 'demo'
+                          ? (language === 'de'
+                              ? `${result.source.label} · ${result.source.model}`
+                              : 'Demo wind · synthetic test field')
+                          : `${result.source.label} · ${result.source.model}`}
+                      </strong>
+                    </div>
+                    <div>
+                      <span>{text.result.from(start.name)}</span>
+                      <strong>{routeEndLabel(result, language)}</strong>
+                    </div>
+                  </div>
+                  <div className="result-actions" data-milos-actions>
+                    <button className="primary-button" type="button" onClick={saveImage} disabled={exporting}>
+                      {exporting ? text.result.exporting : text.result.save}
+                    </button>
+                    <milos-share-button ref={shareRef} primary="" />
+                    <button
+                      className="text-button"
+                      type="button"
+                      onClick={() => {
+                        clearFlightResult();
+                        document.getElementById('zeichnen')?.scrollIntoView({ behavior: motion === 'reduced' ? 'auto' : 'smooth' });
+                      }}
+                    >
+                      {text.result.again}
+                    </button>
+                  </div>
+                </section>
+              )}
+            </div>
 
             <div className="selected-place" aria-live="polite">
               <span className="place-pin" aria-hidden="true">●</span>
@@ -668,82 +859,6 @@ export default function App({ initialLanguage: language }: AppProps) {
           </section>
         )}
 
-        {result && (
-          <section className="result-section" aria-labelledby="result-heading" data-milos-result>
-            <div className="result-heading-row">
-              <div>
-                <p className="eyebrow">
-                  {result.source.kind === 'live' ? text.result.liveRoute : text.result.demoRoute}
-                </p>
-                <h2 id="result-heading" ref={resultHeadingRef} tabIndex={-1}>
-                  {text.result.arrived(routeEndLabel(result, language))}
-                </h2>
-                <p>{text.result.from(start.name)}</p>
-              </div>
-              <span className={`source-badge ${result.source.kind === 'demo' ? 'is-demo' : ''}`}>
-                {result.source.kind === 'live' ? text.result.liveData : text.result.demoData}
-              </span>
-            </div>
-            <div className="result-metrics">
-              <article>
-                <small>{text.result.distance}</small>
-                <strong>{Math.round(result.distanceKm).toLocaleString(locale)} km</strong>
-              </article>
-              <article>
-                <small>{text.result.duration}</small>
-                <strong>{result.durationHours.toLocaleString(locale)} h</strong>
-              </article>
-              <article>
-                <small>{text.result.average}</small>
-                <strong>{Math.round(result.averageSpeedKmh)} km/h</strong>
-              </article>
-              <article>
-                <small>{text.result.maximum}</small>
-                <strong>{Math.round(result.maxSpeedKmh)} km/h</strong>
-              </article>
-            </div>
-            <div className="result-source">
-              <div>
-                <span>{text.result.dataTime}</span>
-                <strong>
-                  {new Date(result.source.forecastStart).toLocaleString(locale, {
-                    dateStyle: 'medium',
-                    timeStyle: 'short',
-                    timeZone: 'UTC',
-                  })} UTC
-                </strong>
-              </div>
-              <div>
-                <span>{text.result.source}</span>
-                <strong>
-                  {result.source.kind === 'demo'
-                    ? (language === 'de'
-                        ? `${result.source.label} · ${result.source.model}`
-                        : 'Demo wind · synthetic test field')
-                    : `${result.source.label} · ${result.source.model}`}
-                </strong>
-              </div>
-            </div>
-            <div className="result-actions" data-milos-actions>
-              <button className="primary-button" type="button" onClick={saveImage} disabled={exporting}>
-                {exporting ? text.result.exporting : text.result.save}
-              </button>
-              <milos-share-button ref={shareRef} primary="" />
-              <button
-                className="text-button"
-                type="button"
-                onClick={() => {
-                  setResult(null);
-                  setFlightStatus('idle');
-                  document.getElementById('zeichnen')?.scrollIntoView({ behavior: motion === 'reduced' ? 'auto' : 'smooth' });
-                }}
-              >
-                {text.result.again}
-              </button>
-            </div>
-          </section>
-        )}
-
         <details className="settings-disclosure" data-milos-secondary>
           <summary>{text.settings.summary}</summary>
           <section className="settings-section" aria-labelledby="settings-heading" data-milos-settings>
@@ -807,6 +922,9 @@ export default function App({ initialLanguage: language }: AppProps) {
         </details>
 
         <aside className="credits-bar" aria-label={text.footer.credits}>
+          <a href="https://dev.milos-apps.de/datenschutz" data-milos-privacy-info>
+            {text.footer.privacy}
+          </a>
           <a href={OPEN_METEO_ATTRIBUTION_URL} target="_blank" rel="noreferrer">
             {text.footer.wind}
           </a>

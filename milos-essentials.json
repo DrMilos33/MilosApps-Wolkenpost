@@ -1,5 +1,5 @@
 {
-  "$schema": "https://milos-apps.de/contracts/public-app-essentials/v1/essentials-manifest.schema.json",
+  "$schema": "./vendor/milosapps-essentials/v1/essentials-manifest.schema.json",
   "appKey": "cloud-post",
   "ownerTask": "MilosApps – Wolkenpost",
   "public": true,
@@ -7,10 +7,15 @@
   "environment": "dev",
   "productionApproved": false,
   "entryHtml": "index.html",
+  "consumerEntryModule": {
+    "sourceFile": "src/App.tsx",
+    "runtimePath": "/src/main.tsx"
+  },
   "integrationFiles": ["index.html", "src/App.tsx", "src/main.tsx"],
   "loading": {
     "appName": "Wolkenpost",
-    "iconPath": "icon.svg",
+    "iconPath": "public/icon.svg",
+    "iconRuntimePath": "icon.svg",
     "message": {
       "de": "Wolkenpost wird geöffnet …",
       "en": "Opening Cloud Post …"
@@ -19,15 +24,36 @@
   "privacy": {
     "mode": "no-cookies",
     "usesLocalStorage": true,
+    "storagePurposes": [
+      {
+        "key": "milosapps.cloud-post.state",
+        "purpose": "Bewahrt die selbst erstellte Zeichnung, das Flugobjekt, den groben Startpunkt sowie Darstellungs-, Bewegungs- und Tonpräferenzen für die ausdrücklich angebotene lokale Wiederaufnahme und Offline-Nutzung.",
+        "lifetime": "until-user-clears",
+        "strictlyNecessary": true
+      },
+      {
+        "key": "milosapps.cloud-post.language",
+        "purpose": "Bewahrt die ausdrücklich gewählte Sprache konsistent für Shell, Fachoberfläche und barrierefreie Beschriftungen.",
+        "lifetime": "until-user-clears",
+        "strictlyNecessary": true
+      }
+    ],
     "optionalTracking": false,
     "privacyUrl": "https://dev.milos-apps.de/datenschutz"
   },
   "features": {
     "startup": true,
-    "privacyNotice": true,
+    "privacyNotice": false,
     "share": true,
     "datePicker": false,
-    "placeSearch": true
+    "placeSearch": true,
+    "placeSuggestions": {
+      "enabled": false,
+      "minChars": 3,
+      "debounceMs": 350,
+      "providerCapability": "submit-only",
+      "evidenceFile": null
+    }
   },
   "theme": {
     "accent": "#1f6658",
@@ -41,8 +67,9 @@
   },
   "essentialsContract": {
     "id": "public-app-essentials/v1",
-    "version": "1.0.0",
-    "sharedCommit": "b09e09008ff05fe87f05bc647a7c4964ff13e6f6",
-    "vendorDirectory": "vendor/milosapps-essentials/v1"
+    "version": "1.1.2",
+    "sharedCommit": "b14aac6107b75f03ff49e74160af7e7e30c29e59",
+    "vendorDirectory": "vendor/milosapps-essentials/v1",
+    "runtimeBasePath": "vendor/milosapps-essentials/v1"
   }
 }

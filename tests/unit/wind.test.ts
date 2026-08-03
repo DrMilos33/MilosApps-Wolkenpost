@@ -1,5 +1,7 @@
 import {
+  createDemoWindSnapshot,
   fetchWindField,
+  fetchWindSnapshot,
   meteorologicalWindVector,
   WindRequestError,
 } from '../../src/lib/wind';
@@ -12,6 +14,10 @@ function apiNode(latitude: number, longitude: number) {
       time: ['2026-07-30T00:00', '2026-07-30T01:00'],
       wind_speed_850hPa: [10, 12],
       wind_direction_850hPa: [270, 180],
+      wind_speed_925hPa: [7, 8],
+      wind_direction_925hPa: [210, 200],
+      wind_speed_10m: [4, 5],
+      wind_direction_10m: [120, 130],
     },
   };
 }
@@ -50,6 +56,35 @@ describe('wind data', () => {
     );
     await expect(fetchWindField({ latitude: 52.5, longitude: 13.5 }, 'cloud'))
       .rejects.toMatchObject({ kind: 'invalid' });
+  });
+
+  it('loads all comparison levels in one reproducible snapshot', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = new URL(String(input));
+      const latitudes = url.searchParams.get('latitude')!.split(',').map(Number);
+      const longitudes = url.searchParams.get('longitude')!.split(',').map(Number);
+      return new Response(JSON.stringify(latitudes.map((latitude, index) =>
+        apiNode(latitude, longitudes[index]),
+      )), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    });
+
+    const snapshot = await fetchWindSnapshot({ latitude: 52.5, longitude: 13.5 });
+    expect(Object.keys(snapshot.fields).sort()).toEqual(['10m', '850hPa', '925hPa']);
+    expect(snapshot.fields['10m'].source.forecastStart)
+      .toBe(snapshot.fields['850hPa'].source.forecastStart);
+    expect(snapshot.fields['925hPa'].source.fetchedAt)
+      .toBe(snapshot.fields['850hPa'].source.fetchedAt);
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const requested = new URL(String(fetchMock.mock.calls[0][0])).searchParams.get('hourly');
+    expect(requested).toContain('wind_speed_10m');
+    expect(requested).toContain('wind_speed_925hPa');
+    expect(requested).toContain('wind_speed_850hPa');
+  });
+
+  it('keeps every demo profile on one immutable data time', () => {
+    const snapshot = createDemoWindSnapshot({ latitude: 52.5, longitude: 13.5 });
+    const dataTimes = Object.values(snapshot.fields).map((field) => field.source.forecastStart);
+    expect(new Set(dataTimes)).toEqual(new Set(['2026-07-30T00:00:00.000Z']));
   });
 
   it('distinguishes a timeout from a generic network error', async () => {

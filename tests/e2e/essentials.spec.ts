@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+import { createHash } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 import {
   expectNoHorizontalOverflow,
   fulfillWind,
@@ -92,25 +94,27 @@ test('startup handshake survives an app-before-bootstrap loading race', async ({
   await expect(loader).toBeHidden();
 });
 
-test('truthful privacy notice follows locale and persists only its dismissal', async ({ page }) => {
+test('no-cookies mode has no banner or consent state and keeps privacy information reachable', async ({ page }) => {
   test.skip(test.info().project.name !== 'desktop', 'focused privacy contract check');
+  await page.addInitScript(() => {
+    localStorage.setItem('milosapps.cloud-post.privacyNotice.v1', 'dismissed');
+  });
   await page.goto('./');
   const notice = page.locator('[data-milos-privacy-notice]');
-  await expect(notice).toBeVisible();
-  await expect(notice).toContainText('Keine Werbe- oder Tracking-Cookies');
-  await expect(notice).toContainText('lokal auf diesem Gerät');
-  await expect(notice.getByRole('button', { name: /Akzeptieren|Ablehnen/ })).toHaveCount(0);
-  await expect(notice.getByRole('link', { name: 'Datenschutz' }))
-    .toHaveAttribute('href', 'https://dev.milos-apps.de/datenschutz');
-
-  await page.locator('milos-app-shell').getByRole('button', { name: 'EN', exact: true }).click();
-  await expect(notice).toContainText('No advertising or tracking cookies');
-  await notice.getByRole('button', { name: 'Got it' }).click();
+  await expect(notice).toHaveCount(0);
+  const privacyInfo = page.locator('[data-milos-privacy-info]');
+  await expect(privacyInfo).toBeVisible();
+  await expect(privacyInfo).toHaveAttribute('href', 'https://dev.milos-apps.de/datenschutz');
+  await expect(page.getByRole('button', { name: /Akzeptieren|Ablehnen|Verstanden/ })).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => (
     localStorage.getItem('milosapps.cloud-post.privacyNotice.v1')
-  ))).toBe('dismissed');
+  ))).toBeNull();
+
+  await page.locator('milos-app-shell').getByRole('button', { name: 'EN', exact: true }).click();
+  await expect(page.locator('[data-milos-privacy-info]')).toHaveText('Privacy');
   await page.reload();
   await expect(notice).toHaveCount(0);
+  await expect(page.locator('[data-milos-privacy-info]')).toHaveText('Privacy');
 });
 
 test('place search is explicit, normalized and works for cities and regions', async ({ page }) => {
@@ -147,6 +151,59 @@ test('place search is explicit, normalized and works for cities and regions', as
   await expect(page.getByRole('combobox', { name: 'Place or region' })).toBeVisible();
 });
 
+test('place search suppresses stale results after replacement, Escape and reconnect', async ({ page }) => {
+  test.skip(test.info().project.name !== 'desktop', 'focused place lifecycle check');
+  await page.goto('./');
+  await page.evaluate(() => {
+    const element = document.querySelector('milos-place-search') as HTMLElement & {
+      setSearchProvider(provider: (request: { query: string }) => Promise<unknown[]>): void;
+    };
+    const target = window as typeof window & {
+      __placeResolvers?: Record<string, (value: unknown[]) => void>;
+    };
+    target.__placeResolvers = {};
+    element.setSearchProvider(({ query }) => new Promise((resolve) => {
+      target.__placeResolvers![query] = resolve;
+    }));
+  });
+  const place = page.locator('milos-place-search');
+  const input = place.getByRole('combobox', { name: 'Ort oder Region' });
+  await input.fill('Berlin');
+  await input.press('Enter');
+  await input.fill('London');
+  await input.press('Enter');
+  await page.evaluate(() => {
+    const target = window as typeof window & { __placeResolvers?: Record<string, (value: unknown[]) => void> };
+    target.__placeResolvers?.London?.([{
+      id: 'london', name: 'London', region: 'England', country: 'United Kingdom',
+      countryCode: 'GB', latitude: 51.5, longitude: -0.1, type: 'city',
+    }]);
+    target.__placeResolvers?.Berlin?.([{
+      id: 'berlin', name: 'Berlin', region: 'Berlin', country: 'Deutschland',
+      countryCode: 'DE', latitude: 52.5, longitude: 13.4, type: 'city',
+    }]);
+  });
+  await expect(place.getByRole('option', { name: /London England · United Kingdom/ })).toBeVisible();
+  await expect(place.getByRole('option', { name: /Berlin Berlin · Deutschland/ })).toHaveCount(0);
+
+  await input.press('Escape');
+  await expect(place.getByRole('option')).toHaveCount(0);
+  await input.fill('Paris');
+  await input.press('Enter');
+  await page.evaluate(() => {
+    const element = document.querySelector('milos-place-search')!;
+    const parent = element.parentElement!;
+    element.remove();
+    parent.append(element);
+    const target = window as typeof window & { __placeResolvers?: Record<string, (value: unknown[]) => void> };
+    target.__placeResolvers?.Paris?.([{
+      id: 'paris', name: 'Paris', region: 'Île-de-France', country: 'France',
+      countryCode: 'FR', latitude: 48.8, longitude: 2.3, type: 'city',
+    }]);
+  });
+  await expect(place.getByRole('option')).toHaveCount(0);
+});
+
 test('shared result share uses native, clipboard and cancellation paths without private URLs', async ({ page }) => {
   test.skip(test.info().project.name !== 'desktop', 'focused sharing contract check');
   const expectedShareUrl = externalBaseUrl ?? 'http://127.0.0.1:4315/';
@@ -176,7 +233,11 @@ test('shared result share uses native, clipboard and cancellation paths without 
   await startFlight(page);
   const share = page.locator('milos-share-button');
   await share.getByRole('button', { name: 'Teilen' }).click();
-  await expect(share.locator('[data-milos-share-status]')).toHaveText('Geteilt');
+  await expect(share.locator('[data-milos-share-status]')).toHaveText('');
+  await expect(share.locator('[data-milos-share-status]')).toHaveAttribute('data-visible', 'false');
+  await expect.poll(() => page.evaluate(() => Boolean(window.__wolkenpostSharePayload))).toBe(true);
+  await expect(page.locator('p.sr-only[aria-live="polite"]')).not.toContainText('Geteilt');
+  const initialShareBounds = await share.boundingBox();
   const nativePayload = await page.evaluate(() => window.__wolkenpostSharePayload);
   expect(nativePayload?.url).toBe(expectedShareUrl);
   expect(nativePayload?.files?.[0]).toMatchObject({ type: 'image/png' });
@@ -191,6 +252,8 @@ test('shared result share uses native, clipboard and cancellation paths without 
   });
   await share.getByRole('button', { name: 'Teilen' }).click();
   await expect(share.locator('[data-milos-share-status]')).toHaveText('Link kopiert');
+  const fallbackShareBounds = await share.boundingBox();
+  expect(fallbackShareBounds).toEqual(initialShareBounds);
   const copied = await page.evaluate(() => window.__wolkenpostClipboard);
   expect(copied).toContain(expectedShareUrl);
   expect(copied).not.toContain('private-location');
@@ -204,6 +267,33 @@ test('shared result share uses native, clipboard and cancellation paths without 
   });
   await share.getByRole('button', { name: 'Teilen' }).click();
   await expect(share.locator('[data-milos-share-status]')).toHaveText('');
+  expect(await share.boundingBox()).toEqual(initialShareBounds);
+});
+
+test('pending share is invalidated by disconnect and reconnect', async ({ page }) => {
+  test.skip(test.info().project.name !== 'desktop', 'focused share lifecycle check');
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', {
+      configurable: true,
+      value: () => new Promise<void>((resolve) => {
+        (window as typeof window & { __resolveShare?: () => void }).__resolveShare = resolve;
+      }),
+    });
+  });
+  await page.goto('./');
+  await startFlight(page);
+  const share = page.locator('milos-share-button');
+  await share.getByRole('button', { name: 'Teilen' }).click();
+  await page.evaluate(() => {
+    const element = document.querySelector('milos-share-button')!;
+    const parent = element.parentElement!;
+    element.remove();
+    parent.append(element);
+    (window as typeof window & { __resolveShare?: () => void }).__resolveShare?.();
+  });
+  await expect(share.locator('[data-milos-share-status]')).toHaveText('');
+  await expect(share.getByRole('button', { name: 'Teilen' })).toBeEnabled();
 });
 
 test('essentials assets keep their lock, MIME, CSP, reflow and module boundary', async ({ page }) => {
@@ -267,6 +357,24 @@ test('essentials assets keep their lock, MIME, CSP, reflow and module boundary',
       const essence = contentType?.split(';', 1)[0].trim().toLowerCase();
       return essence === 'text/javascript' || essence === 'application/javascript';
     })).toBe(true);
+
+  const iconSourceSha256 = createHash('sha256')
+    .update(await readFile('public/icon.svg'))
+    .digest('hex');
+  const iconAsset = await page.evaluate(async () => {
+    const response = await fetch(new URL('icon.svg', document.baseURI));
+    const digest = await crypto.subtle.digest('SHA-256', await response.arrayBuffer());
+    return {
+      ok: response.ok,
+      contentType: response.headers.get('content-type'),
+      sha256: [...new Uint8Array(digest)].map((value) => value.toString(16).padStart(2, '0')).join(''),
+    };
+  });
+  expect(iconAsset).toEqual({
+    ok: true,
+    contentType: expect.stringContaining('image/svg+xml'),
+    sha256: iconSourceSha256,
+  });
 
   for (const viewport of [
     { width: 1440, height: 900 },

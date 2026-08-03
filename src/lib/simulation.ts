@@ -17,7 +17,7 @@ import {
 
 export interface ObjectProfile {
   label: string;
-  level: '10m' | '925hPa' | '850hPa';
+  level: import('../types').WindLevel;
   hours: number;
   driftFactor: number;
   stepMinutes: number;
@@ -103,6 +103,7 @@ export function simulateRoute(
     ...start,
     time: firstTime,
     speed: 0,
+    bearing: 0,
   }];
   let current = { ...start };
   let previousVector: WindVector | null = null;
@@ -129,11 +130,17 @@ export function simulateRoute(
     const speedMs = Math.hypot(smoothed.east, smoothed.north) * profile.driftFactor;
     const speedKmh = speedMs * 3.6;
     const stepDistance = (speedMs * stepSeconds) / 1000;
-    const next = destinationPoint(current, stepDistance, vectorBearing(smoothed.east, smoothed.north));
+    const bearing = vectorBearing(smoothed.east, smoothed.north);
+    const next = destinationPoint(current, stepDistance, bearing);
     distanceKm += haversineKm(current, next);
     maxSpeedKmh = Math.max(maxSpeedKmh, speedKmh);
     current = next;
-    points.push({ ...current, time, speed: speedKmh });
+    points.push({ ...current, time, speed: speedKmh, bearing });
+  }
+
+  if (points.length > 1) {
+    points[0].bearing = points[1].bearing;
+    points[0].speed = points[1].speed;
   }
 
   const endPlace = nearestPlace(current);

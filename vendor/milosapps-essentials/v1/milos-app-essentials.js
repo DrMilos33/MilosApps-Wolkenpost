@@ -1,18 +1,17 @@
 const CONTRACT_ID = "public-app-essentials/v1";
-const CONTRACT_VERSION = "1.0.0";
+const CONTRACT_VERSION = "1.1.2";
 const LOCALE_EVENT = "milosapps:localechange";
 const READY_EVENT = "milosapps:ready";
 
 const COPY = Object.freeze({
   de: Object.freeze({
-    privacyTitle: "Datenschutz & Cookies",
+    privacyTitle: "Technisch notwendige Cookies",
     noCookies: "Keine Werbe- oder Tracking-Cookies. Sprache und Einstellungen können lokal auf diesem Gerät gespeichert werden.",
     noCookiesNoStorage: "Keine Werbe- oder Tracking-Cookies und keine lokale Profilerstellung.",
     essentialOnly: "Es werden nur technisch notwendige Cookies verwendet. Werbung und Tracking bleiben ausgeschaltet.",
-    understood: "Verstanden",
+    closeNotice: "Hinweis schließen",
     privacy: "Datenschutz",
     share: "Teilen",
-    shared: "Geteilt",
     copied: "Link kopiert",
     shareFailed: "Teilen war nicht möglich",
     year: "Jahr wählen",
@@ -29,14 +28,13 @@ const COPY = Object.freeze({
     providerMissing: "Die App hat keine Ortssuche verbunden."
   }),
   en: Object.freeze({
-    privacyTitle: "Privacy & cookies",
+    privacyTitle: "Technically necessary cookies",
     noCookies: "No advertising or tracking cookies. Language and settings may be stored locally on this device.",
     noCookiesNoStorage: "No advertising or tracking cookies and no local profiling.",
     essentialOnly: "Only technically necessary cookies are used. Advertising and tracking stay disabled.",
-    understood: "Got it",
+    closeNotice: "Close notice",
     privacy: "Privacy",
     share: "Share",
-    shared: "Shared",
     copied: "Link copied",
     shareFailed: "Sharing was not possible",
     year: "Choose year",
@@ -57,6 +55,7 @@ const COPY = Object.freeze({
 let activeConfig = null;
 let activeLocale = "de";
 let privacyVisible = false;
+let privacyDismissedForDocument = false;
 
 function normalizeLocale(value) {
   return value === "en" ? "en" : "de";
@@ -64,6 +63,38 @@ function normalizeLocale(value) {
 
 function assertString(value, label) {
   if (typeof value !== "string" || !value.trim()) throw new TypeError(`${label} must be a non-empty string`);
+}
+
+function validHttpsUrl(value) {
+  if (typeof value !== "string" || /\s/.test(value)) return false;
+  try {
+    const parsed = new URL(value);
+    const hostname = parsed.hostname.replace(/\.$/, "");
+    const labels = hostname.split(".");
+    return parsed.protocol === "https:"
+      && labels.length >= 2
+      && labels.every((label) => /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(label))
+      && !parsed.username
+      && !parsed.password;
+  } catch {
+    return false;
+  }
+}
+
+function normalizeStoragePurposes(input, appKey, usesLocalStorage) {
+  if (!Array.isArray(input)) throw new TypeError("privacy.storagePurposes is required");
+  if (usesLocalStorage && input.length === 0) throw new TypeError("usesLocalStorage=true requires at least one storage purpose");
+  if (!usesLocalStorage && input.length > 0) throw new TypeError("storage purposes require usesLocalStorage=true");
+  const keys = new Set();
+  return Object.freeze(input.map((item) => {
+    if (typeof item?.key !== "string" || !item.key.startsWith(`milosapps.${appKey}.`)) throw new TypeError("Storage purpose key must use the app namespace");
+    if (keys.has(item.key)) throw new TypeError("Storage purpose keys must be unique");
+    keys.add(item.key);
+    assertString(item.purpose, "storage purpose");
+    if (!["session", "bounded", "until-user-clears"].includes(item.lifetime)) throw new TypeError("Unsupported storage purpose lifetime");
+    if (item.strictlyNecessary !== true) throw new TypeError("Optional device storage is forbidden without a separate consent contract");
+    return Object.freeze({ key: item.key, purpose: item.purpose.trim(), lifetime: item.lifetime, strictlyNecessary: true });
+  }));
 }
 
 function normalizeConfig(input) {
@@ -75,7 +106,19 @@ function normalizeConfig(input) {
   if (input.environment === "production" && input.productionApproved !== true) throw new TypeError("Production requires explicit approval");
   if (input.privacy?.mode !== "no-cookies" && input.privacy?.mode !== "essential-only") throw new TypeError("Unsupported privacy mode");
   if (input.privacy?.optionalTracking !== false) throw new TypeError("Optional tracking is forbidden by public-app-essentials/v1");
-  if (!/^https:\/\//.test(input.privacy?.privacyUrl || "")) throw new TypeError("privacyUrl must use HTTPS");
+  if (!validHttpsUrl(input.privacy?.privacyUrl)) throw new TypeError("privacyUrl must be an absolute HTTPS URL with a valid host and no credentials");
+  const usesLocalStorage = input.privacy.usesLocalStorage === true;
+  const storagePurposes = normalizeStoragePurposes(input.privacy.storagePurposes, input.appKey, usesLocalStorage);
+  if (input.features?.startup !== true) throw new TypeError("Startup is required for public apps");
+  if (input.features?.share !== true) throw new TypeError("Share is required for public apps");
+  if (input.privacy.mode === "no-cookies" && input.features?.privacyNotice !== false) throw new TypeError("no-cookies requires privacyNotice=false");
+  if (input.privacy.mode === "essential-only" && input.features?.privacyNotice !== true) throw new TypeError("essential-only requires privacyNotice=true");
+  const placeSuggestions = input.features?.placeSuggestions;
+  if (!placeSuggestions || typeof placeSuggestions !== "object") throw new TypeError("features.placeSuggestions is required");
+  if (!Number.isInteger(placeSuggestions.minChars) || placeSuggestions.minChars < 2 || placeSuggestions.minChars > 6) throw new TypeError("placeSuggestions.minChars must be between 2 and 6");
+  if (!Number.isInteger(placeSuggestions.debounceMs) || placeSuggestions.debounceMs < 200 || placeSuggestions.debounceMs > 1000) throw new TypeError("placeSuggestions.debounceMs must be between 200 and 1000");
+  if (placeSuggestions.enabled && placeSuggestions.providerCapability !== "consumer-autocomplete-proxy") throw new TypeError("enabled place suggestions require a consumer autocomplete proxy");
+  if (!placeSuggestions.enabled && placeSuggestions.providerCapability !== "submit-only") throw new TypeError("disabled place suggestions require submit-only mode");
   assertString(input.loading?.appName, "loading.appName");
   assertString(input.loading?.message?.de, "loading.message.de");
   assertString(input.loading?.message?.en, "loading.message.en");
@@ -86,11 +129,21 @@ function normalizeConfig(input) {
     loading: Object.freeze({ appName: input.loading.appName, message: Object.freeze({ ...input.loading.message }) }),
     privacy: Object.freeze({
       mode: input.privacy.mode,
-      usesLocalStorage: input.privacy.usesLocalStorage === true,
+      usesLocalStorage,
+      storagePurposes,
       optionalTracking: false,
       privacyUrl: input.privacy.privacyUrl
     }),
-    features: Object.freeze({ ...input.features })
+    features: Object.freeze({
+      ...input.features,
+      placeSuggestions: Object.freeze({
+        enabled: placeSuggestions.enabled === true,
+        minChars: placeSuggestions.minChars,
+        debounceMs: placeSuggestions.debounceMs,
+        providerCapability: placeSuggestions.providerCapability,
+        evidenceFile: placeSuggestions.evidenceFile ?? null
+      })
+    })
   });
 }
 
@@ -98,12 +151,8 @@ function localeCopy() {
   return COPY[activeLocale];
 }
 
-function storageGet(key) {
-  try { return localStorage.getItem(key); } catch { return null; }
-}
-
-function storageSet(key, value) {
-  try { localStorage.setItem(key, value); } catch { /* Local persistence is optional comfort. */ }
+function storageRemove(key) {
+  try { localStorage.removeItem(key); } catch { /* Storage may be unavailable. */ }
 }
 
 function iconShare() {
@@ -142,19 +191,16 @@ function updatePrivacyCopy() {
   notice.setAttribute("aria-label", copy.privacyTitle);
   notice.querySelector("[data-milos-privacy-title]").textContent = copy.privacyTitle;
   notice.querySelector("[data-milos-privacy-message]").textContent = privacyMessage();
-  notice.querySelector("[data-milos-privacy-dismiss]").textContent = copy.understood;
+  notice.querySelector("[data-milos-privacy-dismiss]").setAttribute("aria-label", copy.closeNotice);
+  notice.querySelector("[data-milos-privacy-dismiss]").setAttribute("title", copy.closeNotice);
   notice.querySelector("[data-milos-privacy-link]").textContent = copy.privacy;
 }
 
-function privacyStorageKey() {
-  return `milosapps.${activeConfig.appKey}.privacyNotice.v1`;
-}
-
 function showPrivacyNotice() {
-  const dismissed = activeConfig?.privacy?.usesLocalStorage && storageGet(privacyStorageKey()) === "dismissed";
-  if (!activeConfig?.features?.privacyNotice || privacyVisible || dismissed) return;
+  if (activeConfig?.privacy?.mode === "no-cookies") return;
+  if (!activeConfig?.features?.privacyNotice || privacyVisible || privacyDismissedForDocument) return;
   privacyVisible = true;
-  const notice = document.createElement("section");
+  const notice = document.createElement("aside");
   notice.dataset.milosPrivacyNotice = "";
   notice.setAttribute("role", "region");
 
@@ -175,11 +221,11 @@ function showPrivacyNotice() {
   const dismiss = document.createElement("button");
   dismiss.className = "milos-essential-button";
   dismiss.dataset.milosPrivacyDismiss = "";
-  dismiss.dataset.primary = "";
   dismiss.type = "button";
+  dismiss.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" stroke-linecap="round"/></svg>';
   dismiss.addEventListener("click", () => {
-    if (activeConfig.privacy.usesLocalStorage) storageSet(privacyStorageKey(), "dismissed");
     privacyVisible = false;
+    privacyDismissedForDocument = true;
     notice.remove();
   });
   actions.append(privacyLink, dismiss);
@@ -220,9 +266,13 @@ export async function shareMilosContent(payload = {}) {
   return Object.freeze({ method: "clipboard" });
 }
 
-class MilosShareButton extends HTMLElement {
+export class MilosShareButton extends HTMLElement {
   connectedCallback() {
-    if (this.dataset.milosReady === "true") return;
+    this.connectionEpoch = (this.connectionEpoch || 0) + 1;
+    if (this.dataset.milosReady === "true") {
+      this.setLocale(activeLocale);
+      return;
+    }
     this.dataset.milosReady = "true";
     this.payloadProvider ??= () => ({ title: document.title, url: window.location.href });
     this.replaceChildren();
@@ -232,7 +282,9 @@ class MilosShareButton extends HTMLElement {
     button.innerHTML = `${iconShare()}<span data-milos-share-label></span>`;
     const status = document.createElement("span");
     status.dataset.milosShareStatus = "";
+    status.dataset.visible = "false";
     status.setAttribute("aria-live", "polite");
+    status.setAttribute("role", "status");
     button.addEventListener("click", () => this.share(button, status));
     this.append(button, status);
     this.setLocale(activeLocale);
@@ -243,21 +295,70 @@ class MilosShareButton extends HTMLElement {
     this.payloadProvider = provider;
   }
 
+  disconnectedCallback() {
+    this.connectionEpoch = (this.connectionEpoch || 0) + 1;
+    this.shareOperationId = (this.shareOperationId || 0) + 1;
+    clearTimeout(this.statusDisplayTimer);
+    clearTimeout(this.statusClearTimer);
+    const status = this.querySelector("[data-milos-share-status]");
+    const button = this.querySelector("button");
+    if (status) this.resetStatus(status);
+    if (button) button.disabled = false;
+  }
+
   async share(button, status) {
+    const operationId = (this.shareOperationId || 0) + 1;
+    this.shareOperationId = operationId;
+    const connectionEpoch = this.connectionEpoch;
     button.disabled = true;
-    status.textContent = "";
+    this.resetStatus(status);
     try {
-      const result = await shareMilosContent(await this.payloadProvider());
-      status.textContent = result.method === "native" ? localeCopy().shared : localeCopy().copied;
+      const payload = await this.payloadProvider();
+      if (!this.isCurrentShare(operationId, connectionEpoch, button, status)) return;
+      const result = await shareMilosContent(payload);
+      if (!this.isCurrentShare(operationId, connectionEpoch, button, status)) return;
+      if (result.method === "clipboard") this.showStatus(status, localeCopy().copied, "success", operationId, connectionEpoch, button);
       this.dispatchEvent(new CustomEvent("milosapps:sharecomplete", { detail: result, bubbles: true, composed: true }));
     } catch (error) {
-      if (error?.name !== "AbortError") {
-        status.textContent = localeCopy().shareFailed;
+      if (this.isCurrentShare(operationId, connectionEpoch, button, status) && error?.name !== "AbortError") {
+        this.showStatus(status, localeCopy().shareFailed, "error", operationId, connectionEpoch, button);
         this.dispatchEvent(new CustomEvent("milosapps:shareerror", { detail: { error }, bubbles: true, composed: true }));
       }
     } finally {
-      button.disabled = false;
+      if (this.isCurrentShare(operationId, connectionEpoch, button, status)) button.disabled = false;
     }
+  }
+
+  isCurrentShare(operationId, connectionEpoch, button, status) {
+    return this.isConnected && this.connectionEpoch === connectionEpoch && this.shareOperationId === operationId && button.isConnected && status.isConnected;
+  }
+
+  showStatus(status, message, tone, operationId, connectionEpoch, button) {
+    clearTimeout(this.statusDisplayTimer);
+    clearTimeout(this.statusClearTimer);
+    status.textContent = message;
+    status.dataset.tone = tone;
+    status.dataset.visible = "true";
+    this.statusDisplayTimer = setTimeout(() => {
+      if (this.isCurrentShare(operationId, connectionEpoch, button, status)) this.hideStatus(status);
+    }, 2200);
+  }
+
+  hideStatus(status, immediate = false) {
+    clearTimeout(this.statusDisplayTimer);
+    clearTimeout(this.statusClearTimer);
+    status.dataset.visible = "false";
+    status.removeAttribute("data-tone");
+    if (immediate) status.textContent = "";
+    else this.statusClearTimer = setTimeout(() => { status.textContent = ""; }, 180);
+  }
+
+  resetStatus(status) {
+    clearTimeout(this.statusDisplayTimer);
+    clearTimeout(this.statusClearTimer);
+    status.textContent = "";
+    status.dataset.visible = "false";
+    status.removeAttribute("data-tone");
   }
 
   setLocale(locale) {
@@ -272,8 +373,21 @@ function isoToday() {
   return local.toISOString().slice(0, 10);
 }
 
+function validIsoDate(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
+  if (!match) return false;
+  const [, yearText, monthText, dayText] = match;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const calendar = new Date(0);
+  calendar.setUTCHours(0, 0, 0, 0);
+  calendar.setUTCFullYear(year, month - 1, day);
+  return calendar.getUTCFullYear() === year && calendar.getUTCMonth() === month - 1 && calendar.getUTCDate() === day;
+}
+
 function clampIsoDate(value, min, max) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value || "")) return "";
+  if (!validIsoDate(value)) return "";
   if (min && value < min) return min;
   if (max && value > max) return max;
   return value;
@@ -282,13 +396,19 @@ function clampIsoDate(value, min, max) {
 function replaceYear(value, year) {
   const [oldYear, month, day] = value.split("-").map(Number);
   if (![oldYear, month, day, year].every(Number.isFinite)) return value;
-  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const calendar = new Date(0);
+  calendar.setUTCHours(0, 0, 0, 0);
+  calendar.setUTCFullYear(year, month, 0);
+  const lastDay = calendar.getUTCDate();
   return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(Math.min(day, lastDay)).padStart(2, "0")}`;
 }
 
-class MilosDatePicker extends HTMLElement {
+export class MilosDatePicker extends HTMLElement {
   connectedCallback() {
-    if (this.dataset.milosReady === "true") return;
+    if (this.dataset.milosReady === "true") {
+      this.setLocale(activeLocale);
+      return;
+    }
     this.dataset.milosReady = "true";
     this.min = this.getAttribute("min") || "1900-01-01";
     this.max = this.getAttribute("max") || "2100-12-31";
@@ -307,6 +427,7 @@ class MilosDatePicker extends HTMLElement {
     const row = document.createElement("div");
     row.dataset.milosDateRow = "";
     const input = document.createElement("input");
+    input.dataset.milosDateInput = "";
     input.id = id;
     input.type = "date";
     input.min = this.min;
@@ -315,6 +436,10 @@ class MilosDatePicker extends HTMLElement {
     input.value = this.currentValue;
     const year = document.createElement("select");
     year.dataset.milosDateYear = "";
+    const emptyYear = document.createElement("option");
+    emptyYear.value = "";
+    emptyYear.textContent = "—";
+    year.append(emptyYear);
     const firstYear = Number(this.min.slice(0, 4));
     const lastYear = Number(this.max.slice(0, 4));
     for (let value = lastYear; value >= firstYear; value -= 1) {
@@ -327,8 +452,16 @@ class MilosDatePicker extends HTMLElement {
     const today = document.createElement("button");
     today.type = "button";
     today.dataset.milosDateToday = "";
-    input.addEventListener("change", () => this.commit(input.value, input, year));
-    year.addEventListener("change", () => this.commit(replaceYear(input.value || this.currentValue, Number(year.value)), input, year));
+    input.addEventListener("change", (event) => { event.stopPropagation(); this.commit(input.value, input, year); });
+    year.addEventListener("change", (event) => {
+      event.stopPropagation();
+      if (!year.value) {
+        this.commit("", input, year);
+        return;
+      }
+      const base = input.value || this.currentValue || clampIsoDate(isoToday(), this.min, this.max);
+      this.commit(replaceYear(base, Number(year.value)), input, year);
+    });
     today.addEventListener("click", () => this.commit(clampIsoDate(isoToday(), this.min, this.max), input, year));
     row.append(input, year, today);
     const note = document.createElement("p");
@@ -341,12 +474,23 @@ class MilosDatePicker extends HTMLElement {
   }
 
   commit(value, input = this.input, year = this.yearSelect) {
-    const normalized = clampIsoDate(value, this.min, this.max);
-    if (!normalized) return;
+    const requested = String(value || "");
+    const normalized = clampIsoDate(requested, this.min, this.max);
+    if (requested && !normalized) {
+      input.value = this.currentValue || "";
+      year.value = this.currentValue?.slice(0, 4) || "";
+      return;
+    }
+    if (normalized === (this.currentValue || "")) {
+      input.value = normalized;
+      year.value = normalized.slice(0, 4);
+      return;
+    }
     this.currentValue = normalized;
     input.value = normalized;
     year.value = normalized.slice(0, 4);
-    this.setAttribute("value", normalized);
+    if (normalized) this.setAttribute("value", normalized);
+    else this.removeAttribute("value");
     this.dispatchEvent(new CustomEvent("milosapps:datechange", { detail: Object.freeze({ value: normalized }), bubbles: true, composed: true }));
     this.dispatchEvent(new Event("change", { bubbles: true }));
   }
@@ -397,12 +541,21 @@ export function normalizeMilosPlaceResults(values) {
     .slice(0, 6);
 }
 
-class MilosPlaceSearch extends HTMLElement {
+export class MilosPlaceSearch extends HTMLElement {
   connectedCallback() {
-    if (this.dataset.milosReady === "true") return;
+    this.connectionEpoch = (this.connectionEpoch || 0) + 1;
+    if (this.dataset.milosReady === "true") {
+      this.setLocale(activeLocale);
+      return;
+    }
     this.dataset.milosReady = "true";
     this.results = [];
     this.activeIndex = -1;
+    this.suggestionsConfig = activeConfig?.features?.placeSuggestions || Object.freeze({ enabled: false, minChars: 3, debounceMs: 350 });
+    this.suggestionRequestId = 0;
+    this.searchRequestId = 0;
+    this.locateRequestId = 0;
+    this.busyOwners = new Set();
     this.render();
     this.setLocale(activeLocale);
   }
@@ -410,6 +563,11 @@ class MilosPlaceSearch extends HTMLElement {
   setSearchProvider(provider) {
     if (typeof provider !== "function") throw new TypeError("Place search provider must be a function");
     this.searchProvider = provider;
+  }
+
+  setSuggestionsProvider(provider) {
+    if (typeof provider !== "function") throw new TypeError("Place suggestions provider must be a function");
+    this.suggestionsProvider = provider;
   }
 
   setLocateProvider(provider) {
@@ -443,7 +601,7 @@ class MilosPlaceSearch extends HTMLElement {
     const locate = document.createElement("button");
     locate.type = "button";
     locate.dataset.milosPlaceLocate = "";
-    locate.hidden = true;
+    locate.hidden = !this.locateProvider;
     const results = document.createElement("div");
     results.id = listId;
     results.dataset.milosPlaceResults = "";
@@ -453,8 +611,11 @@ class MilosPlaceSearch extends HTMLElement {
     status.dataset.milosPlaceStatus = "";
     status.setAttribute("aria-live", "polite");
     input.addEventListener("input", () => {
+      this.cancelLocate();
+      this.cancelSearch();
       this.renderResults([]);
-      this.status.textContent = "";
+      this.clearOperationStatus();
+      this.queueSuggestions();
     });
     input.addEventListener("keydown", (event) => this.onKeyDown(event));
     search.addEventListener("click", () => this.runSearch());
@@ -470,49 +631,152 @@ class MilosPlaceSearch extends HTMLElement {
 
   async runSearch() {
     const query = this.input.value.trim().replace(/\s+/g, " ");
+    this.cancelLocate();
+    this.cancelSuggestions();
+    this.cancelSearch();
     if (query.length < 2) {
       this.renderResults([]);
-      this.status.textContent = "";
+      this.clearOperationStatus();
       return;
     }
     if (!this.searchProvider) {
-      this.status.textContent = localeCopy().providerMissing;
+      this.setOperationStatus("search", localeCopy().providerMissing);
       return;
     }
-    this.controller?.abort();
-    this.controller = new AbortController();
-    this.setBusy(true, localeCopy().searching);
+    const requestId = this.searchRequestId;
+    const connectionEpoch = this.connectionEpoch;
+    this.searchController = new AbortController();
+    const signal = this.searchController.signal;
+    this.beginBusy("search", localeCopy().searching);
     try {
-      const values = await this.searchProvider({ query, locale: activeLocale, signal: this.controller.signal });
+      const values = await this.searchProvider({ query, locale: activeLocale, signal });
+      const currentQuery = this.input.value.trim().replace(/\s+/g, " ");
+      if (!this.isCurrentPlaceOperation("search", requestId, connectionEpoch, signal) || currentQuery !== query) return;
       this.results = normalizeMilosPlaceResults(values);
       this.renderResults(this.results);
-      this.status.textContent = this.results.length ? "" : localeCopy().noResults;
+      if (this.results.length) this.clearOperationStatus("search");
+      else this.setOperationStatus("search", localeCopy().noResults);
     } catch (error) {
-      if (error?.name !== "AbortError") this.status.textContent = localeCopy().searchFailed;
+      const currentQuery = this.input.value.trim().replace(/\s+/g, " ");
+      if (error?.name !== "AbortError" && this.isCurrentPlaceOperation("search", requestId, connectionEpoch, signal) && currentQuery === query) this.setOperationStatus("search", localeCopy().searchFailed);
     } finally {
-      this.setBusy(false);
+      if (this.isCurrentPlaceOperation("search", requestId, connectionEpoch, signal)) this.endBusy("search");
+    }
+  }
+
+  cancelSearch() {
+    this.searchRequestId += 1;
+    this.searchController?.abort();
+    this.searchController = null;
+    this.endBusy("search");
+    this.clearOperationStatus("search");
+  }
+
+  queueSuggestions() {
+    if (!this.suggestionsConfig.enabled) return;
+    this.cancelLocate();
+    const query = this.input.value.trim().replace(/\s+/g, " ");
+    this.cancelSuggestions();
+    if (query.length < this.suggestionsConfig.minChars) return;
+    const requestId = this.suggestionRequestId;
+    const connectionEpoch = this.connectionEpoch;
+    this.suggestionTimer = setTimeout(() => this.runSuggestions(query, requestId, connectionEpoch), this.suggestionsConfig.debounceMs);
+  }
+
+  cancelSuggestions() {
+    clearTimeout(this.suggestionTimer);
+    this.suggestionRequestId += 1;
+    this.suggestionsController?.abort();
+    this.suggestionsController = null;
+    this.endBusy("suggestions");
+    this.clearOperationStatus("suggestions");
+  }
+
+  async runSuggestions(query, requestId, connectionEpoch = this.connectionEpoch) {
+    if (!this.suggestionsProvider || !this.isCurrentPlaceOperation("suggestions", requestId, connectionEpoch)) return;
+    this.suggestionsController = new AbortController();
+    const signal = this.suggestionsController.signal;
+    this.beginBusy("suggestions");
+    try {
+      const values = await this.suggestionsProvider({ query, locale: activeLocale, signal });
+      const currentQuery = this.input.value.trim().replace(/\s+/g, " ");
+      if (!this.isCurrentPlaceOperation("suggestions", requestId, connectionEpoch, signal) || currentQuery !== query) return;
+      this.results = normalizeMilosPlaceResults(values);
+      this.renderResults(this.results);
+    } catch (error) {
+      const currentQuery = this.input.value.trim().replace(/\s+/g, " ");
+      if (error?.name !== "AbortError" && currentQuery === query && this.isCurrentPlaceOperation("suggestions", requestId, connectionEpoch, signal)) this.setOperationStatus("suggestions", localeCopy().searchFailed);
+    } finally {
+      if (this.isCurrentPlaceOperation("suggestions", requestId, connectionEpoch, signal)) this.endBusy("suggestions");
     }
   }
 
   async runLocate() {
     if (!this.locateProvider) return;
-    this.setBusy(true, localeCopy().locating);
+    this.cancelSuggestions();
+    this.cancelSearch();
+    this.cancelLocate();
+    const requestId = this.locateRequestId;
+    const connectionEpoch = this.connectionEpoch;
+    this.locateController = new AbortController();
+    const signal = this.locateController.signal;
+    this.beginBusy("locate", localeCopy().locating);
     try {
-      const place = normalizePlace(await this.locateProvider({ locale: activeLocale }));
+      const place = normalizePlace(await this.locateProvider({ locale: activeLocale, signal }));
+      if (!this.isCurrentPlaceOperation("locate", requestId, connectionEpoch, signal)) return;
       if (!place) throw new Error("Invalid located place");
       this.select(place);
     } catch (error) {
-      if (error?.name !== "AbortError") this.status.textContent = localeCopy().searchFailed;
+      if (error?.name !== "AbortError" && this.isCurrentPlaceOperation("locate", requestId, connectionEpoch, signal)) this.setOperationStatus("locate", localeCopy().searchFailed);
     } finally {
-      this.setBusy(false);
+      if (this.isCurrentPlaceOperation("locate", requestId, connectionEpoch, signal)) this.endBusy("locate");
     }
   }
 
-  setBusy(value, message = "") {
-    this.input.setAttribute("aria-busy", String(value));
-    this.searchButton.disabled = value;
-    this.locateButton.disabled = value;
-    if (value) this.status.textContent = message;
+  cancelLocate() {
+    this.locateRequestId += 1;
+    this.locateController?.abort();
+    this.locateController = null;
+    this.endBusy("locate");
+    this.clearOperationStatus("locate");
+  }
+
+  isCurrentPlaceOperation(owner, requestId, connectionEpoch, signal) {
+    const currentId = owner === "search" ? this.searchRequestId : owner === "suggestions" ? this.suggestionRequestId : this.locateRequestId;
+    return this.isConnected && this.connectionEpoch === connectionEpoch && currentId === requestId && !signal?.aborted;
+  }
+
+  beginBusy(owner, message = "") {
+    this.busyOwners ??= new Set();
+    this.busyOwners.add(owner);
+    if (message) this.setOperationStatus(owner, message);
+    this.syncBusyState();
+  }
+
+  endBusy(owner) {
+    this.busyOwners?.delete(owner);
+    this.syncBusyState();
+  }
+
+  syncBusyState() {
+    if (!this.input) return;
+    const busy = (this.busyOwners?.size || 0) > 0;
+    const blocking = this.busyOwners?.has("search") || this.busyOwners?.has("locate");
+    this.input.setAttribute("aria-busy", String(busy));
+    this.searchButton.disabled = Boolean(blocking);
+    this.locateButton.disabled = Boolean(blocking);
+  }
+
+  setOperationStatus(owner, message) {
+    if (!this.status) return;
+    this.statusOwner = owner;
+    this.status.textContent = message;
+  }
+
+  clearOperationStatus(owner) {
+    if (!this.status || (owner && this.statusOwner !== owner)) return;
+    this.statusOwner = null;
+    this.status.textContent = "";
   }
 
   renderResults(results) {
@@ -542,6 +806,15 @@ class MilosPlaceSearch extends HTMLElement {
   }
 
   onKeyDown(event) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      this.cancelSuggestions();
+      this.cancelSearch();
+      this.cancelLocate();
+      this.renderResults([]);
+      this.clearOperationStatus();
+      return;
+    }
     if (!this.results.length) {
       if (event.key === "Enter") { event.preventDefault(); this.runSearch(); }
       return;
@@ -549,13 +822,14 @@ class MilosPlaceSearch extends HTMLElement {
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
       const direction = event.key === "ArrowDown" ? 1 : -1;
-      this.activeIndex = (this.activeIndex + direction + this.results.length) % this.results.length;
+      this.activeIndex = this.activeIndex < 0
+        ? (direction > 0 ? 0 : this.results.length - 1)
+        : (this.activeIndex + direction + this.results.length) % this.results.length;
       this.highlight();
-    } else if (event.key === "Enter" && this.activeIndex >= 0) {
+    } else if (event.key === "Enter") {
       event.preventDefault();
-      this.select(this.results[this.activeIndex]);
-    } else if (event.key === "Escape") {
-      this.renderResults([]);
+      if (this.activeIndex >= 0) this.select(this.results[this.activeIndex]);
+      else this.runSearch();
     }
   }
 
@@ -569,20 +843,41 @@ class MilosPlaceSearch extends HTMLElement {
   }
 
   select(place) {
-    this.input.value = [place.name, place.region].filter(Boolean).join(", ");
+    this.cancelSuggestions();
+    this.cancelSearch();
+    this.cancelLocate();
+    this.input.value = [place.name, place.region, place.country].filter(Boolean).join(", ");
     this.renderResults([]);
-    this.status.textContent = "";
+    this.clearOperationStatus();
     this.dispatchEvent(new CustomEvent("milosapps:placechange", { detail: place, bubbles: true, composed: true }));
     this.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
   setLocale(locale) {
     const selected = normalizeLocale(locale);
+    if (this.locale && this.locale !== selected) {
+      this.cancelSuggestions();
+      this.cancelSearch();
+      this.cancelLocate();
+      this.renderResults([]);
+      this.clearOperationStatus();
+    }
+    this.locale = selected;
     const copy = COPY[selected];
     if (this.label) this.label.textContent = this.getAttribute(`label-${selected}`) || copy.placeLabel;
     if (this.input) this.input.placeholder = this.getAttribute(`placeholder-${selected}`) || copy.placePlaceholder;
     if (this.searchButton) this.searchButton.textContent = copy.search;
     if (this.locateButton) this.locateButton.textContent = copy.useLocation;
+  }
+
+  disconnectedCallback() {
+    this.connectionEpoch = (this.connectionEpoch || 0) + 1;
+    this.cancelSuggestions();
+    this.cancelSearch();
+    this.cancelLocate();
+    this.busyOwners?.clear();
+    this.syncBusyState();
+    this.clearOperationStatus();
   }
 }
 
@@ -597,6 +892,10 @@ export function markMilosAppReady() {
 
 export function initMilosAppEssentials(config) {
   activeConfig = normalizeConfig(config);
+  if (activeConfig.privacy.usesLocalStorage) {
+    storageRemove(`milosapps.${activeConfig.appKey}.privacyNotice.v1`);
+    storageRemove(`milosapps.${activeConfig.appKey}.essentialCookieInfo.v1`);
+  }
   activeLocale = normalizeLocale(document.documentElement.lang);
   document.body?.setAttribute("data-milos-essentials-page", "");
   if (activeConfig.features.startup) document.body?.setAttribute("data-milos-essentials-loading", "");

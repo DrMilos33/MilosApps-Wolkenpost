@@ -516,6 +516,13 @@ button:disabled {
   touch-action: pan-y;
 }
 
+.world-map[data-route-lens='visible'] {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 2;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--ink) 18%, transparent);
+}
+
 .selected-place {
   display: flex;
   align-items: center;
@@ -779,6 +786,195 @@ button:disabled {
   font-size: 0.86rem;
 }
 
+.flight-space {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  scroll-margin-top: 0.75rem;
+}
+
+.flight-space:has(.result-section) + .selected-place {
+  margin-top: 0.25rem;
+}
+
+.flight-space .result-section {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.9rem;
+  border-radius: 18px;
+}
+
+.flight-space-heading,
+.flight-toolbar {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.flight-space-heading > div,
+.flight-toolbar > * {
+  min-width: 0;
+}
+
+.flight-space-heading h2,
+.comparison-lab h3 {
+  margin: 0;
+}
+
+.model-boundary {
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border-inline-start: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 65%, transparent);
+  color: var(--ink);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.flight-readout {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.flight-readout-row {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-strong);
+}
+
+.flight-readout-row header {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.flight-readout-row header > span:last-child {
+  display: grid;
+}
+
+.flight-readout-row header small,
+.flight-readout-row dt,
+.comparison-prediction small,
+.comparison-outcome small {
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.route-swatch {
+  width: 28px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.flight-readout-row.is-comparison .route-swatch {
+  background: #236c85;
+}
+
+[data-theme='dark'] .flight-readout-row.is-comparison .route-swatch {
+  background: #7dd8ee;
+}
+
+.flight-readout-row dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.flight-readout-row dl > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.12rem;
+}
+
+.flight-readout-row dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.flight-toolbar {
+  align-items: center;
+}
+
+.flight-toolbar > span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-align: end;
+}
+
+.comparison-lab {
+  display: grid;
+  gap: 0.75rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line);
+}
+
+.comparison-lab > div:first-child > p:last-child {
+  margin: 0.3rem 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.comparison-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto;
+  gap: 0.65rem;
+  align-items: end;
+}
+
+.comparison-controls label,
+.comparison-prediction,
+.comparison-outcome {
+  display: grid;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.comparison-controls select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 2.25rem 0 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-strong);
+  color: var(--ink);
+}
+
+.comparison-prediction,
+.comparison-outcome {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--surface-soft) 72%, transparent);
+}
+
+.comparison-prediction span,
+.comparison-outcome span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.map-step .result-metrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.map-step .result-metrics strong {
+  font-size: clamp(1.15rem, 2.1vw, 1.65rem);
+}
+
 .settings-section {
   margin: 0;
   padding-block: 0.5rem;
@@ -876,6 +1072,7 @@ button:disabled {
 }
 
 .credits-bar a {
+  min-width: 44px;
   min-height: 44px;
   display: inline-flex;
   align-items: center;
@@ -989,6 +1186,28 @@ button:disabled {
     flex-direction: column;
   }
 
+  .flight-space-heading,
+  .flight-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .flight-toolbar > span {
+    text-align: start;
+  }
+
+  .flight-readout-row dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .comparison-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-controls .primary-button {
+    width: 100%;
+  }
+
   .result-metrics {
     grid-template-columns: 1fr 1fr;
   }
@@ -1056,6 +1275,47 @@ button:disabled {
   .settings-section,
   .launch-panel {
     padding-inline: 0;
+  }
+
+  .flight-space .result-section {
+    min-width: 0;
+    width: 100%;
+    padding: 0.35rem;
+  }
+
+  .flight-space-heading > div,
+  .source-badge,
+  .flight-readout-row,
+  .flight-toolbar > span,
+  .comparison-lab,
+  .comparison-prediction,
+  .comparison-outcome,
+  .result-source,
+  .result-source > div,
+  .result-source strong,
+  .result-source span {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .source-badge {
+    width: fit-content;
+    padding-inline: 0.45rem;
+    white-space: normal;
+  }
+
+  .model-boundary,
+  .flight-readout-row,
+  .comparison-prediction,
+  .comparison-outcome,
+  .result-source > div {
+    padding-inline: 0.4rem;
+  }
+
+  .flight-readout-row dl,
+  .map-step .result-metrics {
+    grid-template-columns: 1fr;
   }
 
   .step-heading {

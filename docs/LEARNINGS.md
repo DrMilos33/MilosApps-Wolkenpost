@@ -323,3 +323,52 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
 - Für andere MilosApps relevant: Ja. Ein nicht konfigurierbarer statischer
   Hoster kann einen gültigen, aber nicht bevorzugten MIME-Typ setzen; QA muss
   die reale Sicherheitsgrenze prüfen und die Betriebsabweichung dokumentieren.
+
+## 2026-08-03 – Kurze reale Wege brauchen eine ehrlich bezeichnete Lupe
+
+- Datum und geprüfter Stand: 3. August 2026, Gameplay-Vertiefung Runde 1.
+- Beobachtung: Eine 198–209-km-Route ist auf einer vollständigen Weltprojektion
+  nur wenige Pixel lang. Dickere Linien oder künstlich verlängerte Distanzen
+  hätten die Route zwar auffälliger, aber fachlich irreführend gemacht.
+- Evidenz oder reproduzierbarer Test: Sichtbare Browserprüfung mit echtem
+  Open-Meteo-Abruf bei 1440 × 900 und 390 × 844; automatisiertes Gate auf
+  sichtbare Weltkarte, Routenlupe, Fokus und 0 Overflow.
+- Änderung und Regressionstest: Die unveränderte Weltkarte erhält eine klar als
+  vergrößert bezeichnete Routenlupe mit Start, Ziel, aktuellem Punkt,
+  Windrichtung und getrennten Profilfarben. Die aktive Karte bleibt während
+  tiefer Ergebnisinteraktion sticky; vor dem Flug bleibt sie normale Eingabe.
+- Für andere MilosApps relevant: Ja. Wenn die natürliche Datenspanne im
+  globalen Kontext nicht lesbar ist, sollte eine beschriftete Detailansicht die
+  Daten ergänzen – nicht die Darstellungsskala heimlich verfälschen.
+
+## 2026-08-03 – Ein fairer Szenariovergleich teilt den Daten-Snapshot
+
+- Datum und geprüfter Stand: 3. August 2026, Gameplay-Vertiefung Runde 2.
+- Beobachtung: Zwei getrennte Netzabrufe können unterschiedliche Modellzeiten
+  liefern. Dann ist ein sichtbarer Unterschied nicht eindeutig dem geänderten
+  Profil zuzurechnen.
+- Evidenz oder reproduzierbarer Test: Ein Browsertest zählt vor und nach
+  Vergleich und Replay exakt einen Windrequest; Unit-Tests prüfen gemeinsame
+  `forecastStart`-/`fetchedAt`-Werte für 10 m, 925 hPa und 850 hPa.
+- Änderung und Regressionstest: Ein Start lädt alle drei Höhen in einer
+  gebündelten Antwort. Vorhersage, zweites Profil, Ursache-Wirkungs-Text und
+  Replay verwenden ausschließlich diesen unveränderlichen Snapshot.
+- Für andere MilosApps relevant: Ja. Vergleichbare Szenarien benötigen eine
+  explizite gemeinsame Datenbasis und sollten diese im UI sichtbar benennen.
+
+## 2026-08-03 – Persistierte Netzsignale können nach Reload lügen
+
+- Datum und geprüfter Stand: 3. August 2026, Privacy-/Storage-Inventar für
+  Essentials v1.1.
+- Beobachtung: Ein früherer `sessionStorage`-Marker hielt den letzten
+  Offline-Event fest. Nach einem späteren Online-Reload musste aber nicht erneut
+  ein `online`-Event eintreffen; die App konnte deshalb veraltet „offline“
+  anzeigen.
+- Evidenz oder reproduzierbarer Test: Quellpfad vom Offline-Event über
+  `sessionStorage` bis zur Initialisierung; vollständige Offline-/Reload-
+  Regression nach Entfernung.
+- Änderung und Regressionstest: Der unnötige Schlüssel ist entfernt. Aktueller
+  Connectivity-Status kommt aus dem Browsersignal; der versionierte Cache bleibt
+  allein für die ausdrücklich angebotene Offline-Funktion zuständig.
+- Für andere MilosApps relevant: Ja. Kurzlebige Umgebungszustände sind keine
+  Komfortpräferenz und sollten nicht ohne zwingenden Grund persistiert werden.

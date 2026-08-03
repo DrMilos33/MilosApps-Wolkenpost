@@ -27,7 +27,8 @@ test('shell and complete app switch to English and persist across reload', async
     .toHaveAttribute('href', 'https://dev.milos-apps.de/apps');
   await expect(shell.getByRole('link', { name: 'Legal notice' }))
     .toHaveAttribute('href', 'https://dev.milos-apps.de/impressum');
-  await expect(shell.getByRole('link', { name: 'Privacy' }))
+  const legalNavigation = shell.getByRole('navigation', { name: 'Legal' });
+  await expect(legalNavigation.getByRole('link', { name: 'Privacy' }))
     .toHaveAttribute('href', 'https://dev.milos-apps.de/datenschutz');
 
   await page.getByLabel('Place or region').fill('Tokyo');
