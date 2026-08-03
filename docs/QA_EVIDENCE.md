@@ -609,17 +609,24 @@ versionierte PWA-Assetcache. Die Datenschutzinformation ist dauerhaft sichtbar.
 - Deutsch/Englisch einschließlich Reload, permanente Datenschutzinformation,
   No-Login-Grenze und Browserkonsole blieben fehlerfrei.
 - Die erste Linux-CI auf dem finalen Pin deckte eine veraltete Race-
-  Testannahme auf: Bei absichtlich verzögertem, dokumentweit erstem Bootstrap
-  muss die Fach-H1 hinter dem ehrlichen Loader verborgen bleiben. Der
-  Regressionstest prüft nun exakt diese Grenze und anschließend den sichtbaren
-  Handoff nach Freigabe des Bootstrap; Produktcode und Vertragsreihenfolge
-  blieben unverändert.
+  Testannahme auf: Bei absichtlich verzögertem Bootstrap darf das Gate nicht
+  voraussetzen, ob das unabhängige App-Modul hinter dem deckenden Loader bereits
+  ausgewertet wurde. Der Regressionstest prüft stattdessen den weiterhin
+  sichtbaren, autoritativen Loader und anschließend den fehlerfreien sichtbaren
+  Handoff nach Freigabe des Bootstrap.
 - Ein vollständiger lokaler Rerun deckte außerdem auf, dass das Share-Gate eine
   absolute Viewport-X-Koordinate statt die Geometrie im eigenen Aktionscontainer
   verglich. Bei unveränderter Größe und Y-Lage verschob eine dokumentweite
   Scrollbar-/Zentrierungsänderung den absoluten Wert. Das Gate misst nun Größe
   und relative Containerposition über Native-, Clipboard- und Abbruchpfad;
   dadurch bleibt die geforderte lokale Layoutstabilität präzise geprüft.
+- Der parallele Linux-Push-Lauf reproduzierte schließlich eine seltene echte
+  Bootstrap-Reihenfolgeflanke beim Sprach-Reload: React konnte den Ready-Handoff
+  erreichen, bevor der globale Essentials-Controller gesetzt war. Die App wartet
+  jetzt ohne Polling auf die Definition des vendorten Share-Elements und ruft
+  danach weiterhin ausschließlich `globalThis.milosAppEssentials.ready()` auf.
+  Das verzögerte Bootstrap-Gate prüft zusätzlich, dass dabei kein Page- oder
+  Konsolenfehler entsteht.
 
 ## Verbleibende Prüfgrenzen
 

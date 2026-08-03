@@ -77,6 +77,7 @@ test('fresh and delayed startup stays compact until the app is truly ready', asy
 
 test('startup stays honest while bootstrap is delayed and hands off once ready', async ({ page }) => {
   test.skip(test.info().project.name !== 'desktop', 'focused startup race regression');
+  const consoleProblems = recordConsoleProblems(page);
   let releaseBootstrap!: () => void;
   const bootstrapReleased = new Promise<void>((resolve) => { releaseBootstrap = resolve; });
   await page.route('**/vendor/milosapps-essentials/v1/bootstrap.js', async (route) => {
@@ -87,12 +88,12 @@ test('startup stays honest while bootstrap is delayed and hands off once ready',
   const navigation = page.goto('./', { waitUntil: 'domcontentloaded' });
   const loader = page.locator('[data-milos-app-loading]');
   await expect(loader).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Zeichne. Lass es fliegen.' })).toBeHidden();
 
   releaseBootstrap();
   await navigation;
   await expect(page.getByRole('heading', { name: 'Zeichne. Lass es fliegen.' })).toBeVisible();
   await expect(loader).toBeHidden();
+  expect(consoleProblems).toEqual([]);
 });
 
 test('no-cookies mode has no banner or consent state and keeps privacy information reachable', async ({ page }) => {

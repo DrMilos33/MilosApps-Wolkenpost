@@ -46,7 +46,7 @@ import type {
 declare global {
   var milosAppEssentials: {
     ready(): void;
-  };
+  } | undefined;
 }
 
 type FlightStatus = 'idle' | 'loading' | 'result' | 'error';
@@ -182,7 +182,22 @@ export default function App({ initialLanguage: language }: AppProps) {
   }, []);
 
   useEffect(() => {
-    globalThis.milosAppEssentials.ready();
+    let active = true;
+    const markReady = () => {
+      if (active && globalThis.milosAppEssentials) {
+        globalThis.milosAppEssentials.ready();
+      }
+    };
+
+    if (globalThis.milosAppEssentials) {
+      markReady();
+    } else {
+      void customElements.whenDefined('milos-share-button').then(markReady);
+    }
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
