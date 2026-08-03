@@ -74,6 +74,8 @@ test('fresh and delayed startup stays compact until the app is truly ready', asy
   expect(desktopIconSize).toBe(32);
   await expectNoHorizontalOverflow(page);
 
+  // 180 × 400 CSS pixels reproduce the available layout space of
+  // 360 × 800 at 200% text zoom without relying on browser UI zoom controls.
   await page.setViewportSize({ width: 180, height: 400 });
   const zoomedIconSize = await loader.locator('[data-milos-loading-icon]').evaluate((icon) => {
     const bounds = icon.getBoundingClientRect();
@@ -86,6 +88,141 @@ test('fresh and delayed startup stays compact until the app is truly ready', asy
   await navigation;
   await expect(loader).toBeHidden();
   await expect(page.getByRole('heading', { name: 'Zeichne. Lass es fliegen.' })).toBeVisible();
+});
+
+test('shell app icon stays 38px through the custom-element CSS transition', async ({ page }) => {
+  test.skip(test.info().project.name !== 'desktop', 'focused shell icon transition gate');
+  const consoleProblems = recordConsoleProblems(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  let releaseShell!: () => void;
+  const shellReleased = new Promise<void>((resolve) => { releaseShell = resolve; });
+  let releaseAppEntry!: () => void;
+  const appEntryReleased = new Promise<void>((resolve) => { releaseAppEntry = resolve; });
+  let markComponentStylesRequested!: () => void;
+  const componentStylesRequested = new Promise<void>((resolve) => {
+    markComponentStylesRequested = resolve;
+  });
+  let releaseComponentStyles!: () => void;
+  const componentStylesReleased = new Promise<void>((resolve) => {
+    releaseComponentStyles = resolve;
+  });
+
+  await page.route('**/vendor/milosapps-shell/v2/bootstrap.js', async (route) => {
+    await shellReleased;
+    await route.continue();
+  });
+  await page.route(/\/assets\/index-[^/]+\.js(?:\?.*)?$/, async (route) => {
+    await appEntryReleased;
+    await route.continue();
+  });
+  await page.route(/\/vendor\/milosapps-shell\/v2\/milos-app-shell\.css(?:\?.*)?$/, async (route) => {
+    markComponentStylesRequested();
+    await componentStylesReleased;
+    await route.continue();
+  });
+
+  await page.goto('./', { waitUntil: 'commit' });
+  const essentialsStyles = page.locator(
+    'link[href*="vendor/milosapps-essentials/v1/milos-app-essentials.css"]',
+  );
+  await expect(essentialsStyles).toHaveCount(1);
+  await expect.poll(() => essentialsStyles.evaluate((link) => (
+    (link as HTMLLinkElement).sheet !== null
+  ))).toBe(true);
+  const shellIcon = page.locator('milos-app-shell > svg[slot="app-icon"]');
+  await expect(shellIcon).toHaveCount(1);
+  const readShellIcon = () => shellIcon.evaluate((icon) => {
+    const bounds = icon.getBoundingClientRect();
+    const styles = getComputedStyle(icon);
+    const componentStyles = icon.parentElement?.shadowRoot?.querySelector<HTMLLinkElement>(
+      'link[data-milos-app-shell-component]',
+    );
+    return {
+      width: bounds.width,
+      height: bounds.height,
+      widthAttribute: icon.getAttribute('width'),
+      heightAttribute: icon.getAttribute('height'),
+      visibility: styles.visibility,
+      upgraded: Boolean(customElements.get('milos-app-shell')),
+      componentStylesLoaded: componentStyles ? componentStyles.sheet !== null : null,
+    };
+  });
+
+  const beforeUpgrade = await readShellIcon();
+  const loaderIcon = page.locator('[data-milos-loading-icon]');
+  const loaderBeforeUpgrade = await loaderIcon.evaluate((icon) => {
+    const bounds = icon.getBoundingClientRect();
+    return { width: bounds.width, height: bounds.height };
+  });
+  await expectNoHorizontalOverflow(page);
+
+  releaseAppEntry();
+  releaseShell();
+  await expect.poll(() => page.evaluate(() => Boolean(customElements.get('milos-app-shell')))).toBe(true);
+  await componentStylesRequested;
+  const duringComponentStyles = await readShellIcon();
+  await expectNoHorizontalOverflow(page);
+
+  releaseComponentStyles();
+  await expect.poll(async () => (await readShellIcon()).componentStylesLoaded).toBe(true);
+  await page.waitForLoadState('domcontentloaded');
+  const afterComponentStyles = await readShellIcon();
+
+  await page.setViewportSize({ width: 180, height: 400 });
+  const zoom200 = await readShellIcon();
+  await expectNoHorizontalOverflow(page);
+  await expect(page.locator('[data-milos-app-loading]')).toBeHidden();
+  expect(consoleProblems).toEqual([]);
+
+  expect({
+    beforeUpgrade,
+    loaderBeforeUpgrade,
+    duringComponentStyles,
+    afterComponentStyles,
+    zoom200,
+  }).toEqual({
+    beforeUpgrade: {
+      width: 38,
+      height: 38,
+      widthAttribute: '38',
+      heightAttribute: '38',
+      visibility: 'hidden',
+      upgraded: false,
+      componentStylesLoaded: null,
+    },
+    loaderBeforeUpgrade: {
+      width: 32,
+      height: 32,
+    },
+    duringComponentStyles: {
+      width: 38,
+      height: 38,
+      widthAttribute: '38',
+      heightAttribute: '38',
+      visibility: 'visible',
+      upgraded: true,
+      componentStylesLoaded: false,
+    },
+    afterComponentStyles: {
+      width: 38,
+      height: 38,
+      widthAttribute: '38',
+      heightAttribute: '38',
+      visibility: 'visible',
+      upgraded: true,
+      componentStylesLoaded: true,
+    },
+    zoom200: {
+      width: 38,
+      height: 38,
+      widthAttribute: '38',
+      heightAttribute: '38',
+      visibility: 'visible',
+      upgraded: true,
+      componentStylesLoaded: true,
+    },
+  });
 });
 
 test('startup stays honest while bootstrap is delayed and hands off once ready', async ({ page }) => {

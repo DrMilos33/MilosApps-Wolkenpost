@@ -754,6 +754,32 @@ Nebenanzeige. Länder geben Orientierung, Umrisse liefern sofort spielerische
 Variation, und Routenorte schaffen Erzählwert, ohne Navigation oder exakte
 Ballistik vorzutäuschen.
 
+## Contract-QA – Shell-Icon-Übergang mit Essentials v1.1.5
+
+Der app-eigene Shell-Slot deklariert intrinsisch 38 × 38 px. Der atomare Sync
+auf `public-app-essentials/v1.1.5` aus Shared-Commit
+`2942132ad3bf6cf39edc9f52ed918de6a230be23` ersetzt den vorherigen
+40-px-Critical-CSS-Floor durch die gemeinsame 38-px-Grenze. Shell v2.0.3,
+Layout v1.1.0, Loaderfunktion und Fachoberfläche bleiben unverändert.
+
+Automatisierte Evidenz der Contract-Stufe:
+
+- Essentials-v1.1.5- und Shell-v2.0.3-Verifier PASS;
+- fokussierter Playwright-Lauf 2/2 PASS: frischer verzögerter Start sowie
+  getrennt blockiertes Shell-Bootstrap und Shell-Komponenten-CSS;
+- bei 390 × 844: Essentials-CSS geladen und Shell undefiniert ergibt ein
+  verborgenes 38 × 38-Slot-SVG; nach Upgrade bei noch blockiertem
+  Komponenten-CSS ist es sichtbar und 38 × 38; nach CSS-Last bleibt es exakt
+  38 × 38;
+- der getrennte Essentials-Loader misst im Startzustand exakt 32 × 32 px;
+- 180 × 400 CSS-Pixel als 360 × 800@200-%-Äquivalent bleiben ohne
+  horizontalen Überlauf; Endzustand weiterhin 38 × 38;
+- Standardbuild sowie GitHub-Pages-Build und `verify:dev-artifact` PASS; der
+  Service Worker verwendet wegen stabiler Vendor-URLs den neuen Cachepräfix
+  `wolkenpost-essentials-v1.1.5-*`;
+- echter temporärer Windows-Recheckout mit `core.autocrlf=true`: alle Dateien
+  im Essentials-Vendorordner `i/lf w/lf`; Essentials- und Shell-Verifier PASS.
+
 ## Verbleibende Prüfgrenzen
 
 - Keine echte Betriebslast oder API-Quota-Prüfung; nur ein einzelner echter

@@ -469,3 +469,20 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
 - Für andere MilosApps relevant: Ja. Geometriestabilität umfasst die gesamte
   Aktionsgruppe; ein stabiles Element kann durch ein asynchrones Geschwister
   trotzdem sichtbar springen.
+
+## 2026-08-03 – Stabile Vendor-URLs brauchen eine explizite Cache-Revision
+
+- Datum und geprüfter Stand: 3. August 2026, atomare Migration auf
+  `public-app-essentials/v1.1.5`.
+- Beobachtung: Der Service-Worker-Signaturwert beruhte bisher nur auf den
+  Dateipfaden des Buildartefakts. Bei neuen Bytes unter denselben Vendor-URLs
+  hätte ein bestehender App-Shell-Cache deshalb die frühere 40-px-CSS-Datei
+  behalten können.
+- Evidenz oder reproduzierbarer Test: Das Fail-closed-Artefaktgate verlangt
+  nach dem Pinwechsel den Cachepräfix `wolkenpost-essentials-v1.1.5-*`; der
+  Pages-Build enthält ihn und cached weiterhin alle vier Essentials-Runtimes.
+- Änderung und Regressionstest: Der app-eigene Cache-Namespace erhält bei
+  byteveränderten, stabil benannten Vendorartefakten eine Vertragsrevision.
+- Für andere MilosApps relevant: Ja. Ein bytegenauer Vendor-Lock schützt den
+  Build, invalidiert aber nicht automatisch bereits installierte Offline-
+  Caches mit stabilen URLs.
