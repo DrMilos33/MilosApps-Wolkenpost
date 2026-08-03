@@ -948,6 +948,8 @@ Der erste Linux-CI-Lauf machte zwei Windows-lokal nicht sichtbare
 Schriftmetriken transparent: 12 Pixel Überbreite nach dem Flug bei 320 Pixeln
 und eine zu starre 22-Pixel-Testannahme für die kompakten Titel. Textblöcke im
 Ergebnis-/Reisejournal erhalten deshalb unter 390 Pixeln jetzt einen echten
-Umbruchpuffer; das Titelgate prüft eine gemeinsame Zeile relativ zum höchsten
-Kind statt gegen eine betriebssystemspezifische absolute Höhe. Die gezielte
-Regression besteht 320, 375, 390 und 360×800@200 %.
+Umbruchpuffer. Der Shell-Gutter nutzt dort den vorgesehenen App-Token mit acht
+Pixeln und verhindert die zusätzlich aus dem Shadow-DOM stammende Überbreite.
+Das Titelgate prüft eine gemeinsame `nowrap`-Zeile samt fehlendem
+Scrollüberlauf statt einer betriebssystemspezifischen absoluten Höhe. Die
+gezielte Regression besteht 320, 375, 390 und 360×800@200 %.

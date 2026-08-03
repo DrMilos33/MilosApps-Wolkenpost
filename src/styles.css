@@ -2437,6 +2437,10 @@ button:disabled {
 }
 
 @media (max-width: 390px) {
+  milos-app-shell {
+    --milos-shell-gutter: 0.5rem;
+  }
+
   .flight-space,
   .map-step,
   .result-section,

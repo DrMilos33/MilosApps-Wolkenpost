@@ -53,18 +53,18 @@ test.describe('map and flight-detail experience', () => {
     const titleLines = await page.locator('.step-title-line, .wind-title-line').evaluateAll((elements) =>
       elements.map((element) => {
         const bounds = element.getBoundingClientRect();
-        const tallestChild = Math.max(...Array.from(element.children)
-          .map((child) => child.getBoundingClientRect().height));
         return {
-          height: bounds.height,
-          tallestChild,
+          flexWrap: getComputedStyle(element).flexWrap,
+          childWhiteSpace: Array.from(element.children)
+            .map((child) => getComputedStyle(child).whiteSpace),
           width: bounds.width,
           scrollWidth: element.scrollWidth,
         };
       }),
     );
     expect(titleLines.every((line) => (
-      line.height <= line.tallestChild + 2
+      line.flexWrap === 'nowrap'
+      && line.childWhiteSpace.every((whiteSpace) => whiteSpace === 'nowrap')
       && line.scrollWidth <= line.width + 1
     ))).toBe(true);
     await expect(page.getByTestId('world-map')).toHaveAttribute('data-country-detail', 'natural-earth-110m');

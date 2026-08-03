@@ -50,7 +50,13 @@ export async function startFlight(page: Page) {
 export async function expectNoHorizontalOverflow(page: Page) {
   const sizes = await page.evaluate(() => {
     const clientWidth = document.documentElement.clientWidth;
-    const offenders = Array.from(document.querySelectorAll<HTMLElement>('body *'))
+    const shellElements = Array.from(
+      document.querySelector('milos-app-shell')?.shadowRoot?.querySelectorAll<HTMLElement>('*') ?? [],
+    );
+    const offenders = [
+      ...Array.from(document.querySelectorAll<HTMLElement>('body *')),
+      ...shellElements,
+    ]
       .map((element) => {
         const bounds = element.getBoundingClientRect();
         return {

@@ -642,9 +642,10 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
   Scrollbreite und Layoutfluss blieben korrekt. Ein separater 320-Pixel-Befund
   zeigte außerdem, dass Ergebnistext einen kleinen echten Umbruchpuffer
   benötigt.
-- Änderung und Regressionstest: Das Titelgate vergleicht die Containerhöhe nun
-  mit dem höchsten Kind plus Rundungspuffer und verlangt weiterhin fehlenden
-  horizontalen Overflow. Ergebnis- und Reisejournaltexte dürfen unter 390
-  Pixeln an beliebigen langen Wörtern umbrechen.
+- Änderung und Regressionstest: Das Titelgate verlangt nun direkt `nowrap` für
+  Flexzeile und Kinder sowie fehlenden horizontalen Overflow. Ergebnis- und
+  Reisejournaltexte dürfen unter 390 Pixeln an beliebigen langen Wörtern
+  umbrechen; der app-eigene Shell-Gutter-Token schafft dort zusätzlich den
+  nötigen Shadow-DOM-Reflowraum.
 - Für andere MilosApps relevant: Ja. Einzeiligkeitsgates sollten Zeilenstruktur
   und verfügbare Breite prüfen, nicht eine OS-abhängige absolute Pixelhöhe.
