@@ -377,8 +377,8 @@ export default function App({ initialLanguage: language }: AppProps) {
       text.announcements.routeReady(Math.round(nextResult.distanceKm), endLabel),
     );
     window.setTimeout(() => {
-      flightSpaceRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
       resultHeadingRef.current?.focus({ preventScroll: true });
+      resultHeadingRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
     }, 50);
   };
 
@@ -763,36 +763,36 @@ export default function App({ initialLanguage: language }: AppProps) {
                   replayToken={replayToken}
                   onProgress={reportFlightProgress}
                 />
-
-                <aside className="map-control-widget" data-testid="map-control-widget">
-                  <div className="selected-place" aria-live="polite">
-                    <span className="place-pin" aria-hidden="true">●</span>
-                    <span>
-                      <small>{text.map.selected}</small>
-                      <strong>{start.name}</strong>
-                      <span>{placeContext(start)}</span>
-                    </span>
-                  </div>
-
-                  <WindScout
-                    status={windPreviewStatus}
-                    readings={activeWindReadings}
-                    objectType={objectType}
-                    dataTime={windPreviewSnapshot?.forecastStart}
-                    locale={locale}
-                    text={text.windScout}
-                    error={windPreviewStatus === 'error' ? text.windErrors[windPreviewErrorKind] : undefined}
-                    onCheck={() => void inspectWind(start)}
-                    onCancel={cancelWindPreview}
-                    windBoost={windBoost}
-                    estimatedDistanceKm={estimatedDistanceKm}
-                    onWindBoostChange={(next) => {
-                      setWindBoost(next);
-                      clearFlightResult();
-                    }}
-                  />
-                </aside>
               </div>
+
+              <aside className="map-control-widget" data-testid="map-control-widget">
+                <div className="selected-place" aria-live="polite">
+                  <span className="place-pin" aria-hidden="true">●</span>
+                  <span>
+                    <small>{text.map.selected}</small>
+                    <strong>{start.name}</strong>
+                    <span>{placeContext(start)}</span>
+                  </span>
+                </div>
+
+                <WindScout
+                  status={windPreviewStatus}
+                  readings={activeWindReadings}
+                  objectType={objectType}
+                  dataTime={windPreviewSnapshot?.forecastStart}
+                  locale={locale}
+                  text={text.windScout}
+                  error={windPreviewStatus === 'error' ? text.windErrors[windPreviewErrorKind] : undefined}
+                  onCheck={() => void inspectWind(start)}
+                  onCancel={cancelWindPreview}
+                  windBoost={windBoost}
+                  estimatedDistanceKm={estimatedDistanceKm}
+                  onWindBoostChange={(next) => {
+                    setWindBoost(next);
+                    clearFlightResult();
+                  }}
+                />
+              </aside>
 
               {result && (
                 <section className="result-section" aria-labelledby="result-heading" data-milos-result>

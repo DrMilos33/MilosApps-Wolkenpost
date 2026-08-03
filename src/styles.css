@@ -187,6 +187,8 @@ a {
 }
 
 .app-content {
+  --milos-layout-content-max: 96rem;
+  --milos-layout-work-max: 88rem;
   min-width: 0;
   padding-block: 0.5rem 0;
   overflow: visible;
@@ -632,7 +634,7 @@ button:disabled {
   align-items: center;
   flex-wrap: wrap;
   gap: 0.4rem;
-  max-width: calc(100% - 23rem);
+  max-width: calc(100% - 1.5rem);
   margin: 0;
   padding: 0.35rem;
   border: 1px solid color-mix(in srgb, var(--line) 84%, transparent);
@@ -671,8 +673,8 @@ button:disabled {
   display: block;
   width: 100%;
   aspect-ratio: 2 / 1;
-  min-height: 500px;
-  max-height: 640px;
+  min-height: 520px;
+  max-height: 720px;
   border: 1px solid var(--line);
   border-radius: 22px;
   cursor: crosshair;
@@ -692,28 +694,18 @@ button:disabled {
   font-size: 0.82rem;
 }
 
-.map-canvas-shell:has(.world-map[data-route-lens='visible']) {
-  position: sticky;
-  top: 0.5rem;
-  z-index: 2;
-  box-shadow: 0 12px 28px color-mix(in srgb, var(--ink) 18%, transparent);
-  border-radius: 22px;
-}
-
 .map-control-widget {
-  position: absolute;
+  position: relative;
   z-index: 4;
-  top: 0.75rem;
-  right: 0.75rem;
   display: grid;
-  width: min(20.5rem, calc(100% - 1.5rem));
-  max-height: calc(100% - 1.5rem);
-  overflow: auto;
+  grid-template-columns: minmax(12rem, 0.48fr) minmax(0, 2fr);
+  width: calc(100% - 2rem);
+  margin: -1.25rem 1rem 0;
+  overflow: visible;
   border: 1px solid color-mix(in srgb, var(--line) 86%, transparent);
-  border-radius: 20px;
-  background: color-mix(in srgb, var(--surface-strong) 94%, transparent);
-  box-shadow: 0 18px 42px color-mix(in srgb, var(--ink) 18%, transparent);
-  backdrop-filter: blur(16px);
+  border-radius: 18px;
+  background: var(--surface-strong);
+  box-shadow: 0 14px 32px color-mix(in srgb, var(--ink) 14%, transparent);
 }
 
 .map-control-widget .selected-place {
@@ -722,17 +714,32 @@ button:disabled {
   padding: 0.8rem 0.9rem;
   border: 0;
   border-radius: 0;
-  border-block-end: 1px solid var(--line);
+  border-inline-end: 1px solid var(--line);
   background: transparent;
   box-shadow: none;
 }
 
 .map-control-widget .wind-scout {
-  padding: 0.85rem 0.9rem 0.9rem;
+  grid-template-columns: minmax(13rem, 0.85fr) minmax(18rem, 1.15fr);
+  grid-template-areas:
+    'heading boost'
+    'reading boost'
+    'details actions';
+  align-items: start;
+  gap: 0.45rem 0.8rem;
+  padding: 0.7rem 0.8rem;
   border: 0;
   border-radius: 0;
   background: transparent;
 }
+
+.map-control-widget .wind-scout-heading { grid-area: heading; }
+.map-control-widget .wind-scout-description,
+.map-control-widget .wind-primary-reading,
+.map-control-widget .wind-scout-state { grid-area: reading; }
+.map-control-widget .wind-more-levels { grid-area: details; }
+.map-control-widget .wind-scout-actions { grid-area: actions; }
+.map-control-widget .wind-boost { grid-area: boost; }
 
 .map-landmark-strip,
 .flight-moment {
@@ -842,7 +849,7 @@ button:disabled {
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 0.65rem;
-  padding: 0.7rem;
+  padding: 0.55rem 0.65rem;
   border-radius: 14px;
   background: color-mix(in srgb, var(--brand) 10%, var(--surface-strong));
 }
@@ -871,17 +878,24 @@ button:disabled {
 
 .wind-more-levels summary {
   min-height: 44px;
-  padding: 0.7rem 0;
+  padding: 0.55rem 0;
   color: var(--brand);
   cursor: pointer;
   font-size: 0.78rem;
   font-weight: 800;
 }
 
+.wind-detail-copy {
+  margin: 0 0 0.55rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
 .range-preview {
   display: block;
   min-width: 0;
-  padding: 0.58rem 0.65rem;
+  padding: 0.5rem 0.6rem;
   border-radius: 10px;
   background: color-mix(in srgb, var(--yellow) 18%, var(--surface-strong));
   color: var(--ink);
@@ -895,7 +909,7 @@ button:disabled {
   gap: 0.55rem;
   min-width: 0;
   margin: 0;
-  padding: 0.75rem;
+  padding: 0.6rem;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: color-mix(in srgb, var(--surface-strong) 78%, transparent);
@@ -912,7 +926,7 @@ button:disabled {
   margin: 0;
   color: var(--muted);
   font-size: 0.72rem;
-  line-height: 1.45;
+  line-height: 1.35;
 }
 
 .wind-boost-options {
@@ -924,7 +938,7 @@ button:disabled {
 .wind-boost-options button {
   display: grid;
   min-width: 0;
-  min-height: 58px;
+  min-height: 52px;
   place-items: center;
   gap: 0.12rem;
   padding: 0.4rem;
@@ -1354,10 +1368,30 @@ button:disabled {
 
 .flight-space .result-section {
   display: grid;
-  gap: 0.85rem;
-  padding: 0.9rem;
+  grid-template-columns: minmax(0, 1.2fr) minmax(20rem, 0.8fr);
+  grid-template-areas:
+    'heading heading'
+    'boundary metrics'
+    'boost metrics'
+    'readout metrics'
+    'highlights comparison'
+    'toolbar comparison'
+    'source actions';
+  gap: 0.65rem 0.9rem;
+  padding: 0.85rem;
   border-radius: 18px;
 }
+
+.flight-space .flight-space-heading { grid-area: heading; }
+.flight-space .model-boundary { grid-area: boundary; }
+.flight-space .play-wind-result { grid-area: boost; }
+.flight-space .flight-readout { grid-area: readout; }
+.flight-space .route-highlights { grid-area: highlights; }
+.flight-space .flight-toolbar { grid-area: toolbar; }
+.flight-space .comparison-lab { grid-area: comparison; }
+.flight-space .result-metrics { grid-area: metrics; }
+.flight-space .result-source { grid-area: source; }
+.flight-space .result-actions { grid-area: actions; }
 
 .flight-space-heading,
 .flight-toolbar {
@@ -1378,11 +1412,15 @@ button:disabled {
   margin: 0;
 }
 
+#result-heading {
+  scroll-margin-top: 5.5rem;
+}
+
 .model-boundary {
   min-width: 0;
   max-width: 100%;
   margin: 0;
-  padding: 0.65rem 0.75rem;
+  padding: 0.5rem 0.65rem;
   border-inline-start: 3px solid var(--accent);
   background: color-mix(in srgb, var(--accent-soft) 65%, transparent);
   color: var(--ink);
@@ -1393,16 +1431,15 @@ button:disabled {
 
 .flight-readout {
   display: grid;
-  gap: 0.65rem;
+  gap: 0.45rem;
 }
 
 .flight-readout-row {
   display: grid;
-  gap: 0.65rem;
-  padding: 0.75rem;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: var(--surface-strong);
+  gap: 0.5rem;
+  padding: 0.6rem 0;
+  border-block: 1px solid var(--line);
+  background: transparent;
 }
 
 .flight-readout-row header {
@@ -1461,11 +1498,10 @@ button:disabled {
 
 .route-highlights {
   display: grid;
-  gap: 0.65rem;
-  padding: 0.8rem;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--surface-soft) 64%, transparent);
+  gap: 0.5rem;
+  padding: 0.65rem 0 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
 }
 
 .route-highlights h3,
@@ -1476,7 +1512,7 @@ button:disabled {
 
 .route-highlights ol {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
   gap: 0.55rem;
   margin: 0;
   padding: 0;
@@ -1488,7 +1524,7 @@ button:disabled {
   min-width: 0;
   gap: 0.55rem;
   align-items: center;
-  padding: 0.55rem;
+  padding: 0.45rem;
   border-radius: 13px;
   background: var(--surface-strong);
 }
@@ -1540,8 +1576,8 @@ button:disabled {
 
 .comparison-lab {
   display: grid;
-  gap: 0.75rem;
-  padding-top: 0.85rem;
+  gap: 0.6rem;
+  padding-top: 0.65rem;
   border-top: 1px solid var(--line);
 }
 
@@ -1553,7 +1589,7 @@ button:disabled {
 
 .comparison-controls {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.65rem;
   align-items: end;
 }
@@ -1578,10 +1614,10 @@ button:disabled {
 
 .comparison-prediction,
 .comparison-outcome {
-  padding: 0.65rem 0.75rem;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  background: color-mix(in srgb, var(--surface-soft) 72%, transparent);
+  grid-column: 1 / -1;
+  padding: 0.5rem 0;
+  border-block: 1px solid var(--line);
+  background: transparent;
 }
 
 .comparison-prediction span,
@@ -1593,10 +1629,25 @@ button:disabled {
 
 .map-step .result-metrics {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-self: stretch;
+  margin: 0;
 }
 
 .map-step .result-metrics strong {
-  font-size: clamp(1.15rem, 2.1vw, 1.65rem);
+  font-size: clamp(1.05rem, 1.7vw, 1.4rem);
+}
+
+.map-step .result-metrics article {
+  align-content: center;
+  gap: 0.2rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 13px;
+}
+
+.flight-space .result-actions {
+  align-self: end;
+  justify-content: flex-end;
+  margin-top: 0;
 }
 
 .settings-section {
@@ -1759,6 +1810,21 @@ button:disabled {
     border-block-start: 1px solid var(--line);
   }
 
+  .flight-space .result-section {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'heading'
+      'boundary'
+      'boost'
+      'readout'
+      'highlights'
+      'toolbar'
+      'comparison'
+      'metrics'
+      'source'
+      'actions';
+  }
+
   .map-planning-grid {
     grid-template-columns: 1fr;
   }
@@ -1808,11 +1874,27 @@ button:disabled {
     position: relative;
     inset: auto;
     z-index: 4;
+    grid-template-columns: minmax(0, 1fr);
     width: calc(100% - 1rem);
     max-height: none;
     margin: -1rem 0.5rem 0;
     overflow: visible;
     backdrop-filter: none;
+  }
+
+  .map-control-widget .selected-place {
+    border-inline-end: 0;
+    border-block-end: 1px solid var(--line);
+  }
+
+  .map-control-widget .wind-scout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'heading'
+      'reading'
+      'boost'
+      'details'
+      'actions';
   }
 
   .map-landmark-strip,
@@ -1947,8 +2029,9 @@ button:disabled {
 }
 
 @media (max-width: 390px) {
-  .result-metrics {
-    grid-template-columns: 1fr;
+  .result-metrics,
+  .map-step .result-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .drawing-actions > *,

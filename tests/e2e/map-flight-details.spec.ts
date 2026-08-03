@@ -37,6 +37,15 @@ test.describe('map and flight-detail experience', () => {
     expect(geometry.mapStepTop).toBeGreaterThanOrEqual(geometry.drawingBottom - 2);
     expect(geometry.mapWidth).toBeGreaterThan(900);
     expect(geometry.mapHeight).toBeGreaterThan(390);
+    const widgetGeometry = await page.getByTestId('map-control-widget').evaluate((element) => ({
+      overflowY: getComputedStyle(element).overflowY,
+      scrollHeight: element.scrollHeight,
+      clientHeight: element.clientHeight,
+      width: element.getBoundingClientRect().width,
+    }));
+    expect(widgetGeometry.overflowY).toBe('visible');
+    expect(widgetGeometry.scrollHeight).toBeLessThanOrEqual(widgetGeometry.clientHeight + 1);
+    expect(widgetGeometry.width).toBeGreaterThan(850);
     await expect(page.getByTestId('world-map')).toHaveAttribute('data-country-detail', 'natural-earth-110m');
     expect(Number(await page.getByTestId('world-map').getAttribute('data-country-count'))).toBeGreaterThan(170);
     await page.getByRole('button', { name: 'Land fokussieren' }).click();
