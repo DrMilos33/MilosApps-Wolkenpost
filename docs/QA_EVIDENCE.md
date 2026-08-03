@@ -734,6 +734,12 @@ Automatisierte Evidenz:
   Vendorverzeichnisse besitzen nun ebenfalls `* text eol=lf`; im wiederholten
   frischen Checkout melden alle drei Vertragsverzeichnisse `i/lf w/lf`, und
   Shell-, Layout- sowie Essentials-Verifier bestehen gemeinsam.
+- Die erste Linux-CI maß bei 320 CSS-Pixeln 337 px Dokumentbreite, während der
+  identische Windows-Lauf mit 320/320 gerade noch grün blieb. Die Diagnose
+  zeigte einen bereits intern überbreiten `Papierflieger`-Text in der
+  zweispaltigen Objektwahl. Griditem und Textspalte dürfen nun schrumpfen und
+  lange deutsche Komposita bei Bedarf umbrechen; das fokussierte Gate prüft
+  zusätzlich jede Objektoption auf eigene Scrollbreite.
 
 Outcome: Karte und Wind sind nun eine echte Startentscheidung statt eine kleine
 Nebenanzeige. Länder geben Orientierung, Umrisse liefern sofort spielerische

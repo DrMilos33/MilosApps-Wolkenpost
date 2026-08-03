@@ -464,6 +464,7 @@ h2 {
 
 .object-option {
   display: flex;
+  min-width: 0;
   min-height: 58px;
   align-items: center;
   gap: 0.65rem;
@@ -487,6 +488,13 @@ h2 {
 
 .object-option span:last-child {
   display: grid;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.object-option strong,
+.object-option small {
+  overflow-wrap: anywhere;
 }
 
 .object-option small {

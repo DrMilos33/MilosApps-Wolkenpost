@@ -435,3 +435,18 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
   prüft neben den Hashes ausdrücklich den EOL-Status.
 - Für andere MilosApps relevant: Ja. Eine neue LF-Regel in nur einem aktuellen
   Vertragsordner schützt ältere parallel vendorte Locks nicht automatisch.
+
+## 2026-08-03 – Dokumentoverflow kann eine interne Min-Content-Lücke verbergen
+
+- Datum und geprüfter Stand: 3. August 2026, Linux-CI des detaillierten
+  Flugraums nach grüner lokaler Windows-Matrix.
+- Beobachtung: Windows meldete bei 320 CSS-Pixeln noch 320/320
+  Dokumentbreite, obwohl „Papierflieger“ bereits breiter als seine Textzelle
+  war. Die leicht andere Linux-Schriftmetrik machte daraus 337 px.
+- Evidenz oder reproduzierbarer Test: Elementdiagnose der vier Objektoptionen
+  sowie identischer fokussierter Playwright-Reflow auf Windows und Linux-CI.
+- Änderung und Regressionstest: Griditem und Textspalte erhalten `min-width: 0`,
+  lange Bezeichnungen `overflow-wrap: anywhere`; das Gate prüft zusätzlich die
+  eigene Scrollbreite jeder Objektoption.
+- Für andere MilosApps relevant: Ja. Ein grüner Dokumentbreitenvergleich
+  beweist nicht, dass alle inneren Flex-/Gridtexte portabel schrumpfen können.
