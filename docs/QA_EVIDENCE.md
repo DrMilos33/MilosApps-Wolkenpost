@@ -740,6 +740,11 @@ Automatisierte Evidenz:
   zweispaltigen Objektwahl. Griditem und Textspalte dürfen nun schrumpfen und
   lange deutsche Komposita bei Bedarf umbrechen; das fokussierte Gate prüft
   zusätzlich jede Objektoption auf eigene Scrollbreite.
+- Zwei identische docs-only CI-Läufe lieferten beim nativen Share-Abbruch einmal
+  PASS und einmal eine verfrühte Geometriemessung: Der Statustext war schon
+  leer, `data-visible` aber noch nicht autoritativ auf `false`. Das Gate wartet
+  nun auf beide Zustände, bevor es die unveränderte lokale Geometrie vergleicht;
+  Produkt- und Shared-Runtime bleiben unverändert.
 
 Outcome: Karte und Wind sind nun eine echte Startentscheidung statt eine kleine
 Nebenanzeige. Länder geben Orientierung, Umrisse liefern sofort spielerische

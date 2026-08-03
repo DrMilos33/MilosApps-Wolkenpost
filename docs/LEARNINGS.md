@@ -450,3 +450,18 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
   eigene Scrollbreite jeder Objektoption.
 - Für andere MilosApps relevant: Ja. Ein grüner Dokumentbreitenvergleich
   beweist nicht, dass alle inneren Flex-/Gridtexte portabel schrumpfen können.
+
+## 2026-08-03 – Leerer Statustext ist noch kein abgeschlossener UI-Zustand
+
+- Datum und geprüfter Stand: 3. August 2026, doppelte Linux-CI des finalen
+  Karten-Handoffs.
+- Beobachtung: Nach einem nativen Share-Abbruch war der Text bereits leer,
+  während der explizite Sichtbarkeitszustand noch im Handoff auf `false` war.
+  Eine sofortige Geometriemessung konnte deshalb einmal zu früh erfolgen.
+- Evidenz oder reproduzierbarer Test: Zwei identische SHA-genaue CI-Läufe,
+  davon einer PASS und einer mit ausschließlich verschobenem X-Offset bei
+  unveränderter Breite und Höhe.
+- Änderung und Regressionstest: Das Gate wartet auf leeren Text und
+  `data-visible=false`, bevor es die containerrelative Geometrie vergleicht.
+- Für andere MilosApps relevant: Ja. Asynchrone Komponenten sollten in Tests
+  an ihrem autoritativen Zustandsattribut statt nur an Zwischeninhalt hängen.
