@@ -6,6 +6,7 @@ import type {
   RouteResult,
   WindField,
   WindVector,
+  WindBoost,
 } from '../types';
 import {
   clamp,
@@ -92,6 +93,7 @@ export function simulateRoute(
   startLabel: string,
   objectType: ObjectType,
   field: WindField,
+  windBoost: WindBoost = 1,
 ): RouteResult {
   const profile = OBJECT_PROFILES[objectType];
   const firstTime = Math.min(...field.nodes.flatMap((node) => node.times));
@@ -129,7 +131,7 @@ export function simulateRoute(
 
     const speedMs = Math.hypot(smoothed.east, smoothed.north) * profile.driftFactor;
     const speedKmh = speedMs * 3.6;
-    const stepDistance = (speedMs * stepSeconds) / 1000;
+    const stepDistance = ((speedMs * stepSeconds) / 1000) * windBoost;
     const bearing = vectorBearing(smoothed.east, smoothed.north);
     const next = destinationPoint(current, stepDistance, bearing);
     distanceKm += haversineKm(current, next);
@@ -148,11 +150,12 @@ export function simulateRoute(
     points,
     distanceKm,
     durationHours: profile.hours,
-    averageSpeedKmh: profile.hours > 0 ? distanceKm / profile.hours : 0,
+    averageSpeedKmh: profile.hours > 0 ? (distanceKm / windBoost) / profile.hours : 0,
     maxSpeedKmh,
     source: field.source,
     objectType,
     startLabel,
     endLabel: `nahe ${endPlace.name}`,
+    windBoost,
   };
 }

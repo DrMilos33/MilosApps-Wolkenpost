@@ -4,12 +4,14 @@ import type {
   ObjectType,
   StoredState,
   ThemePreference,
+  WindBoost,
 } from '../types';
 
 const STORAGE_KEY = 'milosapps.cloud-post.state';
 const OBJECT_TYPES: ObjectType[] = ['cloud', 'balloon', 'seed', 'paper-plane'];
 const MOTION_VALUES: MotionPreference[] = ['system', 'full', 'reduced'];
 const THEME_VALUES: ThemePreference[] = ['system', 'light', 'dark'];
+const WIND_BOOST_VALUES: WindBoost[] = [1, 1.5, 2];
 
 export const DEFAULT_STATE: StoredState = {
   version: 1,
@@ -19,6 +21,7 @@ export const DEFAULT_STATE: StoredState = {
   motion: 'system',
   theme: 'system',
   soundEnabled: false,
+  windBoost: 1,
 };
 
 export function loadState(storage: Pick<Storage, 'getItem'> = localStorage): StoredState {
@@ -70,6 +73,9 @@ export function loadState(storage: Pick<Storage, 'getItem'> = localStorage): Sto
         ? (parsed.theme as ThemePreference)
         : DEFAULT_STATE.theme,
       soundEnabled: parsed.soundEnabled === true,
+      windBoost: WIND_BOOST_VALUES.includes(parsed.windBoost as WindBoost)
+        ? (parsed.windBoost as WindBoost)
+        : DEFAULT_STATE.windBoost,
     };
   } catch {
     return structuredClone(DEFAULT_STATE);

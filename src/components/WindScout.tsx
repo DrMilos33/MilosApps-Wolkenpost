@@ -1,4 +1,4 @@
-import type { ObjectType, WindLevel, WindReading } from '../types';
+import type { ObjectType, WindBoost, WindLevel, WindReading } from '../types';
 import { OBJECT_PROFILES } from '../lib/simulation';
 
 type PreviewStatus = 'idle' | 'loading' | 'ready' | 'error';
@@ -19,6 +19,11 @@ interface WindScoutText {
   strength: Record<WindReading['strength'], string>;
   compass: readonly string[];
   windValue: (speed: number, direction: string) => string;
+  boostLegend: string;
+  boostDescription: string;
+  boostReal: string;
+  boostMedium: string;
+  boostDouble: string;
 }
 
 interface WindScoutProps {
@@ -31,6 +36,8 @@ interface WindScoutProps {
   error?: string;
   onCheck: () => void;
   onCancel: () => void;
+  windBoost: WindBoost;
+  onWindBoostChange: (boost: WindBoost) => void;
 }
 
 function compassIndex(bearing: number): number {
@@ -57,6 +64,8 @@ export function WindScout({
   error,
   onCheck,
   onCancel,
+  windBoost,
+  onWindBoostChange,
 }: WindScoutProps) {
   const selectedLevel = OBJECT_PROFILES[objectType].level;
   return (
@@ -118,6 +127,30 @@ export function WindScout({
           </span>
         )}
       </div>
+
+      <fieldset className="wind-boost" data-testid="wind-boost">
+        <legend>{text.boostLegend}</legend>
+        <p>{text.boostDescription}</p>
+        <div className="wind-boost-options" role="radiogroup" aria-label={text.boostLegend}>
+          {([
+            [1, text.boostReal],
+            [1.5, text.boostMedium],
+            [2, text.boostDouble],
+          ] as const).map(([boost, label]) => (
+            <button
+              key={boost}
+              type="button"
+              role="radio"
+              aria-checked={windBoost === boost}
+              className={windBoost === boost ? 'is-selected' : ''}
+              onClick={() => onWindBoostChange(boost)}
+            >
+              <strong>{'\u00d7'}{boost.toLocaleString(locale)}</strong>
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+      </fieldset>
     </section>
   );
 }

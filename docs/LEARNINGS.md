@@ -486,3 +486,49 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
 - Für andere MilosApps relevant: Ja. Ein bytegenauer Vendor-Lock schützt den
   Build, invalidiert aber nicht automatisch bereits installierte Offline-
   Caches mit stabilen URLs.
+
+## 2026-08-03 - Karteninteraktion braucht einen gemeinsamen Koordinatenraum
+
+- Datum und gepruefter Stand: 3. August 2026, interaktive Windkarteniteration.
+- Beobachtung: Laenderzoom, Pointer-Rueckprojektion, Route, Windfeld und Figur
+  werden unzuverlaessig, wenn nur einzelne Canvas-Schichten einen Zoom kennen.
+- Evidenz oder reproduzierbarer Test: Unit-Roundtrip fuer einen 12-fach
+  gezoomten Viewport; Browser-Drag mit Maus und Touch; Laenderfokus und Zoom
+  auf Desktop/390 px; 360x800@200-Prozent-Reflow ohne Overflow.
+- Aenderung und Regressionstest: Alle Kartenebenen verwenden denselben
+  Mittelpunkt-/Zoom-Viewport. Pointerkoordinaten werden durch dessen exakte
+  inverse Projektion zurueckgerechnet. Wenn eine animierte Route den sicheren
+  Innenrand verlaesst, passt eine deterministische Fit-Funktion den bisherigen
+  Flug ein und zoomt nur heraus.
+- Fuer andere MilosApps relevant: Ja. Karteninteraktion, Darstellung und
+  Hit-Testing duerfen keine getrennten Projektionsannahmen besitzen.
+
+## 2026-08-03 - Spielparameter duerfen Messwerte nicht umbenennen
+
+- Datum und gepruefter Stand: 3. August 2026, Spielwind 1/1,5/2.
+- Beobachtung: Ein Distanzmultiplikator wuerde als vermeintlich staerkerer
+  echter Wind erscheinen, wenn Durchschnitt und Spitze ebenfalls multipliziert
+  werden.
+- Evidenz oder reproduzierbarer Test: Derselbe feste Wind-Snapshot erzeugt bei
+  Faktor 2 mehr als die 1,9-fache Distanz, aber punktweise, durchschnittlich
+  und maximal unveraenderte Windgeschwindigkeiten.
+- Aenderung und Regressionstest: Der Faktor wirkt nur auf die Verschiebung pro
+  Schritt, ist im Ergebnis gespeichert und im UI als lokaler Spielwind
+  erklaert. Quelle, Datenzeit, Richtung und Windwerte bleiben real.
+- Fuer andere MilosApps relevant: Ja. Spielerische Verstaerker brauchen ein
+  separates Datenfeld und eine sichtbare Negativaussage zu realen Messwerten.
+
+## 2026-08-03 - Ein Wrapper kann den Sticky-Flugraum unbemerkt begrenzen
+
+- Datum und gepruefter Stand: 3. August 2026, visuelle QA-Runde 2.
+- Beobachtung: Ein neuer Karten-Toolbar-Wrapper wurde zum naechsten
+  Sticky-Containing-Block. Beim zweiten Flug blieb die Karte deshalb nicht
+  mehr im sichtbaren Ergebnisraum.
+- Evidenz oder reproduzierbarer Test: Das bestehende Gameplay-Gate prueft nach
+  dem Vergleich die komplette Canvas-Geometrie gegen den Viewport und schlug
+  reproduzierbar fehl.
+- Aenderung und Regressionstest: Der semantische Wrapper bleibt im DOM, erzeugt
+  mit `display: contents` aber keine eigene Layoutbox. Die Karte haftet wieder
+  am gesamten Flugraum; alle drei Gameplay-Runden sind gruen.
+- Fuer andere MilosApps relevant: Ja. Neue Werkzeugleisten um Sticky-Inhalte
+  muessen gegen den tatsaechlichen Scroll-/Containing-Block regressiert werden.

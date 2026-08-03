@@ -227,6 +227,35 @@ Zielregion und Route, aber keine exakten Startkoordinaten oder Teil-URL.
 Geräusch ist standardmäßig aus. Wenn eingeschaltet, entsteht es prozedural im
 Browser und beginnt nur als unmittelbare Folge eines Start-Klicks.
 
+## Interaktive Karte und Spielwind
+
+Eine bewusste Startwahl per Karte, Drag, Ortssuche oder Bereichsregler laedt
+die Windvorschau nach einer kurzen Entprellung automatisch. Der Kartenlayer
+zeigt den Wind des aktiven Objektprofils als Richtungsbahnen und km/h-Badge.
+Der manuelle Neu-laden-Knopf bleibt fuer Aktualisierung und
+Fehlerwiederholung erhalten; ein Flug am unveraenderten Punkt verwendet
+weiterhin exakt denselben Snapshot.
+
+Die Projektion besitzt einen app-eigenen Viewport aus Mittelpunkt und Zoom.
+Weltansicht, aus der Natural-Earth-Geometrie abgeleiteter Laenderfokus und
+manueller Zoom nutzen dieselbe Vorwaerts-/Rueckprojektion. Waehlt der Nutzer
+einen engen Ausschnitt und verlaesst die animierte Figur dessen sicheren
+Innenrand, wird der bisher sichtbare Routenabschnitt deterministisch
+eingepasst. Die Kamera zoomt dabei nur heraus und verfremdet keine Koordinate.
+
+Die Figur verwendet einen einzigen Pointer-Events-Zustandsweg fuer Touch,
+Stift und Maus. Pointer Capture sowie Window-Listener im Capture-Modus halten
+den Lauf stabil. Bewegungen werden pro Animation Frame zusammengefasst, erst
+`pointerup` schreibt den neuen Start; `pointercancel` schreibt nichts.
+Pfeiltasten verschieben weiterhin in 1-Grad- und mit Umschalt in
+5-Grad-Schritten. Plus, Minus und Pos1 bedienen die Kartenansicht.
+
+Der optionale Spielwind ist ein lokaler Faktor 1, 1,5 oder 2. Er wirkt nur auf
+die pro Simulationsschritt zurueckgelegte Strecke. Route und Distanz reagieren,
+waehrend Punktgeschwindigkeiten, Durchschnitt, Maximum, Windrichtung,
+Quelldaten und Datenzeit unveraendert bleiben. `RouteResult.windBoost` macht
+den Faktor reproduzierbar und die Ergebnisoberflaeche nennt die Abgrenzung.
+
 ## PWA-Cache
 
 Der Service Worker erhält pro Assetliste einen neuen Cache-Namen. Statische

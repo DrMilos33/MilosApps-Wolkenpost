@@ -45,6 +45,7 @@ import type {
   Place,
   RouteResult,
   ThemePreference,
+  WindBoost,
   WindSnapshot,
 } from './types';
 
@@ -171,6 +172,7 @@ export default function App({ initialLanguage: language }: AppProps) {
   const [motion, setMotion] = useState<MotionPreference>(initial.motion);
   const [theme, setTheme] = useState<ThemePreference>(initial.theme);
   const [soundEnabled, setSoundEnabled] = useState(initial.soundEnabled);
+  const [windBoost, setWindBoost] = useState<WindBoost>(initial.windBoost);
   const [flightStatus, setFlightStatus] = useState<FlightStatus>('idle');
   const [errorKind, setErrorKind] = useState<WindRequestError['kind']>('network');
   const [result, setResult] = useState<RouteResult | null>(null);
@@ -192,6 +194,7 @@ export default function App({ initialLanguage: language }: AppProps) {
   const [exporting, setExporting] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const previewAbortRef = useRef<AbortController | null>(null);
+  const previewTimerRef = useRef<number | null>(null);
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   const flightSpaceRef = useRef<HTMLDivElement>(null);
   const placeSearchRef = useRef<MilosPlaceSearchElement>(null);
@@ -261,15 +264,17 @@ export default function App({ initialLanguage: language }: AppProps) {
         motion,
         theme,
         soundEnabled,
+        windBoost,
       });
       setStorageWarning(!saved);
     }, 250);
     return () => window.clearTimeout(timeout);
-  }, [motion, objectType, soundEnabled, start, strokes, theme]);
+  }, [motion, objectType, soundEnabled, start, strokes, theme, windBoost]);
 
   useEffect(() => () => {
     abortRef.current?.abort();
     previewAbortRef.current?.abort();
+    if (previewTimerRef.current !== null) window.clearTimeout(previewTimerRef.current);
   }, []);
 
   const clearFlightResult = () => {
@@ -301,6 +306,13 @@ export default function App({ initialLanguage: language }: AppProps) {
     clearFlightResult();
     clearWindPreview();
     setAnnouncement(text.announcements.startSelected(place.name));
+    if (previewTimerRef.current !== null) window.clearTimeout(previewTimerRef.current);
+    if (navigator.onLine) {
+      previewTimerRef.current = window.setTimeout(() => {
+        previewTimerRef.current = null;
+        void inspectWind(place);
+      }, 420);
+    }
   };
 
   const selectMapCoordinate = (coordinate: Coordinate) =>
@@ -369,7 +381,7 @@ export default function App({ initialLanguage: language }: AppProps) {
     }, 50);
   };
 
-  const inspectWind = async () => {
+  async function inspectWind(place: Place = start) {
     previewAbortRef.current?.abort();
     const controller = new AbortController();
     previewAbortRef.current = controller;
@@ -377,15 +389,15 @@ export default function App({ initialLanguage: language }: AppProps) {
     setWindPreviewSnapshot(null);
     setAnnouncement(text.windScout.loading);
     try {
-      const snapshot = await fetchWindSnapshot(start, {
+      const snapshot = await fetchWindSnapshot(place, {
         signal: controller.signal,
         timeoutMs: qaTimeout(),
       });
       if (previewAbortRef.current !== controller) return;
       setWindPreviewSnapshot(snapshot);
-      setWindPreviewKey(coordinateKey(start));
+      setWindPreviewKey(coordinateKey(place));
       setWindPreviewStatus('ready');
-      setAnnouncement(text.announcements.windPreviewReady(start.name));
+      setAnnouncement(text.announcements.windPreviewReady(place.name));
     } catch (error) {
       if (previewAbortRef.current !== controller) return;
       const requestError = error instanceof WindRequestError
@@ -397,7 +409,7 @@ export default function App({ initialLanguage: language }: AppProps) {
     } finally {
       if (previewAbortRef.current === controller) previewAbortRef.current = null;
     }
-  };
+  }
 
   const cancelWindPreview = () => {
     previewAbortRef.current?.abort();
@@ -431,7 +443,7 @@ export default function App({ initialLanguage: language }: AppProps) {
         });
       if (abortRef.current !== controller) return;
       applyResult(
-        simulateRoute(start, start.name, objectType, snapshot.fields[OBJECT_PROFILES[objectType].level]),
+        simulateRoute(start, start.name, objectType, snapshot.fields[OBJECT_PROFILES[objectType].level], windBoost),
         snapshot,
       );
     } catch (error) {
@@ -459,7 +471,7 @@ export default function App({ initialLanguage: language }: AppProps) {
     if (soundEnabled) playWindTone();
     const snapshot = createDemoWindSnapshot(start);
     applyResult(
-      simulateRoute(start, start.name, objectType, snapshot.fields[OBJECT_PROFILES[objectType].level]),
+      simulateRoute(start, start.name, objectType, snapshot.fields[OBJECT_PROFILES[objectType].level], windBoost),
       snapshot,
     );
   };
@@ -467,7 +479,7 @@ export default function App({ initialLanguage: language }: AppProps) {
   const startComparisonFlight = () => {
     if (!result || !windSnapshot || comparisonObjectType === result.objectType) return;
     const field = windSnapshot.fields[OBJECT_PROFILES[comparisonObjectType].level];
-    const next = simulateRoute(start, start.name, comparisonObjectType, field);
+    const next = simulateRoute(start, start.name, comparisonObjectType, field, windBoost);
     setComparisonResult(next);
     setReplayToken((current) => current + 1);
     setAnnouncement(text.announcements.comparisonReady(
@@ -544,6 +556,7 @@ export default function App({ initialLanguage: language }: AppProps) {
     setMotion(DEFAULT_STATE.motion);
     setTheme(DEFAULT_STATE.theme);
     setSoundEnabled(DEFAULT_STATE.soundEnabled);
+    setWindBoost(DEFAULT_STATE.windBoost);
     setResult(null);
     setComparisonResult(null);
     setWindSnapshot(null);
@@ -574,6 +587,9 @@ export default function App({ initialLanguage: language }: AppProps) {
   const activeWindReadings = useMemo(
     () => windReadings(windPreviewSnapshot, start),
     [start, windPreviewSnapshot],
+  );
+  const selectedWindReading = activeWindReadings.find(
+    (reading) => reading.level === OBJECT_PROFILES[objectType].level,
   );
 
   return (
@@ -719,11 +735,13 @@ export default function App({ initialLanguage: language }: AppProps) {
                 comparisonResult={comparisonResult}
                 highlights={activeRouteHighlights}
                 drawing={strokes}
+                windReading={selectedWindReading}
                 motion={motion}
                 theme={theme}
                 onSelect={selectMapCoordinate}
                 label={text.map.canvasLabel}
                 routeLensLabel={text.flightSpace.routeLens}
+                text={text.map}
                 replayToken={replayToken}
                 onProgress={reportFlightProgress}
               />
@@ -742,6 +760,11 @@ export default function App({ initialLanguage: language }: AppProps) {
                     </span>
                   </div>
                   <p className="model-boundary">{text.flightSpace.modelBoundary}</p>
+                  {result.windBoost > 1 && (
+                    <p className="play-wind-result" data-testid="play-wind-result">
+                      {text.flightSpace.boostActive(result.windBoost)}
+                    </p>
+                  )}
 
                   <FlightReadout
                     primary={result}
@@ -947,8 +970,13 @@ export default function App({ initialLanguage: language }: AppProps) {
                 locale={locale}
                 text={text.windScout}
                 error={windPreviewStatus === 'error' ? text.windErrors[windPreviewErrorKind] : undefined}
-                onCheck={() => void inspectWind()}
+                onCheck={() => void inspectWind(start)}
                 onCancel={cancelWindPreview}
+                windBoost={windBoost}
+                onWindBoostChange={(next) => {
+                  setWindBoost(next);
+                  clearFlightResult();
+                }}
               />
             </div>
           </section>

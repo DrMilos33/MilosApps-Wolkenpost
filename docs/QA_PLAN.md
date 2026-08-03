@@ -33,6 +33,13 @@ sind mindestens drei Verbesserungsrunden mit dokumentierter Evidenz nötig.
 - Wiederverwendung des Windvorschau-Snapshots beim Start und Verwerfen nach
   Ortswechsel, Abbruch oder Fehler.
 
+- Kartenfigur per Touch, Stift und Maus ziehen; Pointer-Abbruch darf keinen
+  neuen Start speichern; Pfeiltasten bleiben bedienbar;
+- Welt-/Laenderansicht, Zoom plus/minus und automatisches Herauszoomen bei
+  verlassenem Ausschnitt;
+- Windfeld nach bewusster Startwahl sowie Spielwind 1/1,5/2 mit veraenderter
+  Distanz, aber identischen angezeigten Realwindwerten.
+
 ## Runden
 
 1. Kernlogik und kompletter Happy Path mit reproduzierbaren Fixtures.

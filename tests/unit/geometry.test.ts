@@ -1,8 +1,12 @@
 import {
   coordinateFromProjection,
+  coordinateFromViewProjection,
+  coordinatesFitViewport,
+  coordinateVisibleInViewport,
   destinationPoint,
   haversineKm,
   projectCoordinate,
+  projectCoordinateInView,
   routeSegments,
   wrapLongitude,
 } from '../../src/lib/geometry';
@@ -39,5 +43,26 @@ describe('geography helpers', () => {
     const projected = projectCoordinate(original, 1200, 600);
     const restored = coordinateFromProjection(projected.x, projected.y, 1200, 600);
     expect(restored).toEqual(original);
+  });
+
+  it('round-trips a zoomed country viewport', () => {
+    const viewport = { center: { latitude: 51, longitude: 10 }, zoom: 12 };
+    const original = { latitude: 52.5, longitude: 13.5 };
+    const projected = projectCoordinateInView(original, 1200, 600, viewport);
+    const restored = coordinateFromViewProjection(projected.x, projected.y, 1200, 600, viewport);
+    expect(restored.latitude).toBeCloseTo(original.latitude, 10);
+    expect(restored.longitude).toBeCloseTo(original.longitude, 10);
+  });
+
+  it('expands a close view until the travelled route is visible', () => {
+    const close = { center: { latitude: 52.5, longitude: 13.5 }, zoom: 14 };
+    const destination = { latitude: 35, longitude: 50 };
+    expect(coordinateVisibleInViewport(destination, 1000, 500, close)).toBe(false);
+    const expanded = coordinatesFitViewport([
+      close.center,
+      destination,
+    ], close.zoom, 0.66);
+    expect(expanded.zoom).toBeLessThan(close.zoom);
+    expect(coordinateVisibleInViewport(destination, 1000, 500, expanded)).toBe(true);
   });
 });
