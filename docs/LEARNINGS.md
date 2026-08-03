@@ -518,6 +518,39 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
 - Fuer andere MilosApps relevant: Ja. Spielerische Verstaerker brauchen ein
   separates Datenfeld und eine sichtbare Negativaussage zu realen Messwerten.
 
+## 2026-08-03 - Reichweite ist eine bessere Spielentscheidung als Windfaelschung
+
+- Datum und gepruefter Stand: 3. August 2026, Spielweite 1/4/10.
+- Beobachtung: Faktor 1,5 oder 2 machte kurze Fluege zwar laenger, erzeugte aber
+  noch keinen deutlich anderen Spielverlauf. Ein staerker benannter Windregler
+  wuerde zugleich die echten Modellwerte semantisch verfaelschen.
+- Evidenz oder reproduzierbarer Test: Derselbe feste Snapshot erzeugt bei
+  Abenteuerweite eine mehr als achtfach laengere Route. Punkt-, Durchschnitts-
+  und Maximalwind bleiben bytegleich; das UI zeigt vorab die geschaetzte
+  Reichweite und benennt den Faktor ausschliesslich als Spielweite.
+- Aenderung und Regressionstest: Die Auswahl lautet Echt/Reise/Abenteuer mit
+  1/4/10. Unit- und Browsergate pruefen die Distanzwirkung, die unveraenderten
+  Messwerte und die sichtbare Negativaussage.
+- Fuer andere MilosApps relevant: Ja. Spielerische Simulationen sollten einen
+  klar separaten Spielparameter und eine konkrete Vorschau seiner Wirkung
+  anbieten, statt reale Messgroessen umzubenennen.
+
+## 2026-08-03 - Kartenkontrollen duerfen mobil die Kartenbuehne nicht ersetzen
+
+- Datum und gepruefter Stand: 3. August 2026, zwei sichtbare Kartenrunden.
+- Beobachtung: Ein Desktop-Overlay schafft Zusammenhang zwischen Start, Wind
+  und Reichweite; dieselbe absolute Box wuerde auf 390 Pixeln aber den
+  eigentlichen Flugraum verdecken.
+- Evidenz oder reproduzierbarer Test: Desktop zeigt die Kontrolle als
+  halbtransparentes Karten-Widget. Bei 390 x 844 dockt sie unter der 320 Pixel
+  hohen Karte an; Dokumentbreite 390/390 ohne Overflow. Im Flugfolge-Modus
+  misst die Route Zoom 4,17 und bleibt mit Laendergrenzen sichtbar.
+- Aenderung und Regressionstest: Unter 760 CSS-Pixeln wird das Widget Teil des
+  normalen Flusses. Toolbar und Ziele bleiben mindestens 44 Pixel; 360 x 800
+  bei 200 Prozent wird separat regressiert.
+- Fuer andere MilosApps relevant: Ja. Karten-Overlays brauchen einen echten
+  mobilen Dock-/Sheet-Zustand statt bloss verkleinerter Desktopgeometrie.
+
 ## 2026-08-03 - Ein Wrapper kann den Sticky-Flugraum unbemerkt begrenzen
 
 - Datum und gepruefter Stand: 3. August 2026, visuelle QA-Runde 2.

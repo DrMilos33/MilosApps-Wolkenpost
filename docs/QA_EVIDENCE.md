@@ -818,3 +818,36 @@ Automatisierte Evidenz auf dem lokalen Featurestand:
 - Keine reale Screenreader-Ausgabe mit menschlicher Assistive-Technology-
   Bewertung; Semantik, Fokus und Axe sind automatisiert geprüft.
 - Keine Production-Prüfung oder -Änderung.
+
+## Flight-adventure Stufe 1 - Kartenbuehne und Reichweite
+
+Die Nutzerfreigabe begrenzt diese Iteration bewusst auf den neuen Spielkern;
+Fotopostkarten, Reisepass, Missionen, Geisterrouten und optionale Geraeusche
+bleiben bis zum direkten Nutzertest auf der dokumentierten Agenda.
+
+Sichtbare Runde 1 pruefte den Startzustand. Auf Desktop bleibt die Karte 500
+Pixel hoch und das Wind-/Reichweiten-Widget liegt kompakt rechts auf der
+Kartenflaeche. Auf 390 x 844 dockt das Widget unter der 320 Pixel hohen Karte
+an; Start, Windpruefung und 1/4/10-Reichweite sind ohne Kartenverlust
+bedienbar. Der Screenshot zeigte keine Karten-in-Karten-Kaskade und keinen
+horizontalen Overflow.
+
+Sichtbare Runde 2 pruefte den laufenden Abenteuerflug auf 390 x 844 mit einem
+deterministischen Windfixture. Die Kamera folgte aktiv (`data-follow-flight`
+`true`), passte den sichtbaren Routenabschnitt bis Zoom 4,17 ein und hielt
+Laendergrenzen, Route, Figur, Richtung und Routenlupe im Flugraum. Gemessene
+Dokumentbreite: Client/Scroll 390/390. `Gesamte Route zeigen` und
+`Flug folgen` bleiben getrennte, mindestens 44 Pixel grosse Aktionen.
+
+Automatisierte Evidenz vor dem finalen Publish:
+
+- Vitest 32/32 PASS;
+- Standardbuild PASS;
+- fokussiertes Karten-/Windgate auf Desktop und Phone: 4 anwendbare Faelle
+  PASS, einschliesslich Drag, Pointer-Abbruch, Laenderfokus, Zoom, Reichweite,
+  sichtbaren Sehenswuerdigkeiten, Folge-Modus und mobilem Overflow;
+- Gameplay einschliesslich Vergleich, Replay, Sticky-Kartenbuehne und
+  200-Prozent-Reflow 3/3 PASS;
+- visuelles Vertragsgate Desktop, Dark, 375, 390, EN und 360x800@200 Prozent
+  6/6 PASS;
+- Accessibility/Export/PWA und Resilienz jeweils 6/6 anwendbare Faelle PASS.

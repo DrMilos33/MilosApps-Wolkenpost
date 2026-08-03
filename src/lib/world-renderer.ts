@@ -8,7 +8,7 @@ import {
 import { feature, mesh } from 'topojson-client';
 import type { GeometryCollection, Topology } from 'topojson-specification';
 import worldData from 'world-atlas/countries-110m.json';
-import type { Coordinate, DrawingStroke, RouteHighlight, RoutePoint } from '../types';
+import type { Coordinate, DrawingStroke, MapLandmark, RouteHighlight, RoutePoint } from '../types';
 import {
   clamp,
   coordinatesFitViewport,
@@ -185,6 +185,63 @@ export function drawRouteHighlights(
     context.textBaseline = 'middle';
     context.fillText(String(index + 1), marker.x, marker.y + 0.5);
   });
+}
+
+export function drawMapLandmarks(
+  context: CanvasRenderingContext2D,
+  landmarks: MapLandmark[],
+  width: number,
+  height: number,
+  palette: WorldPalette,
+  viewport: MapViewport = WORLD_VIEWPORT,
+): void {
+  const occupied: Array<{ left: number; right: number; top: number; bottom: number }> = [];
+  context.save();
+  context.font = '700 12px system-ui, sans-serif';
+  context.textBaseline = 'middle';
+
+  for (const landmark of landmarks.slice(0, 5)) {
+    const point = projectCoordinateInView(landmark, width, height, viewport);
+    if (point.x < 14 || point.x > width - 14 || point.y < 14 || point.y > height - 14) continue;
+    const labelWidth = Math.min(150, context.measureText(landmark.name).width + 22);
+    const labelLeft = clamp(point.x + 11, 6, width - labelWidth - 6);
+    const labelTop = clamp(point.y - 14, 6, height - 32);
+    const bounds = {
+      left: labelLeft,
+      right: labelLeft + labelWidth,
+      top: labelTop,
+      bottom: labelTop + 28,
+    };
+    const collides = occupied.some((entry) => !(
+      bounds.right < entry.left
+      || bounds.left > entry.right
+      || bounds.bottom < entry.top
+      || bounds.top > entry.bottom
+    ));
+
+    context.fillStyle = palette.routeHalo;
+    context.beginPath();
+    context.arc(point.x, point.y, 7, 0, Math.PI * 2);
+    context.fill();
+    context.fillStyle = palette.route;
+    context.beginPath();
+    context.arc(point.x, point.y, 3.5, 0, Math.PI * 2);
+    context.fill();
+
+    if (collides) continue;
+    occupied.push(bounds);
+    context.fillStyle = palette.lensBackground;
+    context.strokeStyle = palette.coast;
+    context.lineWidth = 1;
+    context.beginPath();
+    context.roundRect(labelLeft, labelTop, labelWidth, 28, 10);
+    context.fill();
+    context.stroke();
+    context.fillStyle = palette.route;
+    context.textAlign = 'left';
+    context.fillText(landmark.name, labelLeft + 11, labelTop + 14, labelWidth - 18);
+  }
+  context.restore();
 }
 
 export function drawRoute(

@@ -39,7 +39,9 @@ describe('local state', () => {
     const stored = (windBoost: number) => ({
       getItem: () => JSON.stringify({ version: 1, windBoost }),
     });
-    expect(loadState(stored(1.5)).windBoost).toBe(1.5);
+    expect(loadState(stored(4)).windBoost).toBe(4);
+    expect(loadState(stored(10)).windBoost).toBe(10);
+    expect(loadState(stored(1.5)).windBoost).toBe(1);
     expect(loadState(stored(99)).windBoost).toBe(1);
   });
 

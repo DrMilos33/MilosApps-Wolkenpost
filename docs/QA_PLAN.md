@@ -37,8 +37,12 @@ sind mindestens drei Verbesserungsrunden mit dokumentierter Evidenz nötig.
   neuen Start speichern; Pfeiltasten bleiben bedienbar;
 - Welt-/Laenderansicht, Zoom plus/minus und automatisches Herauszoomen bei
   verlassenem Ausschnitt;
-- Windfeld nach bewusster Startwahl sowie Spielwind 1/1,5/2 mit veraenderter
+- Windfeld nach bewusster Startwahl sowie Spielweite 1/4/10 mit veraenderter
   Distanz, aber identischen angezeigten Realwindwerten.
+- Karten-Widget als Overlay auf Desktop und angedockt auf Mobil; echter Wind,
+  Reichweitenschaetzung und Startort bleiben ohne Kartenverlust lesbar.
+- Flugfolge, bewusste Gesamtansicht, Laender-Sehenswuerdigkeiten und sichtbarer
+  Vorbeiflugmoment; die Karte bleibt beim Ergebnis im Blick.
 
 ## Runden
 

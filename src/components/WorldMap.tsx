@@ -9,6 +9,7 @@ import {
 import type {
   Coordinate,
   DrawingStroke,
+  MapLandmark,
   MotionPreference,
   RouteHighlight,
   RouteResult,
@@ -29,6 +30,7 @@ import {
   countryViewportForCoordinate,
   COUNTRY_COUNT,
   drawDrawing,
+  drawMapLandmarks,
   drawRoute,
   drawRouteHighlights,
   drawRouteLens,
@@ -45,6 +47,12 @@ interface WorldMapText {
   worldView: string;
   zoomLevel: (zoom: number) => string;
   dragHint: string;
+  followFlight: string;
+  fitRoute: string;
+  discoveries: string;
+  momentKicker: string;
+  momentNear: (distance: number) => string;
+  momentTime: (hours: number) => string;
 }
 
 interface WorldMapProps {
@@ -54,6 +62,7 @@ interface WorldMapProps {
   highlights?: RouteHighlight[];
   drawing: DrawingStroke[];
   windReading?: WindReading;
+  landmarks?: MapLandmark[];
   motion: MotionPreference;
   theme: ThemePreference;
   onSelect: (coordinate: Coordinate) => void;
@@ -64,7 +73,7 @@ interface WorldMapProps {
   onProgress?: (progress: number) => void;
 }
 
-type ViewMode = 'world' | 'country' | 'custom';
+type ViewMode = 'world' | 'country' | 'custom' | 'route';
 type MapView = MapViewport & { mode: ViewMode };
 
 interface PointerSession {
@@ -92,6 +101,7 @@ export function WorldMap({
   highlights = [],
   drawing,
   windReading,
+  landmarks = [],
   motion,
   theme,
   onSelect,
@@ -113,6 +123,8 @@ export function WorldMap({
   const [dragging, setDragging] = useState(false);
   const [mapView, setMapView] = useState<MapView>(INITIAL_VIEW);
   const viewRef = useRef<MapView>(INITIAL_VIEW);
+  const [following, setFollowing] = useState(false);
+  const followingRef = useRef(false);
   const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
   const systemReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
   const isDark = theme === 'dark' || (theme === 'system' && systemDark.matches);
@@ -121,6 +133,11 @@ export function WorldMap({
   const commitView = useCallback((next: MapView) => {
     viewRef.current = next;
     setMapView((current) => sameView(current, next) ? current : next);
+  }, []);
+
+  const commitFollowing = useCallback((next: boolean) => {
+    followingRef.current = next;
+    setFollowing(next);
   }, []);
 
   const render = useCallback(() => {
@@ -137,7 +154,12 @@ export function WorldMap({
       const visibleCount = Math.max(1, Math.ceil(result.points.length * progressRef.current));
       const visiblePoints = result.points.slice(0, visibleCount);
       objectPosition = visiblePoints.at(-1) ?? result.points[0];
-      if (!coordinateVisibleInViewport(objectPosition, width, height, viewport)) {
+      if (followingRef.current) {
+        const fitted = coordinatesFitViewport(visiblePoints, 8, 0.58);
+        const next: MapView = { ...fitted, mode: 'route' };
+        viewRef.current = next;
+        viewport = next;
+      } else if (!coordinateVisibleInViewport(objectPosition, width, height, viewport)) {
         const expanded = coordinatesFitViewport(visiblePoints, viewport.zoom, 0.66);
         const next: MapView = {
           ...expanded,
@@ -151,6 +173,12 @@ export function WorldMap({
 
     context.clearRect(0, 0, width, height);
     drawWorldBase(context, width, height, palette, viewport);
+
+    if (!result && viewport.zoom >= 2) {
+      const visibleLandmarks = landmarks.filter((landmark) =>
+        coordinateVisibleInViewport(landmark, width, height, viewport, 0.04));
+      drawMapLandmarks(context, visibleLandmarks, width, height, palette, viewport);
+    }
 
     if (windReading && !result) {
       drawWindField(
@@ -279,6 +307,7 @@ export function WorldMap({
     drawing,
     highlights,
     isDark,
+    landmarks,
     result,
     routeLensLabel,
     selected,
@@ -309,6 +338,7 @@ export function WorldMap({
 
   useEffect(() => {
     if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);
+    commitFollowing(Boolean(result));
     progressRef.current = reduced || !result ? 1 : 0;
     lastReportedProgressRef.current = progressRef.current;
     setReportedProgress(progressRef.current);
@@ -329,6 +359,7 @@ export function WorldMap({
       ) {
         lastReportedProgressRef.current = progressRef.current;
         setReportedProgress(progressRef.current);
+        setMapView(viewRef.current);
         onProgress?.(progressRef.current);
       }
       if (progressRef.current < 1) frameRef.current = window.requestAnimationFrame(tick);
@@ -337,7 +368,7 @@ export function WorldMap({
     return () => {
       if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);
     };
-  }, [comparisonResult, onProgress, reduced, render, replayToken, result]);
+  }, [commitFollowing, comparisonResult, onProgress, reduced, render, replayToken, result]);
 
   useEffect(() => {
     const rerender = () => render();
@@ -450,14 +481,17 @@ export function WorldMap({
     else if (event.key === 'ArrowDown') next.latitude = clamp(next.latitude - step, -85, 85);
     else if (event.key === '+' || event.key === '=') {
       event.preventDefault();
+      commitFollowing(false);
       commitView({ center: selected, zoom: clamp(mapView.zoom * 1.35, 1, 16), mode: 'custom' });
       return;
     } else if (event.key === '-') {
       event.preventDefault();
+      commitFollowing(false);
       commitView({ center: selected, zoom: clamp(mapView.zoom / 1.35, 1, 16), mode: 'custom' });
       return;
     } else if (event.key === 'Home') {
       event.preventDefault();
+      commitFollowing(false);
       commitView(INITIAL_VIEW);
       return;
     } else return;
@@ -466,12 +500,21 @@ export function WorldMap({
   };
 
   const changeZoom = (factor: number) => {
+    commitFollowing(false);
     commitView({
       center: selected,
       zoom: clamp(mapView.zoom * factor, 1, 16),
       mode: 'custom',
     });
   };
+
+  const visibleLandmarks = !result && mapView.zoom >= 2
+    ? landmarks.filter((landmark) =>
+        coordinateVisibleInViewport(landmark, 1000, 500, mapView, 0.04)).slice(0, 5)
+    : [];
+  const activeMoment = result
+    ? highlights.filter((highlight) => highlight.progress <= reportedProgress + 0.01).at(-1)
+    : undefined;
 
   return (
     <div className="world-map-stage" data-testid="world-map-stage">
@@ -484,6 +527,7 @@ export function WorldMap({
           className={mapView.mode === 'country' ? 'is-active' : ''}
           aria-pressed={mapView.mode === 'country'}
           onClick={() => {
+            commitFollowing(false);
             const country = countryViewportForCoordinate(selected);
             commitView({ ...country, mode: 'country' });
           }}
@@ -494,10 +538,34 @@ export function WorldMap({
           type="button"
           className={mapView.mode === 'world' ? 'is-active' : ''}
           aria-pressed={mapView.mode === 'world'}
-          onClick={() => commitView(INITIAL_VIEW)}
+          onClick={() => {
+            commitFollowing(false);
+            commitView(INITIAL_VIEW);
+          }}
         >
           {text.worldView}
         </button>
+        {result && (
+          <>
+            <button
+              type="button"
+              className={following ? 'is-active' : ''}
+              aria-pressed={following}
+              onClick={() => commitFollowing(!following)}
+            >
+              {text.followFlight}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                commitFollowing(false);
+                commitView({ ...coordinatesFitViewport(result.points, 8, 0.68), mode: 'route' });
+              }}
+            >
+              {text.fitRoute}
+            </button>
+          </>
+        )}
       </div>
       <canvas
         ref={canvasRef}
@@ -515,6 +583,8 @@ export function WorldMap({
         data-auto-fit={result ? 'enabled' : 'idle'}
         data-drag-state={dragging ? 'dragging' : 'idle'}
         data-wind-overlay={windReading ? 'visible' : 'hidden'}
+        data-follow-flight={following ? 'true' : 'false'}
+        data-visible-landmark-count={visibleLandmarks.length}
         data-selected-key={`${selected.latitude.toFixed(3)},${selected.longitude.toFixed(3)}`}
         data-selected-latitude={selected.latitude.toFixed(3)}
         data-selected-longitude={selected.longitude.toFixed(3)}
@@ -523,6 +593,21 @@ export function WorldMap({
         onKeyDown={onKeyDown}
         tabIndex={0}
       />
+      {visibleLandmarks.length > 0 && (
+        <div className="map-landmark-strip" data-testid="map-landmark-strip">
+          <small>{text.discoveries}</small>
+          <ul>
+            {visibleLandmarks.map((landmark) => <li key={landmark.id}>{landmark.name}</li>)}
+          </ul>
+        </div>
+      )}
+      {activeMoment && (
+        <div className="flight-moment" role="status" data-testid="flight-moment">
+          <small>{text.momentKicker}</small>
+          <strong>{activeMoment.name}</strong>
+          <span>{text.momentNear(activeMoment.distanceKm)} · {text.momentTime(activeMoment.elapsedHours)}</span>
+        </div>
+      )}
     </div>
   );
 }

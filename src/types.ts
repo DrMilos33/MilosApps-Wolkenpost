@@ -1,11 +1,16 @@
 export type ObjectType = 'cloud' | 'balloon' | 'seed' | 'paper-plane';
-export type WindBoost = 1 | 1.5 | 2;
+export type WindBoost = 1 | 4 | 10;
 export type MotionPreference = 'system' | 'full' | 'reduced';
 export type ThemePreference = 'system' | 'light' | 'dark';
 
 export interface Coordinate {
   latitude: number;
   longitude: number;
+}
+
+export interface MapLandmark extends Coordinate {
+  id: string;
+  name: string;
 }
 
 export interface Place extends Coordinate {

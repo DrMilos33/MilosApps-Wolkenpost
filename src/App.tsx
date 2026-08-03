@@ -7,6 +7,7 @@ import { WindScout } from './components/WindScout';
 import { WorldMap } from './components/WorldMap';
 import { copy, type SupportedLanguage } from './copy';
 import { drawingPreset, drawingPresets } from './data/drawing-presets';
+import { LANDMARKS } from './data/landmarks';
 import {
   coarseCoordinate,
   DEFAULT_PLACE,
@@ -591,6 +592,21 @@ export default function App({ initialLanguage: language }: AppProps) {
   const selectedWindReading = activeWindReadings.find(
     (reading) => reading.level === OBJECT_PROFILES[objectType].level,
   );
+  const estimatedDistanceKm = selectedWindReading
+    ? selectedWindReading.speedKmh
+      * OBJECT_PROFILES[objectType].hours
+      * OBJECT_PROFILES[objectType].driftFactor
+      * windBoost
+    : undefined;
+  const mapLandmarks = useMemo(
+    () => LANDMARKS.map((landmark) => ({
+      id: landmark.id,
+      name: landmark.name[language],
+      latitude: landmark.latitude,
+      longitude: landmark.longitude,
+    })),
+    [language],
+  );
 
   return (
     <div
@@ -729,22 +745,54 @@ export default function App({ initialLanguage: language }: AppProps) {
             </div>
 
             <div className="flight-space" ref={flightSpaceRef} data-testid="flight-space">
-              <WorldMap
-                selected={start}
-                result={result}
-                comparisonResult={comparisonResult}
-                highlights={activeRouteHighlights}
-                drawing={strokes}
-                windReading={selectedWindReading}
-                motion={motion}
-                theme={theme}
-                onSelect={selectMapCoordinate}
-                label={text.map.canvasLabel}
-                routeLensLabel={text.flightSpace.routeLens}
-                text={text.map}
-                replayToken={replayToken}
-                onProgress={reportFlightProgress}
-              />
+              <div className="map-canvas-shell">
+                <WorldMap
+                  selected={start}
+                  result={result}
+                  comparisonResult={comparisonResult}
+                  highlights={activeRouteHighlights}
+                  drawing={strokes}
+                  windReading={selectedWindReading}
+                  landmarks={mapLandmarks}
+                  motion={motion}
+                  theme={theme}
+                  onSelect={selectMapCoordinate}
+                  label={text.map.canvasLabel}
+                  routeLensLabel={text.flightSpace.routeLens}
+                  text={text.map}
+                  replayToken={replayToken}
+                  onProgress={reportFlightProgress}
+                />
+
+                <aside className="map-control-widget" data-testid="map-control-widget">
+                  <div className="selected-place" aria-live="polite">
+                    <span className="place-pin" aria-hidden="true">●</span>
+                    <span>
+                      <small>{text.map.selected}</small>
+                      <strong>{start.name}</strong>
+                      <span>{placeContext(start)}</span>
+                    </span>
+                  </div>
+
+                  <WindScout
+                    status={windPreviewStatus}
+                    readings={activeWindReadings}
+                    objectType={objectType}
+                    dataTime={windPreviewSnapshot?.forecastStart}
+                    locale={locale}
+                    text={text.windScout}
+                    error={windPreviewStatus === 'error' ? text.windErrors[windPreviewErrorKind] : undefined}
+                    onCheck={() => void inspectWind(start)}
+                    onCancel={cancelWindPreview}
+                    windBoost={windBoost}
+                    estimatedDistanceKm={estimatedDistanceKm}
+                    onWindBoostChange={(next) => {
+                      setWindBoost(next);
+                      clearFlightResult();
+                    }}
+                  />
+                </aside>
+              </div>
 
               {result && (
                 <section className="result-section" aria-labelledby="result-heading" data-milos-result>
@@ -907,15 +955,6 @@ export default function App({ initialLanguage: language }: AppProps) {
 
             <div className="map-planning-grid">
               <div className="location-planner">
-                <div className="selected-place" aria-live="polite">
-                  <span className="place-pin" aria-hidden="true">●</span>
-                  <span>
-                    <small>{text.map.selected}</small>
-                    <strong>{start.name}</strong>
-                    <span>{placeContext(start)}</span>
-                  </span>
-                </div>
-
                 <div className="place-tools">
                   <milos-place-search
                     key={language}
@@ -961,23 +1000,6 @@ export default function App({ initialLanguage: language }: AppProps) {
                   </div>
                 </details>
               </div>
-
-              <WindScout
-                status={windPreviewStatus}
-                readings={activeWindReadings}
-                objectType={objectType}
-                dataTime={windPreviewSnapshot?.forecastStart}
-                locale={locale}
-                text={text.windScout}
-                error={windPreviewStatus === 'error' ? text.windErrors[windPreviewErrorKind] : undefined}
-                onCheck={() => void inspectWind(start)}
-                onCancel={cancelWindPreview}
-                windBoost={windBoost}
-                onWindBoostChange={(next) => {
-                  setWindBoost(next);
-                  clearFlightResult();
-                }}
-              />
             </div>
           </section>
         </div>
