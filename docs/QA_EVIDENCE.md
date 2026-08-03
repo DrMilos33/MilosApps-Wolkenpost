@@ -728,6 +728,12 @@ Automatisierte Evidenz:
   nicht Teil des Service-Worker-App-Shell-Caches. `THIRD_PARTY_NOTICES.txt`
   wird nun explizit vorgehalten; der anschließende Pages-Build und das
   Fail-closed-Artefaktgate sind grün.
+- Ein echter Windows-Recheckout mit `core.autocrlf=true` bestätigte zunächst den
+  neuen Essentials-v1.1.3-Sechserlock, schrieb aber die älteren vendorten
+  Shell- und Layouttexte mangels enger Vendorregel nach CRLF um. Beide
+  Vendorverzeichnisse besitzen nun ebenfalls `* text eol=lf`; im wiederholten
+  frischen Checkout melden alle drei Vertragsverzeichnisse `i/lf w/lf`, und
+  Shell-, Layout- sowie Essentials-Verifier bestehen gemeinsam.
 
 Outcome: Karte und Wind sind nun eine echte Startentscheidung statt eine kleine
 Nebenanzeige. Länder geben Orientierung, Umrisse liefern sofort spielerische

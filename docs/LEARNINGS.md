@@ -419,3 +419,19 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
   Datenschutzartefakte dürfen bei offlinefähigen Apps nicht nur im Build
   existieren, sondern müssen in der dokumentierten Offline-Grenze enthalten
   oder bewusst als online-only ausgewiesen sein.
+
+## 2026-08-03 – LF-Schutz muss jeden bytegenau gelockten Vendorordner umfassen
+
+- Datum und geprüfter Stand: 3. August 2026, frischer Windows-Recheckout der
+  Karten-/Loaderiteration mit `core.autocrlf=true`.
+- Beobachtung: Der neue Essentials-Ordner blieb wegen seiner engen
+  `.gitattributes` bytegenau, während ältere Shell- und Layoutdateien im selben
+  Checkout nach CRLF umgeschrieben wurden und ihr Verifier korrekt abbrach.
+- Evidenz oder reproduzierbarer Test: `git ls-files --eol` zeigte für
+  Essentials `i/lf w/lf`, für Shell/Layout zunächst `i/lf w/crlf`; danach
+  bestanden alle drei vendorten Verifier in einem neu erzeugten Worktree.
+- Änderung und Regressionstest: Jeder der drei getrennt gelockten
+  Vendorordner besitzt nun die enge Regel `* text eol=lf`. Der Recheckout-Test
+  prüft neben den Hashes ausdrücklich den EOL-Status.
+- Für andere MilosApps relevant: Ja. Eine neue LF-Regel in nur einem aktuellen
+  Vertragsordner schützt ältere parallel vendorte Locks nicht automatisch.
