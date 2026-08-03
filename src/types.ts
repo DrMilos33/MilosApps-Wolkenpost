@@ -1,4 +1,5 @@
 export type ObjectType = 'cloud' | 'balloon' | 'seed' | 'paper-plane';
+export type WindBoost = 1 | 1.5 | 2;
 export type MotionPreference = 'system' | 'full' | 'reduced';
 export type ThemePreference = 'system' | 'light' | 'dark';
 
@@ -68,6 +69,7 @@ export interface RouteResult {
   objectType: ObjectType;
   startLabel: string;
   endLabel: string;
+  windBoost: WindBoost;
 }
 
 export interface RouteHighlight extends Coordinate {
@@ -102,4 +104,5 @@ export interface StoredState {
   motion: MotionPreference;
   theme: ThemePreference;
   soundEnabled: boolean;
+  windBoost: WindBoost;
 }

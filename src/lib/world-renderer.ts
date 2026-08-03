@@ -1,9 +1,23 @@
-import { geoEquirectangular, geoPath, type GeoPermissibleObjects } from 'd3-geo';
+import {
+  geoBounds,
+  geoContains,
+  geoEquirectangular,
+  geoPath,
+  type GeoPermissibleObjects,
+} from 'd3-geo';
 import { feature, mesh } from 'topojson-client';
 import type { GeometryCollection, Topology } from 'topojson-specification';
 import worldData from 'world-atlas/countries-110m.json';
 import type { Coordinate, DrawingStroke, RouteHighlight, RoutePoint } from '../types';
-import { clamp, projectCoordinate, routeSegments } from './geometry';
+import {
+  clamp,
+  coordinatesFitViewport,
+  projectCoordinate,
+  projectCoordinateInView,
+  routeSegmentsInView,
+  WORLD_VIEWPORT,
+  type MapViewport,
+} from './geometry';
 
 type WorldTopology = Topology<{
   countries: GeometryCollection;
@@ -12,7 +26,10 @@ type WorldTopology = Topology<{
 
 const topology = worldData as unknown as WorldTopology;
 const countriesObject = topology.objects.countries;
-const COUNTRIES = feature(topology, countriesObject) as unknown as GeoPermissibleObjects;
+const COUNTRY_FEATURES = feature(topology, countriesObject) as unknown as {
+  features: GeoPermissibleObjects[];
+};
+const COUNTRIES = COUNTRY_FEATURES as unknown as GeoPermissibleObjects;
 const COUNTRY_BORDERS = mesh(
   topology,
   countriesObject,
@@ -20,6 +37,23 @@ const COUNTRY_BORDERS = mesh(
 ) as unknown as GeoPermissibleObjects;
 
 export const COUNTRY_COUNT = countriesObject.geometries.length;
+
+export function countryViewportForCoordinate(coordinate: Coordinate): MapViewport {
+  const country = COUNTRY_FEATURES.features.find((entry) =>
+    geoContains(entry, [coordinate.longitude, coordinate.latitude]));
+  if (!country) {
+    return { center: coordinate, zoom: 4 };
+  }
+  const [[west, south], [east, north]] = geoBounds(country);
+  const viewport = coordinatesFitViewport([
+    { latitude: south, longitude: west },
+    { latitude: north, longitude: east },
+  ], 14, 0.62);
+  return {
+    center: viewport.center,
+    zoom: Math.max(2, viewport.zoom),
+  };
+}
 
 export interface WorldPalette {
   oceanTop: string;
@@ -69,6 +103,7 @@ export function drawWorldBase(
   width: number,
   height: number,
   palette: WorldPalette,
+  viewport: MapViewport = WORLD_VIEWPORT,
 ): void {
   const gradient = context.createLinearGradient(0, 0, 0, height);
   gradient.addColorStop(0, palette.oceanTop);
@@ -79,14 +114,16 @@ export function drawWorldBase(
   context.strokeStyle = palette.grid;
   context.lineWidth = 1;
   for (let longitude = -150; longitude <= 150; longitude += 30) {
-    const x = projectCoordinate({ latitude: 0, longitude }, width, height).x;
+    const x = projectCoordinateInView({ latitude: 0, longitude }, width, height, viewport).x;
+    if (x < 0 || x > width) continue;
     context.beginPath();
     context.moveTo(x, 0);
     context.lineTo(x, height);
     context.stroke();
   }
   for (let latitude = -60; latitude <= 60; latitude += 30) {
-    const y = projectCoordinate({ latitude, longitude: 0 }, width, height).y;
+    const y = projectCoordinateInView({ latitude, longitude: 0 }, width, height, viewport).y;
+    if (y < 0 || y > height) continue;
     context.beginPath();
     context.moveTo(0, y);
     context.lineTo(width, y);
@@ -99,19 +136,23 @@ export function drawWorldBase(
     .precision(0.35);
   const path = geoPath(projection, context);
   context.save();
+  const center = projectCoordinate(viewport.center, width, height);
+  context.translate(width / 2, height / 2);
+  context.scale(viewport.zoom, viewport.zoom);
+  context.translate(-center.x, -center.y);
   context.scale(width / 360, height / 180);
   context.beginPath();
   path(COUNTRIES);
   context.fillStyle = palette.land;
   context.fill();
   context.strokeStyle = palette.coast;
-  context.lineWidth = Math.max(0.45, 360 / Math.max(width, 720));
+  context.lineWidth = Math.max(0.45, 360 / Math.max(width, 720)) / viewport.zoom;
   context.stroke();
 
   context.beginPath();
   path(COUNTRY_BORDERS);
   context.strokeStyle = palette.countryBorder;
-  context.lineWidth = Math.max(0.28, 260 / Math.max(width, 760));
+  context.lineWidth = Math.max(0.28, 260 / Math.max(width, 760)) / viewport.zoom;
   context.stroke();
   context.restore();
 }
@@ -123,10 +164,12 @@ export function drawRouteHighlights(
   width: number,
   height: number,
   palette: WorldPalette,
+  viewport: MapViewport = WORLD_VIEWPORT,
 ): void {
   highlights.forEach((highlight, index) => {
     if (highlight.progress > progress + 0.01) return;
-    const marker = projectCoordinate(highlight, width, height);
+    const marker = projectCoordinateInView(highlight, width, height, viewport);
+    if (marker.x < -20 || marker.x > width + 20 || marker.y < -20 || marker.y > height + 20) return;
     const radius = Math.max(8, Math.min(12, width / 90));
     context.fillStyle = palette.routeHalo;
     context.beginPath();
@@ -157,10 +200,11 @@ export function drawRoute(
     drawStart?: boolean;
     drawTarget?: boolean;
   } = {},
+  viewport: MapViewport = WORLD_VIEWPORT,
 ): Coordinate {
   const visibleCount = Math.max(1, Math.ceil(points.length * Math.min(1, Math.max(0, progress))));
   const visible = points.slice(0, visibleCount);
-  const segments = routeSegments(visible, width, height);
+  const segments = routeSegmentsInView(visible, width, height, viewport);
 
   const renderPath = (strokeStyle: string, lineWidth: number) => {
     context.strokeStyle = strokeStyle;
@@ -183,7 +227,7 @@ export function drawRoute(
   renderPath(haloColor, Math.max(5, width / 120));
   renderPath(routeColor, Math.max(2.5, width / 260));
 
-  const first = projectCoordinate(points[0], width, height);
+  const first = projectCoordinateInView(points[0], width, height, viewport);
   if (options.drawStart !== false) {
     context.fillStyle = haloColor;
     context.beginPath();
@@ -196,7 +240,7 @@ export function drawRoute(
   }
 
   if (options.drawTarget !== false) {
-    const target = projectCoordinate(points.at(-1) ?? points[0], width, height);
+    const target = projectCoordinateInView(points.at(-1) ?? points[0], width, height, viewport);
     const radius = Math.max(5, width / 160);
     context.save();
     context.translate(target.x, target.y);
@@ -218,8 +262,9 @@ export function drawWindArrow(
   width: number,
   height: number,
   color: string,
+  viewport: MapViewport = WORLD_VIEWPORT,
 ): void {
-  const center = projectCoordinate(coordinate, width, height);
+  const center = projectCoordinateInView(coordinate, width, height, viewport);
   const size = Math.max(14, Math.min(22, width / 24));
   context.save();
   context.translate(center.x, center.y);
@@ -240,6 +285,72 @@ export function drawWindArrow(
   context.restore();
 }
 
+export function drawWindField(
+  context: CanvasRenderingContext2D,
+  coordinate: Coordinate,
+  bearing: number,
+  speedKmh: number,
+  width: number,
+  height: number,
+  palette: WorldPalette,
+  viewport: MapViewport = WORLD_VIEWPORT,
+): void {
+  const center = projectCoordinateInView(coordinate, width, height, viewport);
+  const strength = clamp(speedKmh / 75, 0.18, 1);
+  const length = 38 + 54 * strength;
+  const spacing = Math.max(17, Math.min(28, width / 32));
+  const angle = (bearing * Math.PI) / 180;
+  const along = { x: Math.sin(angle), y: -Math.cos(angle) };
+  const across = { x: Math.cos(angle), y: Math.sin(angle) };
+
+  context.save();
+  context.lineCap = 'round';
+  for (let lane = -2; lane <= 2; lane += 1) {
+    const offset = lane * spacing;
+    const originX = center.x + across.x * offset - along.x * length * 0.55;
+    const originY = center.y + across.y * offset - along.y * length * 0.55;
+    const gradient = context.createLinearGradient(
+      originX,
+      originY,
+      originX + along.x * length,
+      originY + along.y * length,
+    );
+    gradient.addColorStop(0, 'rgba(255,255,255,0)');
+    gradient.addColorStop(0.28, palette.routeHalo);
+    gradient.addColorStop(1, palette.route);
+    context.strokeStyle = gradient;
+    context.lineWidth = 2 + strength * 1.8;
+    context.globalAlpha = 0.38 + strength * 0.38;
+    context.beginPath();
+    context.moveTo(originX, originY);
+    context.quadraticCurveTo(
+      originX + along.x * length * 0.48 + across.x * lane * 1.5,
+      originY + along.y * length * 0.48 + across.y * lane * 1.5,
+      originX + along.x * length,
+      originY + along.y * length,
+    );
+    context.stroke();
+  }
+  context.globalAlpha = 1;
+  context.fillStyle = palette.lensBackground;
+  context.strokeStyle = palette.coast;
+  context.lineWidth = 1;
+  const label = `${Math.round(speedKmh)} km/h`;
+  context.font = '700 12px system-ui, sans-serif';
+  const badgeWidth = context.measureText(label).width + 18;
+  const badgeX = clamp(center.x + 18, 6, width - badgeWidth - 6);
+  const badgeY = clamp(center.y - 40, 6, height - 28);
+  context.beginPath();
+  context.roundRect(badgeX, badgeY, badgeWidth, 24, 12);
+  context.fill();
+  context.stroke();
+  context.fillStyle = palette.route;
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.fillText(label, badgeX + badgeWidth / 2, badgeY + 12);
+  context.restore();
+}
+
 function longitudeOffset(longitude: number, origin: number): number {
   return ((((longitude - origin) + 540) % 360) - 180);
 }
@@ -252,6 +363,7 @@ export function drawRouteLens(
   height: number,
   palette: WorldPalette,
   label: string,
+  viewport: MapViewport = WORLD_VIEWPORT,
 ): void {
   const usableRoutes = routes.filter((route) => route.points.length > 1);
   if (!usableRoutes.length) return;
@@ -267,7 +379,7 @@ export function drawRouteLens(
 
   const lensWidth = Math.min(width - 20, Math.max(150, width * 0.47));
   const lensHeight = Math.min(height - 20, Math.max(92, height * 0.42));
-  const routeStart = projectCoordinate(usableRoutes[0].points[0], width, height);
+  const routeStart = projectCoordinateInView(usableRoutes[0].points[0], width, height, viewport);
   const left = routeStart.x > width / 2 ? 10 : width - lensWidth - 10;
   const top = routeStart.y > height / 2 ? 10 : height - lensHeight - 10;
   const titleHeight = 24;
@@ -376,8 +488,9 @@ export function drawDrawing(
   width: number,
   height: number,
   options: { size?: number; fill?: string; halo?: string } = {},
+  viewport: MapViewport = WORLD_VIEWPORT,
 ): void {
-  const center = projectCoordinate(coordinate, width, height);
+  const center = projectCoordinateInView(coordinate, width, height, viewport);
   const size = options.size ?? Math.max(34, width / 19);
   const left = center.x - size / 2;
   const top = center.y - size / 2;

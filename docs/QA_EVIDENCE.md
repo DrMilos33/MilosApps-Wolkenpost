@@ -780,6 +780,37 @@ Automatisierte Evidenz der Contract-Stufe:
 - echter temporärer Windows-Recheckout mit `core.autocrlf=true`: alle Dateien
   im Essentials-Vendorordner `i/lf w/lf`; Essentials- und Shell-Verifier PASS.
 
+## Interaktive Windkarte - zwei sichtbare Runden
+
+Runde 1 pruefte den neuen zusammenhaengenden Bedienfluss auf Desktop und
+Smartphone: Figur per Maus/Touch verschieben, Wind nach der Startwahl auf der
+Karte, Welt-/Laenderansicht, Zoom und Spielwind. Der Pointer-Abbruch schreibt
+keinen Start; vier Kartenknopfe messen jeweils mindestens 44 x 44 px. Ein
+Unit-Gate belegt, dass Faktor 2 die Distanz deutlich vergroessert, aber
+Punkt-, Durchschnitts- und Maximalwind unveraendert laesst.
+
+Runde 2 pruefte die sichtbare Laenderkarte bei 1440 x 900 und 390 x 844 sowie
+den 360 x 800@200-Prozent-Fall. Laenderlinien behalten beim Zoom ihre
+Bildschirmstaerke; Berlin, Figur, Richtungsbahnen und km/h-Badge sind gemeinsam
+lesbar. Der Reflow blieb bei 180/180 CSS-Pixeln ohne horizontalen Overflow.
+Das bestehende Gameplay-Gate fand einen begrenzenden Toolbar-Wrapper, durch
+den die Sticky-Karte beim Vergleich aus dem Viewport rutschte. Nach der
+`display: contents`-Korrektur bestanden Route-im-Blick, Vergleich/Replay und
+mobiler/200-Prozent-Reflow 3/3.
+
+Automatisierte Evidenz auf dem lokalen Featurestand:
+
+- Vitest 32/32 PASS;
+- Standardbuild PASS;
+- Karten-/Windinteraktion Desktop und Phone 4 anwendbare Faelle PASS;
+- Gameplay Desktop 3/3 PASS;
+- Eingabematrix Smartphone hoch/quer, Tablet, Desktop 12/12 PASS;
+- Resilienzgate 6 anwendbare Faelle PASS: Abbruch, Netzwerk, Timeout,
+  verweigerte Ortung, Offline/Demo und App-Resume;
+- Accessibility/Export/PWA 6 anwendbare Faelle PASS: DE/EN, Hell/Dunkel,
+  Reduced Motion, 320-Reflow, privater PNG-Export und Offline-Shell;
+- visuelles Layoutgate Desktop/Dark/375/390/EN/200-Prozent 6/6 PASS.
+
 ## Verbleibende Prüfgrenzen
 
 - Keine echte Betriebslast oder API-Quota-Prüfung; nur ein einzelner echter

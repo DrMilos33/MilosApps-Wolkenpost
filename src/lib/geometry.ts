@@ -66,6 +66,96 @@ export function projectCoordinate(
   };
 }
 
+export interface MapViewport {
+  center: Coordinate;
+  zoom: number;
+}
+
+export const WORLD_VIEWPORT: MapViewport = {
+  center: { latitude: 0, longitude: 0 },
+  zoom: 1,
+};
+
+function longitudeOffset(longitude: number, origin: number): number {
+  return ((((longitude - origin) + 540) % 360) - 180);
+}
+
+export function projectCoordinateInView(
+  coordinate: Coordinate,
+  width: number,
+  height: number,
+  viewport: MapViewport = WORLD_VIEWPORT,
+): { x: number; y: number } {
+  return {
+    x: width / 2 + (longitudeOffset(coordinate.longitude, viewport.center.longitude) / 360)
+      * width * viewport.zoom,
+    y: height / 2 - ((coordinate.latitude - viewport.center.latitude) / 180)
+      * height * viewport.zoom,
+  };
+}
+
+export function coordinateFromViewProjection(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  viewport: MapViewport = WORLD_VIEWPORT,
+): Coordinate {
+  return {
+    latitude: clamp(
+      viewport.center.latitude - ((y - height / 2) / (height * viewport.zoom)) * 180,
+      -85,
+      85,
+    ),
+    longitude: wrapLongitude(
+      viewport.center.longitude + ((x - width / 2) / (width * viewport.zoom)) * 360,
+    ),
+  };
+}
+
+export function coordinatesFitViewport(
+  coordinates: Coordinate[],
+  maximumZoom = 8,
+  paddingFactor = 0.68,
+): MapViewport {
+  if (!coordinates.length) return WORLD_VIEWPORT;
+  const origin = coordinates[0].longitude;
+  const longitudes = coordinates.map((point) => longitudeOffset(point.longitude, origin));
+  const latitudes = coordinates.map((point) => point.latitude);
+  const minimumLongitude = Math.min(...longitudes);
+  const maximumLongitude = Math.max(...longitudes);
+  const minimumLatitude = Math.min(...latitudes);
+  const maximumLatitude = Math.max(...latitudes);
+  const longitudeSpan = Math.max(4, maximumLongitude - minimumLongitude);
+  const latitudeSpan = Math.max(3, maximumLatitude - minimumLatitude);
+  const zoom = clamp(
+    Math.min(360 / longitudeSpan, 180 / latitudeSpan) * paddingFactor,
+    1,
+    maximumZoom,
+  );
+  return {
+    center: {
+      longitude: wrapLongitude(origin + (minimumLongitude + maximumLongitude) / 2),
+      latitude: clamp((minimumLatitude + maximumLatitude) / 2, -75, 75),
+    },
+    zoom,
+  };
+}
+
+export function coordinateVisibleInViewport(
+  coordinate: Coordinate,
+  width: number,
+  height: number,
+  viewport: MapViewport,
+  inset = 0.12,
+): boolean {
+  const point = projectCoordinateInView(coordinate, width, height, viewport);
+  return point.x >= width * inset
+    && point.x <= width * (1 - inset)
+    && point.y >= height * inset
+    && point.y <= height * (1 - inset);
+}
+
 export function coordinateFromProjection(
   x: number,
   y: number,
@@ -90,6 +180,30 @@ export function routeSegments<T extends Coordinate>(
     const projected = { ...projectCoordinate(point, width, height), source: point };
     const previous = current.at(-1);
     if (previous && Math.abs(projected.x - previous.x) > width / 2) {
+      if (current.length) segments.push(current);
+      current = [projected];
+    } else {
+      current.push(projected);
+    }
+  }
+
+  if (current.length) segments.push(current);
+  return segments;
+}
+
+export function routeSegmentsInView<T extends Coordinate>(
+  points: T[],
+  width: number,
+  height: number,
+  viewport: MapViewport,
+): Array<Array<{ x: number; y: number; source: T }>> {
+  const segments: Array<Array<{ x: number; y: number; source: T }>> = [];
+  let current: Array<{ x: number; y: number; source: T }> = [];
+
+  for (const point of points) {
+    const projected = { ...projectCoordinateInView(point, width, height, viewport), source: point };
+    const previous = current.at(-1);
+    if (previous && Math.abs(projected.x - previous.x) > width * viewport.zoom / 2) {
       if (current.length) segments.push(current);
       current = [projected];
     } else {

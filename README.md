@@ -10,6 +10,15 @@ dem Flug nennt die App kuratierte große Orte und Wahrzeichen nahe der Route.
 Das Ergebnis ist eine persönliche, grobe Modellroute, kein fremdes Video- oder
 Kartenportal und keine Navigation.
 
+Die Karte kann zwischen Welt- und Laenderfokus wechseln und stufenweise
+zoomen. Die gezeichnete Figur ist vor dem Start mit Maus, Touch oder Stift
+direkt verschiebbar; Pfeiltasten bleiben die gleichwertige Alternative. Nach
+einer neuen Startwahl erscheint der Wind des aktiven Hoehenprofils auch als
+Richtungsfeld auf der Karte. Verlaesst die Figur den sichtbaren Flugraum,
+erweitert die Ansicht automatisch den Ausschnitt. Ein klar als Spielwind
+bezeichneter Faktor kann nur die Flugweite vergroessern; angezeigte
+Windgeschwindigkeit und Richtung bleiben die echten Werte des Snapshots.
+
 ## Feste Grenzen
 
 - kein Konto und keine App-Datenbank;

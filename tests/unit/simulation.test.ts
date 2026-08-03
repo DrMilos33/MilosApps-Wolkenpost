@@ -32,6 +32,19 @@ describe('route simulation', () => {
     expect(first.points[0].bearing).toBe(first.points[1].bearing);
   });
 
+  it('stretches the playful route without relabelling the measured wind', () => {
+    const wind = field({ east: 12, north: 2 });
+    const real = simulateRoute({ latitude: 52.5, longitude: 13.5 }, 'Berlin', 'cloud', wind, 1);
+    const playful = simulateRoute({ latitude: 52.5, longitude: 13.5 }, 'Berlin', 'cloud', wind, 2);
+
+    expect(playful.distanceKm).toBeGreaterThan(real.distanceKm * 1.9);
+    expect(playful.maxSpeedKmh).toBeCloseTo(real.maxSpeedKmh, 10);
+    expect(playful.averageSpeedKmh).toBeCloseTo(real.averageSpeedKmh, 10);
+    expect(playful.points[24].speed).toBeCloseTo(real.points[24].speed, 10);
+    expect(playful.windBoost).toBe(2);
+    expect(real.windBoost).toBe(1);
+  });
+
   it('keeps a weak-wind route at the start', () => {
     const result = simulateRoute(
       { latitude: 52.5, longitude: 13.5 },

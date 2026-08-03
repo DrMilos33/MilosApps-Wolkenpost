@@ -31,6 +31,7 @@ function result(points: RoutePoint[]): RouteResult {
     objectType: 'cloud',
     startLabel: 'Berlin',
     endLabel: 'Paris',
+    windBoost: 1,
   };
 }
 

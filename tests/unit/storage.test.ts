@@ -31,7 +31,16 @@ describe('local state', () => {
     expect(result.objectType).toBe('cloud');
     expect(result.motion).toBe('system');
     expect(result.theme).toBe('system');
+    expect(result.windBoost).toBe(1);
     expect(result.drawing[0].points).toHaveLength(1);
+  });
+
+  it('keeps only supported playful wind multipliers', () => {
+    const stored = (windBoost: number) => ({
+      getItem: () => JSON.stringify({ version: 1, windBoost }),
+    });
+    expect(loadState(stored(1.5)).windBoost).toBe(1.5);
+    expect(loadState(stored(99)).windBoost).toBe(1);
   });
 
   it('reports storage quota failures without throwing', () => {

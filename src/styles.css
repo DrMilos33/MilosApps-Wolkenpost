@@ -613,6 +613,44 @@ button:disabled {
   max-width: 100%;
 }
 
+.world-map-stage {
+  display: contents;
+}
+
+.map-view-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.55rem;
+  padding-inline: 0.1rem;
+}
+
+.map-view-toolbar button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-strong);
+  color: var(--ink);
+  font-weight: 750;
+}
+
+.map-view-toolbar button.is-active,
+.map-view-toolbar button[aria-pressed='true'] {
+  border-color: var(--brand);
+  background: color-mix(in srgb, var(--brand) 12%, var(--surface-strong));
+  color: var(--brand);
+}
+
+.map-view-toolbar output {
+  min-width: 5.8rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
 .world-map {
   display: block;
   width: 100%;
@@ -622,7 +660,13 @@ button:disabled {
   border: 1px solid var(--line);
   border-radius: 22px;
   cursor: crosshair;
-  touch-action: pan-y;
+  touch-action: none;
+}
+
+.world-map[data-drag-state='dragging'] {
+  cursor: grabbing;
+  outline: 3px solid color-mix(in srgb, var(--accent) 52%, transparent);
+  outline-offset: 2px;
 }
 
 .map-detail {
@@ -680,6 +724,73 @@ button:disabled {
 .wind-scout h3,
 .wind-scout-heading .step-kicker {
   margin: 0;
+}
+
+.wind-boost {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-strong) 78%, transparent);
+}
+
+.wind-boost legend {
+  padding-inline: 0.25rem;
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.wind-boost p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.wind-boost-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.wind-boost-options button {
+  display: grid;
+  min-width: 0;
+  min-height: 58px;
+  place-items: center;
+  gap: 0.12rem;
+  padding: 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-strong);
+  color: var(--ink);
+  text-align: center;
+}
+
+.wind-boost-options button.is-selected {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.wind-boost-options span {
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+
+.play-wind-result {
+  margin: 0.55rem 0;
+  padding: 0.7rem 0.85rem;
+  border-inline-start: 4px solid var(--accent);
+  border-radius: 0 12px 12px 0;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-strong));
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 650;
 }
 
 .wind-scout > p,
@@ -1550,6 +1661,16 @@ button:disabled {
     aspect-ratio: 1.28;
   }
 
+  .map-view-toolbar output {
+    order: -1;
+    width: 100%;
+    text-align: start;
+  }
+
+  .map-view-toolbar button {
+    flex: 1 1 auto;
+  }
+
   .wind-readings article > strong {
     white-space: normal;
   }
@@ -1736,6 +1857,10 @@ button:disabled {
 
   .wind-scout {
     padding-inline: 0.6rem;
+  }
+
+  .wind-boost-options {
+    grid-template-columns: 1fr;
   }
 
   .wind-compass {
