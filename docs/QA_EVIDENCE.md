@@ -943,3 +943,11 @@ Prüfgrenzen bleiben ehrlich: Die Landmarken-Fotomontage ist nur für die zwei
 lokal vendorten Motive Eiffelturm und Kölner Dom verfügbar. Route, Wind und
 „vorbeigeflogen“-Hinweise sind weiterhin eine spielerische Modellierung, keine
 Navigation oder exakte Ballistik.
+
+Der erste Linux-CI-Lauf machte zwei Windows-lokal nicht sichtbare
+Schriftmetriken transparent: 12 Pixel Überbreite nach dem Flug bei 320 Pixeln
+und eine zu starre 22-Pixel-Testannahme für die kompakten Titel. Textblöcke im
+Ergebnis-/Reisejournal erhalten deshalb unter 390 Pixeln jetzt einen echten
+Umbruchpuffer; das Titelgate prüft eine gemeinsame Zeile relativ zum höchsten
+Kind statt gegen eine betriebssystemspezifische absolute Höhe. Die gezielte
+Regression besteht 320, 375, 390 und 360×800@200 %.

@@ -48,11 +48,30 @@ export async function startFlight(page: Page) {
 }
 
 export async function expectNoHorizontalOverflow(page: Page) {
-  const sizes = await page.evaluate(() => ({
-    scrollWidth: document.documentElement.scrollWidth,
-    clientWidth: document.documentElement.clientWidth,
-  }));
-  expect(sizes.scrollWidth).toBeLessThanOrEqual(sizes.clientWidth + 1);
+  const sizes = await page.evaluate(() => {
+    const clientWidth = document.documentElement.clientWidth;
+    const offenders = Array.from(document.querySelectorAll<HTMLElement>('body *'))
+      .map((element) => {
+        const bounds = element.getBoundingClientRect();
+        return {
+          selector: `${element.tagName.toLowerCase()}.${element.className}`,
+          left: bounds.left,
+          right: bounds.right,
+          width: bounds.width,
+        };
+      })
+      .filter(({ left, right }) => left < -1 || right > clientWidth + 1)
+      .slice(0, 8);
+    return {
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth,
+      offenders,
+    };
+  });
+  expect(
+    sizes.scrollWidth,
+    `Horizontal overflow offenders: ${JSON.stringify(sizes.offenders)}`,
+  ).toBeLessThanOrEqual(sizes.clientWidth + 1);
 }
 
 export function recordConsoleProblems(page: Page): string[] {

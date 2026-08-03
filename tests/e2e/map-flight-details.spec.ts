@@ -51,13 +51,22 @@ test.describe('map and flight-detail experience', () => {
     expect(widgetGeometry.width).toBeGreaterThanOrEqual(280);
     expect(widgetGeometry.width).toBeLessThanOrEqual(360);
     const titleLines = await page.locator('.step-title-line, .wind-title-line').evaluateAll((elements) =>
-      elements.map((element) => ({
-        height: element.getBoundingClientRect().height,
-        width: element.getBoundingClientRect().width,
-        scrollWidth: element.scrollWidth,
-      })),
+      elements.map((element) => {
+        const bounds = element.getBoundingClientRect();
+        const tallestChild = Math.max(...Array.from(element.children)
+          .map((child) => child.getBoundingClientRect().height));
+        return {
+          height: bounds.height,
+          tallestChild,
+          width: bounds.width,
+          scrollWidth: element.scrollWidth,
+        };
+      }),
     );
-    expect(titleLines.every((line) => line.height < 22 && line.scrollWidth <= line.width + 1)).toBe(true);
+    expect(titleLines.every((line) => (
+      line.height <= line.tallestChild + 2
+      && line.scrollWidth <= line.width + 1
+    ))).toBe(true);
     await expect(page.getByTestId('world-map')).toHaveAttribute('data-country-detail', 'natural-earth-110m');
     expect(Number(await page.getByTestId('world-map').getAttribute('data-country-count'))).toBeGreaterThan(170);
     await page.getByRole('button', { name: 'Land fokussieren' }).click();

@@ -630,3 +630,21 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
 - Für andere MilosApps relevant: Ja. Lokale Fortschrittswerte gehören in das
   erklärte Zweckinventar und in denselben vorhersehbaren Löschfluss wie andere
   App-Daten.
+
+## 2026-08-03 – Einzeiligkeit relativ statt betriebssystemspezifisch prüfen
+
+- Datum und geprüfter Stand: 3. August 2026, Linux-CI-Folgefix des
+  Reise-Arbeitsplatzes.
+- Beobachtung: Derselbe kompakte Titel blieb unter Windows und Linux
+  einzeilig, überschritt unter der Linux-Schriftmetrik aber eine feste
+  22-Pixel-Testgrenze.
+- Evidenz oder reproduzierbarer Test: Die CI meldete nur die absolute Höhe;
+  Scrollbreite und Layoutfluss blieben korrekt. Ein separater 320-Pixel-Befund
+  zeigte außerdem, dass Ergebnistext einen kleinen echten Umbruchpuffer
+  benötigt.
+- Änderung und Regressionstest: Das Titelgate vergleicht die Containerhöhe nun
+  mit dem höchsten Kind plus Rundungspuffer und verlangt weiterhin fehlenden
+  horizontalen Overflow. Ergebnis- und Reisejournaltexte dürfen unter 390
+  Pixeln an beliebigen langen Wörtern umbrechen.
+- Für andere MilosApps relevant: Ja. Einzeiligkeitsgates sollten Zeilenstruktur
+  und verfügbare Breite prüfen, nicht eine OS-abhängige absolute Pixelhöhe.

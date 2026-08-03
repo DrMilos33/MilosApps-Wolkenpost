@@ -2437,6 +2437,25 @@ button:disabled {
 }
 
 @media (max-width: 390px) {
+  .flight-space,
+  .map-step,
+  .result-section,
+  .travel-journal,
+  .travel-journal-grid,
+  .travel-journal-details,
+  .travel-photo,
+  .journey-event,
+  .daily-mission,
+  .travel-passport {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .result-section :where(h3, h4, p, strong, span, a, dt, dd),
+  .travel-journal :where(h3, h4, p, strong, span, a, dt, dd) {
+    overflow-wrap: anywhere;
+  }
+
   .result-metrics,
   .map-step .result-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
