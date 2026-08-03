@@ -2089,7 +2089,30 @@ button:disabled {
 
   .map-control-widget .wind-scout {
     contain: inline-size;
+    width: 100%;
     overflow-x: hidden;
+  }
+
+  .map-control-widget .wind-scout > *,
+  .map-control-widget .wind-boost,
+  .map-control-widget .wind-boost-options,
+  .map-control-widget .wind-primary-reading,
+  .map-control-widget .wind-more-levels,
+  .map-control-widget .wind-scout-actions {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .map-control-widget .wind-scout-heading,
+  .map-control-widget .wind-primary-reading,
+  .map-control-widget .wind-scout-actions {
+    overflow: hidden;
+  }
+
+  .map-control-widget .wind-scout-actions > span,
+  .map-control-widget .wind-primary-reading > span:last-child,
+  .map-control-widget .range-preview {
+    overflow-wrap: anywhere;
   }
 
   .wind-scout-actions button {

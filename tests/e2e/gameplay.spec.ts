@@ -94,6 +94,11 @@ test('completed and compared flights reflow on mobile and at 200 percent', async
 
   await page.setViewportSize({ width: 180, height: 400 });
   await expectNoHorizontalOverflow(page);
+  const windScoutWidth = await page.getByTestId('wind-scout').evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }));
+  expect(windScoutWidth.scrollWidth).toBeLessThanOrEqual(windScoutWidth.clientWidth + 1);
   const clipped = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>(
     '.flight-space *, .comparison-lab *, .result-actions *',
   )].filter((element) => {
