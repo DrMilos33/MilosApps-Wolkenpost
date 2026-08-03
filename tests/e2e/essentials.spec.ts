@@ -292,6 +292,7 @@ test('shared result share uses native, clipboard and cancellation paths without 
   });
   await share.getByRole('button', { name: 'Teilen' }).click();
   await expect(share.locator('[data-milos-share-status]')).toHaveText('');
+  await expect(share.locator('[data-milos-share-status]')).toHaveAttribute('data-visible', 'false');
   expect(await measureShareGeometry()).toEqual(initialShareGeometry);
 });
 

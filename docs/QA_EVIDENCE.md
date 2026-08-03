@@ -740,6 +740,14 @@ Automatisierte Evidenz:
   zweispaltigen Objektwahl. Griditem und Textspalte dürfen nun schrumpfen und
   lange deutsche Komposita bei Bedarf umbrechen; das fokussierte Gate prüft
   zusätzlich jede Objektoption auf eigene Scrollbreite.
+- Zwei identische docs-only CI-Läufe lieferten beim nativen Share-Abbruch einmal
+  PASS und einmal einen um 14,72 px verschobenen Shareknopf bei unveränderter
+  eigener Größe. Die erste Härtung auf `data-visible=false` belegte, dass nicht
+  die Shared-Komponente, sondern der davor stehende Exportknopf während der
+  asynchronen Payload-Erzeugung noch zwischen „Ergebnisbild speichern“ und
+  „Grafik wird erstellt …“ wechselte. Eine feste, mobil weiter reflowende
+  14-rem-Breite deckt beide DE/EN-Labels ab; das Gate wartet zusätzlich auf den
+  autoritativen Sharezustand.
 
 Outcome: Karte und Wind sind nun eine echte Startentscheidung statt eine kleine
 Nebenanzeige. Länder geben Orientierung, Umrisse liefern sofort spielerische
