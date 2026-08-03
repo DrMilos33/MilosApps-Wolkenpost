@@ -29,7 +29,7 @@ const essentialsLockedFiles = [
   'verify.mjs',
   'essentials-manifest.schema.json',
 ];
-const [index, serviceWorker, manifestText, healthText, integrationText, shellLockText, layoutLockText, essentialsLockText, sourceIcon, builtIcon] = await Promise.all([
+const [index, serviceWorker, manifestText, healthText, integrationText, shellLockText, layoutLockText, essentialsLockText, sourceIcon, builtIcon, thirdPartyNotices] = await Promise.all([
   readFile('dist/index.html', 'utf8'),
   readFile('dist/sw.js', 'utf8'),
   readFile('dist/manifest.webmanifest', 'utf8'),
@@ -40,6 +40,7 @@ const [index, serviceWorker, manifestText, healthText, integrationText, shellLoc
   readFile(`${essentialsDirectory}/essentials-lock.json`, 'utf8'),
   readFile('public/icon.svg'),
   readFile('dist/icon.svg'),
+  readFile('dist/THIRD_PARTY_NOTICES.txt', 'utf8'),
 ]);
 const shellArtifacts = await Promise.all(
   shellRuntimeFiles.map((file) => readFile(`dist/${shellDirectory}/${file}`)),
@@ -94,8 +95,10 @@ const checks = [
   [integration.preview?.path === `${BASE}preview.png`, 'Integration metadata contains the wrong preview path.'],
   [integration.preview?.url === `${DEV_URL}preview.png`, 'Integration metadata contains the wrong preview URL.'],
   [sha256(builtIcon) === sha256(sourceIcon), 'Built loading icon is not byte-identical to public/icon.svg.'],
-  [essentialsLock.version === '1.1.2', 'Essentials lock is not pinned to v1.1.2.'],
-  [essentialsLock.sharedCommit === 'b14aac6107b75f03ff49e74160af7e7e30c29e59', 'Essentials lock contains the wrong Shared commit.'],
+  [thirdPartyNotices.includes('Natural Earth') && thirdPartyNotices.includes('world-atlas 2.0.2'), 'Built artifact is missing the Natural Earth/world-atlas notices.'],
+  [serviceWorker.includes(`${BASE}THIRD_PARTY_NOTICES.txt`), 'The service worker does not cache the third-party notices.'],
+  [essentialsLock.version === '1.1.3', 'Essentials lock is not pinned to v1.1.3.'],
+  [essentialsLock.sharedCommit === 'babe74a0e62e1a7f9095648195e54b322a837726', 'Essentials lock contains the wrong Shared commit.'],
   [essentialsLock.loadingIconRuntimePath === 'icon.svg', 'Essentials lock contains the wrong icon runtime path.'],
   [JSON.stringify(Object.keys(essentialsLock.artifacts).sort()) === JSON.stringify([...essentialsLockedFiles].sort()), 'Essentials lock must contain exactly six consumer artifacts.'],
   ...shellRuntimeFiles.map((file, index) => [

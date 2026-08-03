@@ -6,13 +6,16 @@ Stand: 3. August 2026
 
 - React 19 und TypeScript 7 für klar getrennte Zustands- und Interaktionslogik;
 - Vite 8 für lokalen DEV-Server und statischen Build;
+- Natural-Earth-110-m-Ländergeometrie über fest gepinntes `world-atlas` sowie
+  `d3-geo`/`topojson-client` für die lokale Canvas-Darstellung; keine Tiles und
+  kein Karten-Netzaufruf;
 - keine Serverkomponente, App-Datenbank oder Anmeldung;
 - `public-app-shell/v2.0.3` als feste, lokal vendorte Build-Abhängigkeit mit
   Manifest und SHA-256-Lock; kein CDN, kein Runtimeimport und keine gemeinsame
   Datenbank;
 - `public-app-layout/v1.1.0` als davon getrennte, lokal vendorte
   Inhaltslayout-Abhängigkeit mit Profil `guided-flow` und eigenem Lock;
-- `public-app-essentials/v1.1.2` als dritter, separat gepinnter Vertrag für
+- `public-app-essentials/v1.1.3` als dritter, separat gepinnter Vertrag für
   Startscreen, Datenschutz, Teilen und explizite Ortssuche;
 - Browser-Lokalspeicher ausschließlich für Zeichnung, Einstellungen und den
   groben letzten Startpunkt;
@@ -66,12 +69,13 @@ SHA-256; es gibt weder CDN noch Runtimeimport aus dem Shared-Repository. Der
 bestehende Fünf-Artefakt-Lock der App-Shell bleibt davon unabhängig.
 
 Die React-Struktur markiert Intro, Primärarbeit, Schritte, Aktionen, Ergebnis
-und sekundäre Einstellungen semantisch mit den Vertragsattributen. Die beiden
-fachlich zusammengehörigen Arbeitsblöcke aktivieren mit
-`data-milos-flow="paired"` bewusst den zweispaltigen Desktopfluss; mobil und
-bei hohem Textzoom reflowen sie einspaltig. Wolkenpost behält Zeichenfläche,
-Weltkarte und redaktionelle Typografie, verwendet aber nur eine gemeinsame
-visuelle Arbeitsfläche statt verschachtelter Karten. Die Orbit-Wolke ist mit
+und sekundäre Einstellungen semantisch mit den Vertragsattributen. Die
+Primärarbeit ist bewusst einspaltig: Die Zeichenfläche darf intern am Desktop
+Bedienung und Canvas nebeneinander stellen, die Weltkarte folgt jedoch als
+eigener, vollbreiter Flugraum. Mobil und bei hohem Textzoom reflowen auch die
+Zeichenwerkzeuge einspaltig. Wolkenpost behält Zeichenfläche, Weltkarte und
+redaktionelle Typografie, verwendet aber nur eine gemeinsame visuelle
+Arbeitsfläche statt verschachtelter Karten. Die Orbit-Wolke ist mit
 `data-milos-intro-icon` als kompakte Identitätsstütze begrenzt. Darstellung,
 Bewegung, Startton und lokale Löschung verwenden den eigenen kompakten
 Settings-Baustein und werden progressiv offengelegt.
@@ -85,9 +89,9 @@ misst am echten Build `[data-milos-intro]` und
 
 ## Öffentliche Essentials
 
-`milos-essentials.json` pinnt `public-app-essentials/v1.1.2` auf den
+`milos-essentials.json` pinnt `public-app-essentials/v1.1.3` auf den
 unveränderlichen Shared-Commit
-`b14aac6107b75f03ff49e74160af7e7e30c29e59`. Der Sync erzeugt unter
+`babe74a0e62e1a7f9095648195e54b322a837726`. Der Sync erzeugt unter
 `vendor/milosapps-essentials/v1/` Bootstrap, Web Component, Basis-/Theme-CSS,
 portablen Verifier, das vendorte Manifestschema und `essentials-lock.json`.
 Der Sechs-Artefakt-Lock bleibt
@@ -155,6 +159,24 @@ Gleicher Start, gleiche Objektart und dasselbe gespeicherte Windfeld ergeben
 dieselbe Route. Es gibt keine versteckte Zufallszahl. Das UI beschreibt die
 Route bewusst als spielerische Modellroute und nicht als Navigation oder
 Wetterwarnung.
+
+Vor dem Start kann derselbe gebündelte Snapshot bewusst als Windvorschau
+geladen werden. Drei visuelle Höhenbänder zeigen Geschwindigkeit, Richtung und
+eine sprachliche Stärke; das aktuell gewählte Flugprofil ist markiert. Startet
+der Nutzer anschließend am unveränderten Ort, verwendet der Flug genau diesen
+Snapshot statt eines zweiten Netzabrufs. Ein Ortswechsel verwirft die Vorschau.
+
+## Karte und Routennähe
+
+Die Weltkarte zeichnet 177 Länder aus der lokal gebündelten
+Natural-Earth-110-m-Geometrie. Startwahl, Route, Windpfeil und Zeichnung bleiben
+app-eigene Canvas-Schichten. Während eines Flugs ergänzt eine lokale,
+zweisprachige CC0-Auswahl bekannte Bauwerke sowie die bestehende Großortliste.
+Pro Kandidat wird der nächste simulierte Routenpunkt berechnet; nur innerhalb
+von 70 km (Wahrzeichen) beziehungsweise 95 km (große Orte) erscheint eine
+nummerierte Markierung. Nahe Duplikate werden zusammengeführt, Wahrzeichen
+haben Vorrang. Die Oberfläche nennt diese Grenze ausdrücklich als grobe Nähe,
+nicht als exakten Überflug.
 
 ## Fallback- und Fehlervertrag
 

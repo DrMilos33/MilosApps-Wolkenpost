@@ -3,6 +3,7 @@ import type {
   Coordinate,
   DrawingStroke,
   MotionPreference,
+  RouteHighlight,
   RouteResult,
   ThemePreference,
 } from '../types';
@@ -15,16 +16,19 @@ import {
 import {
   drawDrawing,
   drawRoute,
+  drawRouteHighlights,
   drawRouteLens,
   drawWindArrow,
   drawWorldBase,
   WORLD_PALETTES,
+  COUNTRY_COUNT,
 } from '../lib/world-renderer';
 
 interface WorldMapProps {
   selected: Coordinate;
   result: RouteResult | null;
   comparisonResult?: RouteResult | null;
+  highlights?: RouteHighlight[];
   drawing: DrawingStroke[];
   motion: MotionPreference;
   theme: ThemePreference;
@@ -39,6 +43,7 @@ export function WorldMap({
   selected,
   result,
   comparisonResult = null,
+  highlights = [],
   drawing,
   motion,
   theme,
@@ -116,6 +121,14 @@ export function WorldMap({
         context.arc(marker.x, marker.y, Math.max(4, width / 180), 0, Math.PI * 2);
         context.fill();
       }
+      drawRouteHighlights(
+        context,
+        highlights,
+        progressRef.current,
+        width,
+        height,
+        palette,
+      );
       drawRouteLens(
         context,
         [
@@ -147,7 +160,7 @@ export function WorldMap({
     }
 
     if (drawing.length) drawDrawing(context, drawing, objectPosition, width, height);
-  }, [comparisonResult, drawing, isDark, result, routeLensLabel, selected]);
+  }, [comparisonResult, drawing, highlights, isDark, result, routeLensLabel, selected]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -252,6 +265,9 @@ export function WorldMap({
       data-motion={reduced ? 'reduced' : 'full'}
       data-route-count={result ? (comparisonResult ? '2' : '1') : '0'}
       data-route-lens={result ? 'visible' : 'hidden'}
+      data-country-detail="natural-earth-110m"
+      data-country-count={COUNTRY_COUNT}
+      data-highlight-count={highlights.length}
       data-progress={reportedProgress.toFixed(2)}
       aria-label={label}
       onPointerDown={onPointerDown}

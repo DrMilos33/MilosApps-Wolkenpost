@@ -70,6 +70,22 @@ export interface RouteResult {
   endLabel: string;
 }
 
+export interface RouteHighlight extends Coordinate {
+  id: string;
+  kind: 'landmark' | 'city';
+  name: string;
+  distanceKm: number;
+  elapsedHours: number;
+  progress: number;
+}
+
+export interface WindReading {
+  level: WindLevel;
+  speedKmh: number;
+  bearing: number;
+  strength: 'calm' | 'light' | 'lively' | 'strong' | 'very-strong';
+}
+
 export type WindLevel = '10m' | '925hPa' | '850hPa';
 
 export interface WindSnapshot {

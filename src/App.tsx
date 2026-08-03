@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DrawingCanvas } from './components/DrawingCanvas';
 import { FlightReadout } from './components/FlightReadout';
+import { OutlinePicker } from './components/OutlinePicker';
+import { RouteHighlights } from './components/RouteHighlights';
+import { WindScout } from './components/WindScout';
 import { WorldMap } from './components/WorldMap';
 import { copy, type SupportedLanguage } from './copy';
-import { drawingPreset } from './data/drawing-presets';
+import { drawingPreset, drawingPresets } from './data/drawing-presets';
 import {
   coarseCoordinate,
   DEFAULT_PLACE,
@@ -13,6 +16,7 @@ import {
 } from './data/places';
 import { createResultImage, downloadFile } from './lib/export';
 import { haversineKm, roundedCoordinateLabel } from './lib/geometry';
+import { routeHighlights } from './lib/route-highlights';
 import { OBJECT_PROFILES, simulateRoute } from './lib/simulation';
 import {
   clearState,
@@ -27,6 +31,7 @@ import {
   OPEN_METEO_ATTRIBUTION_URL,
   WindRequestError,
 } from './lib/wind';
+import { windReadings } from './lib/wind-insight';
 import type {
   MilosPlaceResult,
   MilosPlaceSearchElement,
@@ -50,6 +55,7 @@ declare global {
 }
 
 type FlightStatus = 'idle' | 'loading' | 'result' | 'error';
+type WindPreviewStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 interface AppProps {
   initialLanguage: SupportedLanguage;
@@ -61,6 +67,11 @@ function appShareUrl(): string {
 
 function placeContext(place: Place): string {
   return [place.region, place.country].filter(Boolean).join(' · ');
+}
+
+function coordinateKey(coordinate: Coordinate): string {
+  const coarse = coarseCoordinate(coordinate);
+  return `${coarse.latitude.toFixed(2)},${coarse.longitude.toFixed(2)}`;
 }
 
 function essentialsPlace(place: Place): MilosPlaceResult {
@@ -150,7 +161,10 @@ export default function App({ initialLanguage: language }: AppProps) {
   const firstVisit = useMemo(isFirstVisit, []);
   const [objectType, setObjectType] = useState<ObjectType>(initial.objectType);
   const [strokes, setStrokes] = useState<DrawingStroke[]>(
-    firstVisit ? drawingPreset(initial.objectType, 'welcome') : initial.drawing,
+    firstVisit ? drawingPreset(initial.objectType, undefined, 'welcome') : initial.drawing,
+  );
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(
+    firstVisit ? drawingPresets(initial.objectType)[0].id : null,
   );
   const [start, setStart] = useState<Place>(() =>
     localizePlace(initial.lastStart ?? DEFAULT_PLACE, language, text.map));
@@ -165,6 +179,10 @@ export default function App({ initialLanguage: language }: AppProps) {
     defaultComparisonType(initial.objectType),
   );
   const [windSnapshot, setWindSnapshot] = useState<WindSnapshot | null>(null);
+  const [windPreviewSnapshot, setWindPreviewSnapshot] = useState<WindSnapshot | null>(null);
+  const [windPreviewKey, setWindPreviewKey] = useState<string | null>(null);
+  const [windPreviewStatus, setWindPreviewStatus] = useState<WindPreviewStatus>('idle');
+  const [windPreviewErrorKind, setWindPreviewErrorKind] = useState<WindRequestError['kind']>('network');
   const [flightProgress, setFlightProgress] = useState(1);
   const [replayToken, setReplayToken] = useState(0);
   const [online, setOnline] = useState(navigator.onLine);
@@ -173,6 +191,7 @@ export default function App({ initialLanguage: language }: AppProps) {
   const [resetArmed, setResetArmed] = useState(false);
   const [exporting, setExporting] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  const previewAbortRef = useRef<AbortController | null>(null);
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   const flightSpaceRef = useRef<HTMLDivElement>(null);
   const placeSearchRef = useRef<MilosPlaceSearchElement>(null);
@@ -248,7 +267,10 @@ export default function App({ initialLanguage: language }: AppProps) {
     return () => window.clearTimeout(timeout);
   }, [motion, objectType, soundEnabled, start, strokes, theme]);
 
-  useEffect(() => () => abortRef.current?.abort(), []);
+  useEffect(() => () => {
+    abortRef.current?.abort();
+    previewAbortRef.current?.abort();
+  }, []);
 
   const clearFlightResult = () => {
     setResult(null);
@@ -258,8 +280,17 @@ export default function App({ initialLanguage: language }: AppProps) {
     setFlightStatus('idle');
   };
 
+  const clearWindPreview = () => {
+    previewAbortRef.current?.abort();
+    previewAbortRef.current = null;
+    setWindPreviewSnapshot(null);
+    setWindPreviewKey(null);
+    setWindPreviewStatus('idle');
+  };
+
   const changeObjectType = (next: ObjectType) => {
     setObjectType(next);
+    setSelectedPresetId(null);
     setComparisonObjectType(defaultComparisonType(next));
     clearFlightResult();
     setAnnouncement(text.announcements.objectSelected(text.objectTypes[next].label));
@@ -268,6 +299,7 @@ export default function App({ initialLanguage: language }: AppProps) {
   const selectStart = (place: Place) => {
     setStart(place);
     clearFlightResult();
+    clearWindPreview();
     setAnnouncement(text.announcements.startSelected(place.name));
   };
 
@@ -337,8 +369,47 @@ export default function App({ initialLanguage: language }: AppProps) {
     }, 50);
   };
 
+  const inspectWind = async () => {
+    previewAbortRef.current?.abort();
+    const controller = new AbortController();
+    previewAbortRef.current = controller;
+    setWindPreviewStatus('loading');
+    setWindPreviewSnapshot(null);
+    setAnnouncement(text.windScout.loading);
+    try {
+      const snapshot = await fetchWindSnapshot(start, {
+        signal: controller.signal,
+        timeoutMs: qaTimeout(),
+      });
+      if (previewAbortRef.current !== controller) return;
+      setWindPreviewSnapshot(snapshot);
+      setWindPreviewKey(coordinateKey(start));
+      setWindPreviewStatus('ready');
+      setAnnouncement(text.announcements.windPreviewReady(start.name));
+    } catch (error) {
+      if (previewAbortRef.current !== controller) return;
+      const requestError = error instanceof WindRequestError
+        ? error
+        : new WindRequestError('Unbekannter Fehler beim Windabruf.', 'network');
+      setWindPreviewErrorKind(requestError.kind);
+      setWindPreviewStatus('error');
+      setAnnouncement(text.windErrors[requestError.kind]);
+    } finally {
+      if (previewAbortRef.current === controller) previewAbortRef.current = null;
+    }
+  };
+
+  const cancelWindPreview = () => {
+    previewAbortRef.current?.abort();
+    previewAbortRef.current = null;
+    setWindPreviewStatus('idle');
+    setAnnouncement(text.announcements.windPreviewCancelled);
+  };
+
   const startLiveFlight = async () => {
     if (!strokes.length || flightStatus === 'loading') return;
+    previewAbortRef.current?.abort();
+    previewAbortRef.current = null;
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -349,10 +420,15 @@ export default function App({ initialLanguage: language }: AppProps) {
     setAnnouncement(text.announcements.liveLoading);
     if (soundEnabled) playWindTone();
     try {
-      const snapshot = await fetchWindSnapshot(start, {
-        signal: controller.signal,
-        timeoutMs: qaTimeout(),
-      });
+      const preparedSnapshot = windPreviewStatus === 'ready'
+        && windPreviewSnapshot
+        && windPreviewKey === coordinateKey(start)
+        ? windPreviewSnapshot
+        : null;
+      const snapshot = preparedSnapshot ?? await fetchWindSnapshot(start, {
+          signal: controller.signal,
+          timeoutMs: qaTimeout(),
+        });
       if (abortRef.current !== controller) return;
       applyResult(
         simulateRoute(start, start.name, objectType, snapshot.fields[OBJECT_PROFILES[objectType].level]),
@@ -460,8 +536,10 @@ export default function App({ initialLanguage: language }: AppProps) {
   const resetLocalData = () => {
     clearState();
     abortRef.current?.abort();
+    previewAbortRef.current?.abort();
     setObjectType(DEFAULT_STATE.objectType);
     setStrokes([]);
+    setSelectedPresetId(null);
     setStart(localizePlace(DEFAULT_STATE.lastStart, language, text.map));
     setMotion(DEFAULT_STATE.motion);
     setTheme(DEFAULT_STATE.theme);
@@ -469,6 +547,9 @@ export default function App({ initialLanguage: language }: AppProps) {
     setResult(null);
     setComparisonResult(null);
     setWindSnapshot(null);
+    setWindPreviewSnapshot(null);
+    setWindPreviewKey(null);
+    setWindPreviewStatus('idle');
     setComparisonObjectType(defaultComparisonType(DEFAULT_STATE.objectType));
     setFlightProgress(1);
     setFlightStatus('idle');
@@ -486,6 +567,14 @@ export default function App({ initialLanguage: language }: AppProps) {
   const comparisonDistance = result && comparisonResult
     ? Math.abs(Math.round(comparisonResult.distanceKm - result.distanceKm))
     : 0;
+  const activeRouteHighlights = useMemo(
+    () => routeHighlights(result, language, text.map),
+    [language, result, text.map],
+  );
+  const activeWindReadings = useMemo(
+    () => windReadings(windPreviewSnapshot, start),
+    [start, windPreviewSnapshot],
+  );
 
   return (
     <div
@@ -515,7 +604,7 @@ export default function App({ initialLanguage: language }: AppProps) {
           </div>
         </section>
 
-        <div className="journey-layout" data-milos-primary-work data-milos-flow="paired" data-milos-panel>
+        <div className="journey-layout" data-milos-primary-work data-milos-panel>
           <section className="step-card drawing-step" id="zeichnen" aria-labelledby="drawing-heading">
             <div className="step-heading" data-milos-step>
               <span className="step-number" aria-hidden="true" data-milos-step-index>1</span>
@@ -546,38 +635,52 @@ export default function App({ initialLanguage: language }: AppProps) {
               ))}
             </div>
 
+            <div className="outline-selector">
+              <div>
+                <strong>{text.drawing.outlinesHeading}</strong>
+                <span>{text.drawing.outlinesHint}</span>
+              </div>
+              <OutlinePicker
+                presets={drawingPresets(objectType)}
+                labels={text.drawing.outlineLabels[objectType]}
+                groupLabel={text.drawing.outlinesGroup}
+                selectedId={selectedPresetId}
+                onSelect={(preset) => {
+                  const outlineIndex = drawingPresets(objectType).findIndex((entry) => entry.id === preset.id);
+                  setStrokes(drawingPreset(objectType, preset.id));
+                  setSelectedPresetId(preset.id);
+                  clearFlightResult();
+                  setAnnouncement(text.announcements.outlineSelected(
+                    text.drawing.outlineLabels[objectType][outlineIndex],
+                  ));
+                }}
+              />
+            </div>
+
             <DrawingCanvas
               strokes={strokes}
               labels={text.drawing}
               onChange={(next) => {
                 setStrokes(next);
+                setSelectedPresetId(null);
                 clearFlightResult();
                 setAnnouncement(text.announcements.strokesSaved(next.length));
               }}
               onUndo={() => {
                 setStrokes((current) => current.slice(0, -1));
+                setSelectedPresetId(null);
                 clearFlightResult();
                 setAnnouncement(text.announcements.strokeUndone);
               }}
             />
             <div className="drawing-actions" data-milos-actions>
               <button
-                className="secondary-button"
-                type="button"
-                onClick={() => {
-                  setStrokes((current) => [...current, ...drawingPreset(objectType)].slice(-80));
-                  clearFlightResult();
-                  setAnnouncement(text.announcements.outlineAdded(text.objectTypes[objectType].label));
-                }}
-              >
-                {text.drawing.addOutline}
-              </button>
-              <button
                 className="text-button"
                 type="button"
                 disabled={!strokes.length}
                 onClick={() => {
                   setStrokes((current) => current.slice(0, -1));
+                  setSelectedPresetId(null);
                   clearFlightResult();
                 }}
               >
@@ -589,6 +692,7 @@ export default function App({ initialLanguage: language }: AppProps) {
                 disabled={!strokes.length}
                 onClick={() => {
                   setStrokes([]);
+                  setSelectedPresetId(null);
                   clearFlightResult();
                   setAnnouncement(text.announcements.canvasCleared);
                 }}
@@ -604,6 +708,7 @@ export default function App({ initialLanguage: language }: AppProps) {
               <div>
                 <p className="step-kicker">{text.map.kicker}</p>
                 <h2 id="map-heading">{text.map.heading}</h2>
+                <p className="map-detail">{text.map.detail}</p>
               </div>
             </div>
 
@@ -612,6 +717,7 @@ export default function App({ initialLanguage: language }: AppProps) {
                 selected={start}
                 result={result}
                 comparisonResult={comparisonResult}
+                highlights={activeRouteHighlights}
                 drawing={strokes}
                 motion={motion}
                 theme={theme}
@@ -643,6 +749,11 @@ export default function App({ initialLanguage: language }: AppProps) {
                     progress={flightProgress}
                     language={language}
                     startLabel={start.name}
+                  />
+
+                  <RouteHighlights
+                    highlights={activeRouteHighlights}
+                    text={text.routeHighlights}
                   />
 
                   <div className="flight-toolbar" data-milos-actions>
@@ -771,59 +882,75 @@ export default function App({ initialLanguage: language }: AppProps) {
               )}
             </div>
 
-            <div className="selected-place" aria-live="polite">
-              <span className="place-pin" aria-hidden="true">●</span>
-              <span>
-                <small>{text.map.selected}</small>
-                <strong>{start.name}</strong>
-                <span>{placeContext(start)}</span>
-              </span>
-            </div>
+            <div className="map-planning-grid">
+              <div className="location-planner">
+                <div className="selected-place" aria-live="polite">
+                  <span className="place-pin" aria-hidden="true">●</span>
+                  <span>
+                    <small>{text.map.selected}</small>
+                    <strong>{start.name}</strong>
+                    <span>{placeContext(start)}</span>
+                  </span>
+                </div>
 
-            <div className="place-tools">
-              <milos-place-search
-                key={language}
-                ref={placeSearchRef}
-                label-de={copy.de.map.search}
-                label-en={copy.en.map.search}
-                placeholder-de={copy.de.map.placeholder}
-                placeholder-en={copy.en.map.placeholder}
+                <div className="place-tools">
+                  <milos-place-search
+                    key={language}
+                    ref={placeSearchRef}
+                    label-de={copy.de.map.search}
+                    label-en={copy.en.map.search}
+                    placeholder-de={copy.de.map.placeholder}
+                    placeholder-en={copy.en.map.placeholder}
+                  />
+                </div>
+
+                <details className="coordinate-controls">
+                  <summary>{text.map.fineTune}</summary>
+                  <div>
+                    <label>
+                      {text.map.latitude} <output>{start.latitude.toFixed(0)}°</output>
+                      <input
+                        type="range"
+                        min="-85"
+                        max="85"
+                        step="1"
+                        value={start.latitude}
+                        onChange={(event) => selectMapCoordinate({
+                          latitude: Number(event.target.value),
+                          longitude: start.longitude,
+                        })}
+                      />
+                    </label>
+                    <label>
+                      {text.map.longitude} <output>{start.longitude.toFixed(0)}°</output>
+                      <input
+                        type="range"
+                        min="-180"
+                        max="180"
+                        step="1"
+                        value={start.longitude}
+                        onChange={(event) => selectMapCoordinate({
+                          latitude: start.latitude,
+                          longitude: Number(event.target.value),
+                        })}
+                      />
+                    </label>
+                  </div>
+                </details>
+              </div>
+
+              <WindScout
+                status={windPreviewStatus}
+                readings={activeWindReadings}
+                objectType={objectType}
+                dataTime={windPreviewSnapshot?.forecastStart}
+                locale={locale}
+                text={text.windScout}
+                error={windPreviewStatus === 'error' ? text.windErrors[windPreviewErrorKind] : undefined}
+                onCheck={() => void inspectWind()}
+                onCancel={cancelWindPreview}
               />
             </div>
-
-            <details className="coordinate-controls">
-              <summary>{text.map.fineTune}</summary>
-              <div>
-                <label>
-                  {text.map.latitude} <output>{start.latitude.toFixed(0)}°</output>
-                  <input
-                    type="range"
-                    min="-85"
-                    max="85"
-                    step="1"
-                    value={start.latitude}
-                    onChange={(event) => selectMapCoordinate({
-                      latitude: Number(event.target.value),
-                      longitude: start.longitude,
-                    })}
-                  />
-                </label>
-                <label>
-                  {text.map.longitude} <output>{start.longitude.toFixed(0)}°</output>
-                  <input
-                    type="range"
-                    min="-180"
-                    max="180"
-                    step="1"
-                    value={start.longitude}
-                    onChange={(event) => selectMapCoordinate({
-                      latitude: start.latitude,
-                      longitude: Number(event.target.value),
-                    })}
-                  />
-                </label>
-              </div>
-            </details>
           </section>
         </div>
 

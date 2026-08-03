@@ -1,8 +1,8 @@
 # Datenschutz- und Speicherinventar
 
 Stand: lokaler Migrationskandidat, 3. August 2026. Der Vertrag ist fest auf
-`public-app-essentials/v1.1.2` und Shared-Commit
-`b14aac6107b75f03ff49e74160af7e7e30c29e59` gepinnt.
+`public-app-essentials/v1.1.3` und Shared-Commit
+`babe74a0e62e1a7f9095648195e54b322a837726` gepinnt.
 
 Wolkenpost verwendet keine Werbe-, Analyse- oder Tracking-Cookies, kein
 Fingerprinting, keine Anmeldung und keine App-Datenbank. Es gibt keine

@@ -1,6 +1,6 @@
 # Datenquellen und Lizenzen
 
-Geprüft am 30. Juli 2026 anhand der verlinkten Primärquellen.
+Geprüft am 3. August 2026 anhand der verlinkten Primärquellen.
 
 ## Live-Wind
 
@@ -63,18 +63,42 @@ Die Ortung funktioniert in ausgelieferten Umgebungen nur über HTTPS und nach
 expliziter Browserfreigabe. Suche und Karte bleiben vollständig ohne Ortung
 nutzbar.
 
+## Weltkarte und Routenorte
+
+### Natural Earth / world-atlas
+
+- Natural-Earth-Lizenz: <https://www.naturalearthdata.com/about/terms-of-use/>
+- vendortes npm-Paket: <https://www.npmjs.com/package/world-atlas>
+- Runtime-Helfer: <https://www.npmjs.com/package/topojson-client> und
+  <https://www.npmjs.com/package/d3-geo>
+
+Wolkenpost bündelt die 110-m-Ländergeometrie aus `world-atlas` in das eigene
+Browserartefakt und zeichnet Küsten sowie Grenzen im Canvas. Natural Earth
+stellt seine Vektor- und Rasterdaten Public Domain bereit. `world-atlas`,
+`topojson-client` und `d3-geo` sind ISC-lizenziert. Es gibt weder einen
+Kartentile-Abruf noch einen Kartenanbieter zur Laufzeit.
+
+### Wikidata
+
+- Lizenz: <https://www.wikidata.org/wiki/Wikidata:Licensing>
+
+Die kleine kuratierte Liste bekannter Bauwerke und Wahrzeichen basiert auf
+CC0-Fakten aus Wikidata. Namen und Koordinaten werden lokal in Wolkenpost
+versioniert; Koordinaten sind bewusst gerundet. Die App meldet nur grobe
+Routennähe innerhalb eines transparent genannten Radius und niemals einen
+exakten Überflug oder Navigation. Zur Laufzeit wird Wikidata nicht aufgerufen.
+
 ## Eigene Inhalte
 
-- Weltkonturen: bewusst grobe, von Wolkenpost selbst gezeichnete Polygone;
-  keine Kartentiles und kein kopierter Geodatensatz.
 - Ortsliste: kleine handkuratierte Auswahl grob gerundeter, nicht
   urheberrechtlich geschützter Fakten; keine fremde Such-API. Die gemeinsame
   Essentials-Ortsoberfläche ändert nur Interaktion und Ausgabeformat. Suche
   und Normalisierung zu Name, Region und Land bleiben vollständig lokal und
   fügen keinen Provider, Netzaufruf oder neuen Lizenzgegenstand hinzu.
 - App-Icon, CSS-Gestaltung und Canvas-Export: eigenes Werk.
-- `public/preview.png`: Screenshot des eigenen Builds; enthält ausschließlich
-  die oben genannten eigenen Inhalte und Systemschriften.
+- `public/preview.png`: Screenshot des eigenen Builds; enthält die dokumentierte
+  Natural-Earth-Länderkarte, eigene Gestaltung und Systemschriften, aber keine
+  extern nachgeladenen Medien.
 - Keine externen Fotos, Videos, Webcams, Audiodateien oder Webfonts.
 
 ## Softwareabhängigkeiten
@@ -91,6 +115,12 @@ geprüft:
 | axe Playwright | 4.12.1 | MPL-2.0 |
 | TypeScript | 7.0.2 | Apache-2.0 |
 | jsdom | 30.0.1 | MIT |
+| d3-geo | 3.1.1 | ISC |
+| topojson-client | 3.1.0 | ISC |
+| world-atlas | 2.0.2 | ISC; Geodaten Public Domain (Natural Earth) |
 
-Im ausgelieferten Browserbundle liegen React und eigener App-Code. Vitest,
-Playwright, axe, TypeScript und jsdom sind reine Entwicklungsabhängigkeiten.
+Im ausgelieferten Browserbundle liegen React, die Kartenhelfer, die gebündelte
+Ländergeometrie und eigener App-Code. Vitest, Playwright, axe, TypeScript und
+jsdom sind reine Entwicklungsabhängigkeiten. Die vollständigen Hinweise für
+die neuen Kartenabhängigkeiten werden mit dem statischen Build als
+`THIRD_PARTY_NOTICES.txt` ausgeliefert.

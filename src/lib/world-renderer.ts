@@ -1,53 +1,36 @@
-import type { Coordinate, DrawingStroke, RoutePoint } from '../types';
+import { geoEquirectangular, geoPath, type GeoPermissibleObjects } from 'd3-geo';
+import { feature, mesh } from 'topojson-client';
+import type { GeometryCollection, Topology } from 'topojson-specification';
+import worldData from 'world-atlas/countries-110m.json';
+import type { Coordinate, DrawingStroke, RouteHighlight, RoutePoint } from '../types';
 import { clamp, projectCoordinate, routeSegments } from './geometry';
 
-type Polygon = Array<[number, number]>;
+type WorldTopology = Topology<{
+  countries: GeometryCollection;
+  land: GeometryCollection;
+}>;
 
-// Deliberately simplified, hand-authored silhouettes: no external map tiles or geodata.
-const LANDMASSES: Polygon[] = [
-  [
-    [-168, 71], [-151, 70], [-141, 60], [-132, 55], [-124, 48], [-123, 38], [-117, 32],
-    [-106, 23], [-97, 19], [-88, 21], [-82, 25], [-81, 31], [-76, 35], [-70, 42],
-    [-61, 47], [-57, 53], [-65, 61], [-80, 66], [-97, 72], [-117, 74], [-139, 73],
-  ],
-  [
-    [-81, 12], [-75, 8], [-70, -4], [-65, -13], [-61, -21], [-56, -30], [-58, -39],
-    [-64, -50], [-71, -55], [-75, -44], [-73, -33], [-78, -18], [-80, -3],
-  ],
-  [
-    [-52, 82], [-28, 83], [-20, 76], [-30, 66], [-44, 61], [-55, 68], [-60, 76],
-  ],
-  [
-    [-10, 36], [-10, 43], [0, 48], [14, 56], [31, 61], [47, 67], [66, 72],
-    [91, 76], [117, 73], [142, 65], [160, 58], [174, 51], [164, 44], [145, 42],
-    [131, 34], [122, 24], [113, 20], [105, 11], [97, 7], [89, 20], [78, 24],
-    [70, 23], [62, 30], [51, 27], [43, 13], [35, 5], [34, -10], [28, -22],
-    [20, -35], [10, -34], [1, -25], [-5, -8], [-13, 5], [-17, 18], [-10, 36],
-  ],
-  [
-    [113, -22], [121, -17], [134, -13], [145, -18], [153, -28], [151, -37],
-    [140, -43], [127, -39], [116, -33],
-  ],
-  [
-    [47, -13], [51, -16], [50, -25], [46, -26], [44, -18],
-  ],
-  [
-    [130, 32], [135, 34], [141, 40], [145, 44], [142, 31], [137, 29],
-  ],
-  [
-    [-180, -68], [-150, -73], [-110, -71], [-70, -75], [-30, -72], [10, -76],
-    [55, -72], [95, -75], [140, -70], [180, -72], [180, -90], [-180, -90],
-  ],
-];
+const topology = worldData as unknown as WorldTopology;
+const countriesObject = topology.objects.countries;
+const COUNTRIES = feature(topology, countriesObject) as unknown as GeoPermissibleObjects;
+const COUNTRY_BORDERS = mesh(
+  topology,
+  countriesObject,
+  (left, right) => left !== right,
+) as unknown as GeoPermissibleObjects;
+
+export const COUNTRY_COUNT = countriesObject.geometries.length;
 
 export interface WorldPalette {
   oceanTop: string;
   oceanBottom: string;
   land: string;
   coast: string;
+  countryBorder: string;
   grid: string;
   route: string;
   routeHalo: string;
+  lensBackground: string;
   comparisonRoute: string;
   comparisonHalo: string;
 }
@@ -58,9 +41,11 @@ export const WORLD_PALETTES: Record<'light' | 'dark', WorldPalette> = {
     oceanBottom: '#b8dfe0',
     land: '#fff5d8',
     coast: '#619887',
+    countryBorder: 'rgba(53, 117, 99, 0.48)',
     grid: 'rgba(38, 102, 85, 0.16)',
     route: '#d75f45',
     routeHalo: 'rgba(255, 255, 255, 0.82)',
+    lensBackground: '#fffdf6',
     comparisonRoute: '#236c85',
     comparisonHalo: 'rgba(255, 255, 255, 0.82)',
   },
@@ -69,9 +54,11 @@ export const WORLD_PALETTES: Record<'light' | 'dark', WorldPalette> = {
     oceanBottom: '#102c35',
     land: '#435b4f',
     coast: '#86b49f',
+    countryBorder: 'rgba(183, 222, 205, 0.42)',
     grid: 'rgba(205, 235, 220, 0.12)',
     route: '#ff9b73',
     routeHalo: 'rgba(13, 35, 39, 0.9)',
+    lensBackground: '#16383c',
     comparisonRoute: '#7dd8ee',
     comparisonHalo: 'rgba(13, 35, 39, 0.9)',
   },
@@ -106,20 +93,55 @@ export function drawWorldBase(
     context.stroke();
   }
 
+  const projection = geoEquirectangular()
+    .translate([180, 90])
+    .scale(180 / Math.PI)
+    .precision(0.35);
+  const path = geoPath(projection, context);
+  context.save();
+  context.scale(width / 360, height / 180);
+  context.beginPath();
+  path(COUNTRIES);
   context.fillStyle = palette.land;
+  context.fill();
   context.strokeStyle = palette.coast;
-  context.lineWidth = Math.max(1, width / 900);
-  for (const polygon of LANDMASSES) {
+  context.lineWidth = Math.max(0.45, 360 / Math.max(width, 720));
+  context.stroke();
+
+  context.beginPath();
+  path(COUNTRY_BORDERS);
+  context.strokeStyle = palette.countryBorder;
+  context.lineWidth = Math.max(0.28, 260 / Math.max(width, 760));
+  context.stroke();
+  context.restore();
+}
+
+export function drawRouteHighlights(
+  context: CanvasRenderingContext2D,
+  highlights: RouteHighlight[],
+  progress: number,
+  width: number,
+  height: number,
+  palette: WorldPalette,
+): void {
+  highlights.forEach((highlight, index) => {
+    if (highlight.progress > progress + 0.01) return;
+    const marker = projectCoordinate(highlight, width, height);
+    const radius = Math.max(8, Math.min(12, width / 90));
+    context.fillStyle = palette.routeHalo;
     context.beginPath();
-    polygon.forEach(([longitude, latitude], index) => {
-      const point = projectCoordinate({ latitude, longitude }, width, height);
-      if (index === 0) context.moveTo(point.x, point.y);
-      else context.lineTo(point.x, point.y);
-    });
-    context.closePath();
+    context.arc(marker.x, marker.y, radius + 3, 0, Math.PI * 2);
     context.fill();
-    context.stroke();
-  }
+    context.fillStyle = highlight.kind === 'landmark' ? palette.route : palette.comparisonRoute;
+    context.beginPath();
+    context.arc(marker.x, marker.y, radius, 0, Math.PI * 2);
+    context.fill();
+    context.fillStyle = highlight.kind === 'landmark' ? '#fffaf0' : '#ffffff';
+    context.font = `700 ${Math.max(10, Math.min(13, width / 72))}px system-ui, sans-serif`;
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(String(index + 1), marker.x, marker.y + 0.5);
+  });
 }
 
 export function drawRoute(
@@ -245,8 +267,9 @@ export function drawRouteLens(
 
   const lensWidth = Math.min(width - 20, Math.max(150, width * 0.47));
   const lensHeight = Math.min(height - 20, Math.max(92, height * 0.42));
-  const left = width - lensWidth - 10;
-  const top = height - lensHeight - 10;
+  const routeStart = projectCoordinate(usableRoutes[0].points[0], width, height);
+  const left = routeStart.x > width / 2 ? 10 : width - lensWidth - 10;
+  const top = routeStart.y > height / 2 ? 10 : height - lensHeight - 10;
   const titleHeight = 24;
   const padding = 10;
   const plotWidth = lensWidth - padding * 2;
@@ -258,7 +281,7 @@ export function drawRouteLens(
   });
 
   context.save();
-  context.fillStyle = palette.routeHalo;
+  context.fillStyle = palette.lensBackground;
   context.strokeStyle = palette.coast;
   context.lineWidth = 1;
   context.beginPath();
@@ -268,6 +291,23 @@ export function drawRouteLens(
   context.beginPath();
   context.rect(left + 1, top + 1, lensWidth - 2, lensHeight - 2);
   context.clip();
+
+  context.strokeStyle = palette.grid;
+  context.lineWidth = 1;
+  for (let column = 1; column < 4; column += 1) {
+    const x = left + (lensWidth * column) / 4;
+    context.beginPath();
+    context.moveTo(x, top + titleHeight);
+    context.lineTo(x, top + lensHeight);
+    context.stroke();
+  }
+  for (let row = 1; row < 3; row += 1) {
+    const y = top + titleHeight + (plotHeight * row) / 3;
+    context.beginPath();
+    context.moveTo(left, y);
+    context.lineTo(left + lensWidth, y);
+    context.stroke();
+  }
 
   context.fillStyle = palette.coast;
   context.font = `700 ${Math.max(10, Math.min(12, width / 44))}px system-ui, sans-serif`;

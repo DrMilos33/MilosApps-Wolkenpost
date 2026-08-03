@@ -372,3 +372,50 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
   allein für die ausdrücklich angebotene Offline-Funktion zuständig.
 - Für andere MilosApps relevant: Ja. Kurzlebige Umgebungszustände sind keine
   Komfortpräferenz und sollten nicht ohne zwingenden Grund persistiert werden.
+
+## 2026-08-03 – Eine Windvorschau muss denselben Snapshot wie der Start nutzen
+
+- Datum und geprüfter Stand: 3. August 2026, lokale Karten-/Winditeration.
+- Beobachtung: Ein separater Windcheck und ein anschließender neuer Abruf können
+  unterschiedliche Modellzeiten liefern. Dann entscheidet der Nutzer anhand
+  eines anderen Zustands als dem, der den Flug tatsächlich bewegt.
+- Evidenz oder reproduzierbarer Test: Der Browsertest zählt für Vorschau plus
+  Start exakt einen Open-Meteo-Request; der Start verwendet den Snapshot nur bei
+  unverändertem gerundetem Startpunkt und verwirft ihn nach Ortswechsel.
+- Änderung und Regressionstest: Die drei Höhen werden gemeinsam geladen,
+  Zeitpunkt und aktuelles Profil sichtbar markiert und der Snapshot bewusst
+  wiederverwendet. Abbruch, Fehler und Ortswechsel löschen die Vorschau.
+- Für andere MilosApps relevant: Ja. Vorschau und Ausführung einer
+  datengetriebenen Entscheidung brauchen eine belegbar identische Datenbasis.
+
+## 2026-08-03 – Routennähe braucht Radius, Provenienz und eine Negativaussage
+
+- Datum und geprüfter Stand: 3. August 2026, lokale Wahrzeicheniteration.
+- Beobachtung: Ein Punkt auf einer groben Modellroute kann leicht als exakter
+  Überflug verstanden werden, obwohl räumliche Daten, Windfeld und Zeitschritt
+  das nicht tragen.
+- Evidenz oder reproduzierbarer Test: Unit-Routen über Leipzig, Wartburg, Köln
+  und Paris prüfen chronologische Marker; eine äquatoriale Fernroute liefert
+  keine falschen Treffer.
+- Änderung und Regressionstest: Lokale CC0-Fakten, feste 70-/95-km-Radien,
+  nächster simulierter Routenpunkt, Deduplizierung und sichtbarer Hinweis
+  „grobe Routennähe, kein exakter Überflug oder Navigation“.
+- Für andere MilosApps relevant: Ja. Ortsanreicherung braucht neben der Quelle
+  eine maschinenprüfbare Unsicherheitsgrenze und eine verständliche
+  Negativaussage.
+
+## 2026-08-03 – Neue öffentliche Nachweise gehören in das Offline-Gate
+
+- Datum und geprüfter Stand: 3. August 2026, Pages-Artefaktprüfung des
+  detaillierten Flugraums.
+- Beobachtung: `THIRD_PARTY_NOTICES.txt` wurde korrekt gebaut und ausgeliefert,
+  fehlte aber zunächst in der expliziten Service-Worker-App-Shell-Liste.
+- Evidenz oder reproduzierbarer Test: Das erweiterte Fail-closed-Artefaktgate
+  brach ausschließlich wegen des fehlenden Cachepfads ab; nach Aufnahme des
+  Pfads bestanden Pages-Build und Artefaktprüfung.
+- Änderung und Regressionstest: Drittanbieterhinweis, Datenquellen-Doku und
+  Service-Worker-Cache werden als eine Veröffentlichungseinheit geprüft.
+- Für andere MilosApps relevant: Ja. Neue Lizenz-, Hilfe- oder
+  Datenschutzartefakte dürfen bei offlinefähigen Apps nicht nur im Build
+  existieren, sondern müssen in der dokumentierten Offline-Grenze enthalten
+  oder bewusst als online-only ausgewiesen sein.

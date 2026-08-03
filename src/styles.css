@@ -327,8 +327,8 @@ h2 {
 
 .journey-layout {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  gap: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
   margin: 0;
   align-items: stretch;
 }
@@ -342,13 +342,44 @@ h2 {
 
 .step-card {
   min-width: 0;
-  padding: 0 1.15rem 0 0;
+  padding: 0;
   background: transparent;
 }
 
 .map-step {
-  padding: 0 0 0 1.15rem;
-  border-inline-start: 1px solid var(--line);
+  padding-top: 1rem;
+  border-block-start: 1px solid var(--line);
+}
+
+.drawing-step {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.82fr) minmax(0, 1.18fr);
+  grid-template-rows: auto auto 1fr auto;
+  gap: 0.75rem 1.25rem;
+}
+
+.drawing-step > .step-heading {
+  grid-column: 1 / -1;
+}
+
+.drawing-step > .object-picker {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.drawing-step > .outline-selector {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+.drawing-step > .drawing-board {
+  grid-column: 2;
+  grid-row: 2 / span 2;
+}
+
+.drawing-step > .drawing-actions {
+  grid-column: 2;
+  grid-row: 4;
 }
 
 .step-heading {
@@ -364,6 +395,71 @@ h2 {
   grid-template-columns: repeat(2, 1fr);
   gap: 0.6rem;
   margin-bottom: 1rem;
+}
+
+.outline-selector {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+  align-content: start;
+}
+
+.outline-selector > div:first-child {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.outline-selector > div:first-child span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.outline-picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.outline-option {
+  display: grid;
+  min-width: 0;
+  min-height: 92px;
+  justify-items: center;
+  gap: 0.25rem;
+  padding: 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-strong);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.outline-option:hover,
+.outline-option.is-selected {
+  border-color: var(--brand);
+}
+
+.outline-option.is-selected {
+  background: var(--surface-soft);
+  box-shadow: inset 0 0 0 1px var(--brand);
+}
+
+.outline-option svg {
+  width: 54px;
+  height: 54px;
+  overflow: visible;
+}
+
+.outline-option path {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .object-option {
@@ -418,7 +514,7 @@ h2 {
 .drawing-canvas {
   display: block;
   width: 100%;
-  height: clamp(240px, 25vw, 290px);
+  height: clamp(300px, 29vw, 360px);
   border: 1px solid var(--line);
   border-radius: 22px;
   box-shadow: inset 0 2px 12px rgba(44, 89, 74, 0.06);
@@ -504,16 +600,27 @@ button:disabled {
   align-self: start;
 }
 
+.result-actions > .primary-button {
+  min-width: 13rem;
+}
+
 .world-map {
   display: block;
   width: 100%;
-  aspect-ratio: 16 / 9;
-  min-height: 240px;
-  max-height: 360px;
+  aspect-ratio: 2 / 1;
+  min-height: 390px;
+  max-height: 520px;
   border: 1px solid var(--line);
   border-radius: 22px;
   cursor: crosshair;
   touch-action: pan-y;
+}
+
+.map-detail {
+  max-width: 68ch;
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
 }
 
 .world-map[data-route-lens='visible'] {
@@ -537,6 +644,170 @@ button:disabled {
   box-shadow: 0 12px 24px rgba(23, 63, 53, 0.12);
   position: relative;
   z-index: 2;
+}
+
+.map-planning-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, 0.85fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.location-planner,
+.wind-scout {
+  min-width: 0;
+}
+
+.wind-scout {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface-soft) 74%, var(--surface-strong));
+}
+
+.wind-scout > p,
+.wind-scout h3,
+.wind-scout-heading .step-kicker {
+  margin: 0;
+}
+
+.wind-scout > p,
+.wind-scout-state,
+.wind-scout-actions > span,
+.wind-readings small {
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.wind-scout-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.wind-scout-heading > div {
+  min-width: 0;
+}
+
+.wind-compass {
+  display: grid;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface-strong);
+  color: var(--accent);
+  font-size: 1.35rem;
+}
+
+.wind-compass [data-bearing-sector='0'] { transform: rotate(-90deg); }
+.wind-compass [data-bearing-sector='1'] { transform: rotate(-45deg); }
+.wind-compass [data-bearing-sector='2'] { transform: rotate(0deg); }
+.wind-compass [data-bearing-sector='3'] { transform: rotate(45deg); }
+.wind-compass [data-bearing-sector='4'] { transform: rotate(90deg); }
+.wind-compass [data-bearing-sector='5'] { transform: rotate(135deg); }
+.wind-compass [data-bearing-sector='6'] { transform: rotate(180deg); }
+.wind-compass [data-bearing-sector='7'] { transform: rotate(225deg); }
+
+.wind-readings {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.wind-readings article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.2rem 0.65rem;
+  min-width: 0;
+  padding: 0.6rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--surface-strong);
+}
+
+.wind-readings article.is-selected {
+  border-color: var(--brand);
+  box-shadow: inset 3px 0 0 var(--brand);
+}
+
+.wind-readings header {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  grid-column: 1 / -1;
+}
+
+.wind-readings header span {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.wind-readings header small {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.wind-meter {
+  align-self: center;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--line) 72%, transparent);
+}
+
+.wind-meter > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand), var(--yellow), var(--accent));
+}
+
+.wind-meter [data-wind-band='1'] { width: 20%; }
+.wind-meter [data-wind-band='2'] { width: 40%; }
+.wind-meter [data-wind-band='3'] { width: 60%; }
+.wind-meter [data-wind-band='4'] { width: 80%; }
+.wind-meter [data-wind-band='5'] { width: 100%; }
+
+.wind-readings article > strong {
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.wind-readings article > small {
+  grid-column: 1 / -1;
+}
+
+.wind-scout-state {
+  min-height: 44px;
+  padding: 0.65rem 0.75rem;
+  border-inline-start: 3px solid var(--line);
+  background: var(--surface-strong);
+}
+
+.wind-scout-state.is-error {
+  border-inline-start-color: var(--accent);
+  color: var(--ink);
+}
+
+.wind-scout-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+}
+
+.wind-scout-actions > span {
+  min-width: 0;
+  text-align: end;
 }
 
 .place-pin {
@@ -904,6 +1175,75 @@ button:disabled {
   font-weight: 700;
 }
 
+.route-highlights {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface-soft) 64%, transparent);
+}
+
+.route-highlights h3,
+.route-highlights .step-kicker,
+.route-highlights p {
+  margin: 0;
+}
+
+.route-highlights ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.route-highlights li {
+  display: flex;
+  min-width: 0;
+  gap: 0.55rem;
+  align-items: center;
+  padding: 0.55rem;
+  border-radius: 13px;
+  background: var(--surface-strong);
+}
+
+.route-highlights li > span:last-child {
+  display: grid;
+  min-width: 0;
+}
+
+.route-highlights li small,
+.route-highlights li span span,
+.route-highlights-empty,
+.route-highlights-boundary {
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.route-highlights li strong {
+  overflow-wrap: anywhere;
+}
+
+.highlight-index {
+  display: grid;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fffaf0;
+  font-weight: 800;
+}
+
+.route-highlights-boundary {
+  padding-inline-start: 0.55rem;
+  border-inline-start: 2px solid var(--line);
+}
+
 .flight-toolbar {
   align-items: center;
 }
@@ -1114,6 +1454,16 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
+  .drawing-step {
+    display: block;
+  }
+
+  .drawing-step > .outline-selector,
+  .drawing-step > .drawing-board,
+  .drawing-step > .drawing-actions {
+    margin-top: 0.85rem;
+  }
+
   .step-card {
     padding: 0;
   }
@@ -1123,6 +1473,10 @@ button:disabled {
     padding-top: 1rem;
     border-inline-start: 0;
     border-block-start: 1px solid var(--line);
+  }
+
+  .map-planning-grid {
+    grid-template-columns: 1fr;
   }
 
   .drawing-canvas {
@@ -1160,7 +1514,21 @@ button:disabled {
   }
 
   .object-picker {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .object-option {
+    min-height: 70px;
+    align-items: flex-start;
+  }
+
+  .outline-picker {
+    gap: 0.35rem;
+  }
+
+  .outline-option {
+    min-height: 88px;
+    padding-inline: 0.25rem;
   }
 
   .drawing-canvas {
@@ -1168,8 +1536,22 @@ button:disabled {
   }
 
   .world-map {
-    min-height: 205px;
-    aspect-ratio: 1.42;
+    min-height: 270px;
+    max-height: none;
+    aspect-ratio: 1.28;
+  }
+
+  .wind-readings article > strong {
+    white-space: normal;
+  }
+
+  .wind-scout-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .wind-scout-actions > span {
+    text-align: start;
   }
 
   .place-tools [data-milos-place-locate] {
@@ -1241,6 +1623,10 @@ button:disabled {
   .state-actions > *,
   .result-actions > * {
     width: 100%;
+  }
+
+  .result-actions > .primary-button {
+    min-width: 0;
   }
 }
 
@@ -1332,6 +1718,39 @@ button:disabled {
     display: grid;
     justify-items: start;
     padding: 0.55rem;
+  }
+
+  .object-picker,
+  .outline-picker {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .wind-scout {
+    padding-inline: 0.6rem;
+  }
+
+  .wind-compass {
+    display: none;
+  }
+
+  .outline-option {
+    grid-template-columns: 54px minmax(0, 1fr);
+    min-height: 64px;
+    align-items: center;
+    justify-items: start;
+    text-align: start;
+  }
+
+  .world-map {
+    min-height: 220px;
+  }
+
+  .wind-readings article {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .wind-readings article > strong {
+    grid-column: 1;
   }
 
   .object-option > span:last-child {
