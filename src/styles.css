@@ -609,7 +609,8 @@ button:disabled {
 }
 
 .result-actions > .primary-button {
-  min-width: 13rem;
+  width: 14rem;
+  max-width: 100%;
 }
 
 .world-map {

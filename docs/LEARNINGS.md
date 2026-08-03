@@ -451,17 +451,21 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
 - Für andere MilosApps relevant: Ja. Ein grüner Dokumentbreitenvergleich
   beweist nicht, dass alle inneren Flex-/Gridtexte portabel schrumpfen können.
 
-## 2026-08-03 – Leerer Statustext ist noch kein abgeschlossener UI-Zustand
+## 2026-08-03 – Stabile Komponenten brauchen auch stabile Geschwister
 
 - Datum und geprüfter Stand: 3. August 2026, doppelte Linux-CI des finalen
   Karten-Handoffs.
-- Beobachtung: Nach einem nativen Share-Abbruch war der Text bereits leer,
-  während der explizite Sichtbarkeitszustand noch im Handoff auf `false` war.
-  Eine sofortige Geometriemessung konnte deshalb einmal zu früh erfolgen.
+- Beobachtung: Der Shareknopf behielt Breite und Höhe, verschob sich aber um
+  14,72 px, solange der vorherige Exportknopf nach der Payload-Erzeugung noch
+  das kürzere Busy-Label zeigte. Allein das Warten auf `data-visible=false`
+  beseitigte diese reale Geschwisterbewegung nicht.
 - Evidenz oder reproduzierbarer Test: Zwei identische SHA-genaue CI-Läufe,
   davon einer PASS und einer mit ausschließlich verschobenem X-Offset bei
   unveränderter Breite und Höhe.
-- Änderung und Regressionstest: Das Gate wartet auf leeren Text und
-  `data-visible=false`, bevor es die containerrelative Geometrie vergleicht.
-- Für andere MilosApps relevant: Ja. Asynchrone Komponenten sollten in Tests
-  an ihrem autoritativen Zustandsattribut statt nur an Zwischeninhalt hängen.
+- Änderung und Regressionstest: Der Exportknopf erhält am Desktop eine feste,
+  beide DE/EN-Labels abdeckende Breite und reflowt mobil weiterhin auf 100 %.
+  Das Gate wartet zusätzlich auf leeren Text und `data-visible=false`, bevor es
+  die containerrelative Sharegeometrie vergleicht.
+- Für andere MilosApps relevant: Ja. Geometriestabilität umfasst die gesamte
+  Aktionsgruppe; ein stabiles Element kann durch ein asynchrones Geschwister
+  trotzdem sichtbar springen.
