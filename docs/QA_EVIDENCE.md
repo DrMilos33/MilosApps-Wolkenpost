@@ -891,14 +891,14 @@ Der Dock stapelt deshalb bis 820 Pixel; die gezielte Tablet-Reise besteht danach
 Dieser Abschnitt ersetzt die frühere Follow-up-Aussage, die Karte bleibe
 grundsätzlich relativ und weitere Spielmodule seien pausiert. Der direkte
 Nutzervergleich mit „Irgendwo ist gerade“ führte zu einem klaren
-Arbeitsplatzprinzip: Auf breiten Viewports steht links eine ruhige, 288 Pixel
+Arbeitsplatzprinzip: Auf breiten Viewports steht links eine ruhige, 320 Pixel
 breite Steuerspur; rechts erhält die Karte den verbleibenden Raum. Auf kleinen
 Viewports bleibt die lineare Lesereihenfolge erhalten.
 
 ### Sichtbare Runde 1 – Start und Planung
 
-- 1440 × 1000: Arbeitsbereich 1152 Pixel, linke Steuerspur 288 Pixel,
-  Kartenfläche 836 × 600 Pixel; kein horizontaler Overflow und kein innerer
+- 1440 × 1000: Arbeitsbereich 1152 Pixel, linke Steuerspur 320 Pixel,
+  Kartenfläche mindestens 800 × 600 Pixel; kein horizontaler Overflow und kein innerer
   Widget-Scroll.
 - „Dein Reisender · Was fliegt heute?“, „Der Startpunkt · Wo geht die Reise
   los?“ sowie „Wind vor dem Start · Wie kräftig trägt der Wind hier?“ bleiben
