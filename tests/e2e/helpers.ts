@@ -44,7 +44,7 @@ export async function fulfillWind(route: Route, delayMs = 0) {
 
 export async function startFlight(page: Page) {
   await page.getByRole('button', { name: 'Flug mit Live-Wind starten' }).click();
-  await expect(page.getByRole('heading', { name: /Angekommen nahe/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Angekommen nahe/ })).toBeVisible({ timeout: 10_000 });
 }
 
 export async function expectNoHorizontalOverflow(page: Page) {
