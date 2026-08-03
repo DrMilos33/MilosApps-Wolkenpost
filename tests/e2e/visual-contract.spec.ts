@@ -139,7 +139,7 @@ for (const visualCase of cases) {
     ]);
     expect(layoutContract.responses.every(({ ok, contentType }) => ok && contentType?.includes('text/css'))).toBe(true);
     expect(layoutContract.layoutDisplay).toBe('grid');
-    await expect(page.locator('[data-milos-primary-work]')).toHaveAttribute('data-milos-flow', 'paired');
+    await expect(page.locator('[data-milos-primary-work]')).not.toHaveAttribute('data-milos-flow', 'paired');
     await expect(page.locator('[data-milos-intro-icon]')).toHaveCount(1);
     await expect(page.locator('[data-milos-settings]')).toHaveCount(1);
     await expect(page.locator('[data-milos-settings-intro]')).toHaveCount(1);

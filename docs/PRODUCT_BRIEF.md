@@ -8,10 +8,10 @@ Welt.
 
 ## Kernablauf
 
-1. Objektart wählen oder direkt zeichnen.
-2. Groben Startort auf Karte oder per Suche wählen.
-3. Flug starten und Route verständlich verfolgen.
-4. Windrichtung, Geschwindigkeit, Entfernung und Zielregion erkunden.
+1. Objektart und einen passenden Umriss wählen oder frei weiterzeichnen.
+2. Groben Startort auf der vollbreiten Länderkarte oder per Suche wählen.
+3. Windrichtung und -stärke in drei sichtbaren Höhen prüfen.
+4. Flug starten und Route, Profil sowie nahe große Orte/Wahrzeichen verfolgen.
 5. Eine gestaltete Ergebnisansicht bewusst teilen oder lokal speichern.
 
 ## MVP
@@ -21,7 +21,10 @@ Welt.
 - Startort ohne verpflichtende Geräteortung;
 - echte, zeitgestempelte Winddaten mit sichtbarer Quelle;
 - reproduzierbare, physikalisch plausible Routensimulation;
-- eigene stilisierte Weltvisualisierung ohne ungeklärte Medienrechte;
+- lokal gebündelte, lizenzgeprüfte Ländergrenzen ohne Kartentiles oder
+  Runtime-Kartenanbieter;
+- grobe, ehrlich begrenzte Routennähe zu kuratierten großen Orten und
+  Wahrzeichen;
 - ehrlicher Lade-, Fehler- und Offlinezustand;
 - lokaler Export einer Ergebnisgrafik ohne genaue Koordinaten als Standard;
 - Deutsch zuerst, Texte zentral und für Englisch vorbereitbar.

@@ -87,6 +87,7 @@ function appShellServiceWorker(base: string): Plugin {
         withBase(base, 'health.json'),
         withBase(base, 'integration.json'),
         withBase(base, 'preview.png'),
+        withBase(base, 'THIRD_PARTY_NOTICES.txt'),
         ...files,
       ]));
       const cacheSignature = files

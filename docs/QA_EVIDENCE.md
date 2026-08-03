@@ -628,6 +628,124 @@ versionierte PWA-Assetcache. Die Datenschutzinformation ist dauerhaft sichtbar.
   Das verzögerte Bootstrap-Gate prüft zusätzlich, dass dabei kein Page- oder
   Konsolenfehler entsteht.
 
+## Runde 11 – prominenter Länder-Flugraum, Umrisse und Windentscheidung
+
+Basis ist der portal-verifizierte öffentliche DEV-Stand
+`ddaffbd268580f8415fb22a47bafef50ee8be6d2`. Die Änderung liegt lokal auf
+`codex/cloud-post-map-flight-details` und übernimmt atomar
+`public-app-essentials/v1.1.3` aus Shared-Commit
+`babe74a0e62e1a7f9095648195e54b322a837726`. Eine externe Veröffentlichung
+erfolgt erst nach dem vollständigen App- und Pages-Gate.
+
+### Baseline und Nutzeraufgaben
+
+Simulierte frische Nutzeraufgaben:
+
+1. Für jede Flugart eine erkennbar andere Grundform wählen und anschließend
+   frei weiterzeichnen.
+2. Einen Start anhand von Ländern finden, Windstärke und -richtung vor dem
+   Start vergleichen und bei Bedarf bewusst einen anderen Ort wählen.
+3. Nach dem Flug erkennen, an welchen großen Orten oder Wahrzeichen die grobe
+   Modellroute vorbeikam, ohne daraus einen exakten Überflug abzuleiten.
+
+Gemessene Baseline: Am Desktop teilten sich Zeichnung und Karte Spalten von
+447/547 px; die Weltkarte maß nur 527×297 px. Mobil begann sie erst bei rund
+`y=1182` und maß 293×206 px. Die groben handgezeichneten Kontinente hatten
+keine Ländergrenzen. Eine Windstärke war erst nach dem Flug lesbar, Umrisse
+waren nicht auswählbar und Routenorte fehlten.
+
+### Visuelle QA-Runde 1
+
+Änderungen:
+
+- Primärarbeit einspaltig; die Karte folgt als eigener vollbreiter Flugraum
+  unter der intern kompakten Zeichenwerkstatt.
+- Je Flugart drei SVG-vorgeschaute Umrisse als echte Radiogruppe; eine Auswahl
+  ersetzt die Zeichnung deterministisch, freies Weiterzeichnen bleibt möglich.
+- 177 lokal gebündelte Natural-Earth-Länder mit Küsten und Grenzen ersetzen die
+  groben Eigenpolygone; keine Tiles oder Laufzeit-Kartenanfrage.
+- Eine Windvorschau zeigt 10 m, 925 hPa und 850 hPa mit Richtung,
+  Geschwindigkeit, Stärke, Balken und markiertem Flugprofil. Start am
+  unveränderten Ort verwendet genau diesen Snapshot und erzeugt keinen zweiten
+  Windrequest.
+- Eine lokale CC0-Liste bekannter Wahrzeichen plus bestehende Großortliste wird
+  gegen den nächsten Routenpunkt geprüft. Nummern in der Karte und eine
+  DE/EN-Liste nennen nur grobe Nähe innerhalb 70/95 km.
+
+Browsermessung Desktop 1440×900 (tatsächlicher Client 1425): Weltkarte
+994×497 px, `data-country-count=177`, vollständig unter der Zeichenfläche und
+ohne horizontalen Overflow. Mobil 390×844 (Client 375): Karte 293×270 px,
+Windbereich 293×484,5 px, 0 Overflow und 0 sichtbare Ziele unter 44 px.
+
+Gefundene Befunde und Korrekturen:
+
+- Der Leerlauf wiederholte die Windbeschreibung in einem zweiten Statusblock;
+  der redundante Block wurde entfernt.
+- Die Routenlupe war halbtransparent und ließ fremde Weltregionen als scheinbare
+  Linsengeografie durchscheinen. Sie erhielt einen opaken, themengerechten
+  Hintergrund, ein Orientierungsraster und wechselt auf die dem Start
+  gegenüberliegende Kartenseite.
+- Der visuelle Kompass nahm im extremen Textreflow zu viel Breite ein; unter
+  240 CSS-Pixeln entfällt ausschließlich diese dekorative Doppelung, während
+  Richtungstext und Windbalken erhalten bleiben.
+
+### Visuelle QA-Runde 2 und vollständiges lokales Gate
+
+Frischer echter Open-Meteo-Lauf bei 1440×900: Länder, Start, Route,
+Routenlupe, Windpfeil, Profil und Modellgrenze gleichzeitig lesbar; 994×497 px,
+0 Overflow. Bei 390×844/Client 375 blieben Länderkarte, drei Windhöhen,
+markiertes Profil, Datenzeit und Startaktion vollständig sichtbar und
+touchfähig. DE/EN, Dark Mode, Reduced Motion und 180×400 CSS-Pixel als
+360×800@200-%-Äquivalent blieben ohne Clipping.
+
+Automatisierte Evidenz:
+
+- Shell v2.0.3, Layout v1.1.0 und Essentials v1.1.3 Validatoren PASS;
+- Vitest 28/28 in acht Dateien, darunter Umriss-Klonung,
+  Windstärkengrenzen/-richtungen und Wahrzeichenchronologie;
+- Playwright 52 anwendbare Fälle PASS, 108 bewusst profilbedingt übersprungen:
+  Smartphone hoch/quer, Tablet, Desktop, Touch/Pointer/Maus/Tastatur,
+  Pointer-Abbruch, langsames Netz/Timeout/Offline/Resume, verweigerte Ortung,
+  Axe, DE/EN+Reload, Reduced Motion, CSP/MIME und 200-%-Reflow;
+- neuer Produktgate: drei Umrisse pro Flugart, Weltkarte nach statt neben der
+  Zeichnung, Breite >900 px am Desktop, 177 Länder, drei Windhöhen, markiertes
+  Profil und exakt ein Windrequest für Vorschau plus Start;
+- Share-Geometrie nach Native-/Clipboard-/Abbruchpfad zusätzlich 5/5 stabil
+  wiederholt; der app-eigene Exportknopf besitzt am Desktop nun eine konstante
+  Mindestbreite und reflowt mobil weiter auf 100 %;
+- Standardbuild PASS; GitHub-Pages-Build und `verify:dev-artifact` PASS. Der
+  finale kombinierte Rerun auf dem atomar synchronisierten v1.1.3-Pin bestätigt
+  den HTML-Fallback sowie berechnete 32×32 px bei 1440×900, 390×844 und
+  180×400 CSS-Pixeln als 360×800@200-%-Äquivalent. Quell- und Build-Icon sind
+  byteidentisch mit SHA-256
+  `35b7213e031d3c749f3f38996934b20c559c983204e0b150a22119c935c05a59`.
+- Ein erster kombinierter Lauf startete unter gleichzeitiger Windows-Last
+  keinen der acht Vitest-Worker und führte folglich null Tests aus. Der
+  unveränderte isolierte Wiederholungslauf bestand anschließend 28/28; Build
+  und die vollständige Browsermatrix liefen danach auf demselben Stand grün.
+- Das erweiterte Artefaktgate fand dabei einen echten Offline-Randfall: Der neu
+  ausgelieferte Drittanbieter-Lizenzhinweis war im Build vorhanden, aber noch
+  nicht Teil des Service-Worker-App-Shell-Caches. `THIRD_PARTY_NOTICES.txt`
+  wird nun explizit vorgehalten; der anschließende Pages-Build und das
+  Fail-closed-Artefaktgate sind grün.
+- Ein echter Windows-Recheckout mit `core.autocrlf=true` bestätigte zunächst den
+  neuen Essentials-v1.1.3-Sechserlock, schrieb aber die älteren vendorten
+  Shell- und Layouttexte mangels enger Vendorregel nach CRLF um. Beide
+  Vendorverzeichnisse besitzen nun ebenfalls `* text eol=lf`; im wiederholten
+  frischen Checkout melden alle drei Vertragsverzeichnisse `i/lf w/lf`, und
+  Shell-, Layout- sowie Essentials-Verifier bestehen gemeinsam.
+- Die erste Linux-CI maß bei 320 CSS-Pixeln 337 px Dokumentbreite, während der
+  identische Windows-Lauf mit 320/320 gerade noch grün blieb. Die Diagnose
+  zeigte einen bereits intern überbreiten `Papierflieger`-Text in der
+  zweispaltigen Objektwahl. Griditem und Textspalte dürfen nun schrumpfen und
+  lange deutsche Komposita bei Bedarf umbrechen; das fokussierte Gate prüft
+  zusätzlich jede Objektoption auf eigene Scrollbreite.
+
+Outcome: Karte und Wind sind nun eine echte Startentscheidung statt eine kleine
+Nebenanzeige. Länder geben Orientierung, Umrisse liefern sofort spielerische
+Variation, und Routenorte schaffen Erzählwert, ohne Navigation oder exakte
+Ballistik vorzutäuschen.
+
 ## Verbleibende Prüfgrenzen
 
 - Keine echte Betriebslast oder API-Quota-Prüfung; nur ein einzelner echter

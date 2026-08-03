@@ -50,12 +50,17 @@ test('fresh and delayed startup stays compact until the app is truly ready', asy
     return {
       width: bounds.width,
       height: bounds.height,
+      widthAttribute: icon.getAttribute('width'),
+      heightAttribute: icon.getAttribute('height'),
       titleTag: element.querySelector('[data-milos-loading-title]')?.tagName,
       title: element.querySelector('[data-milos-loading-title]')?.textContent,
       message: element.querySelector('[data-milos-loading-message]')?.textContent,
     };
   });
-  expect(Math.max(initial.width, initial.height)).toBeLessThanOrEqual(48);
+  expect(initial.width).toBe(32);
+  expect(initial.height).toBe(32);
+  expect(initial.widthAttribute).toBe('32');
+  expect(initial.heightAttribute).toBe('32');
   expect(initial.titleTag).toBe('P');
   expect(initial.title).toBe('Wolkenpost');
   expect(initial.message).toBe('Wolkenpost wird geöffnet …');
@@ -66,7 +71,15 @@ test('fresh and delayed startup stays compact until the app is truly ready', asy
     const bounds = icon.getBoundingClientRect();
     return Math.max(bounds.width, bounds.height);
   });
-  expect(desktopIconSize).toBeLessThanOrEqual(56);
+  expect(desktopIconSize).toBe(32);
+  await expectNoHorizontalOverflow(page);
+
+  await page.setViewportSize({ width: 180, height: 400 });
+  const zoomedIconSize = await loader.locator('[data-milos-loading-icon]').evaluate((icon) => {
+    const bounds = icon.getBoundingClientRect();
+    return { width: bounds.width, height: bounds.height };
+  });
+  expect(zoomedIconSize).toEqual({ width: 32, height: 32 });
   await expectNoHorizontalOverflow(page);
 
   releaseApp();
@@ -239,6 +252,7 @@ test('shared result share uses native, clipboard and cancellation paths without 
   await expect(share.locator('[data-milos-share-status]')).toHaveAttribute('data-visible', 'false');
   await expect.poll(() => page.evaluate(() => Boolean(window.__wolkenpostSharePayload))).toBe(true);
   await expect(page.locator('p.sr-only[aria-live="polite"]')).not.toContainText('Geteilt');
+  await expect(page.getByRole('button', { name: 'Ergebnisbild speichern' })).toBeEnabled();
   const measureShareGeometry = () => share.evaluate((element) => {
     const bounds = element.getBoundingClientRect();
     const container = element.parentElement!.getBoundingClientRect();

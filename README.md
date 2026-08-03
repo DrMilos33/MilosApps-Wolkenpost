@@ -2,10 +2,13 @@
 
 Eigenständige öffentliche MilosApps-Web-App mit dem App-Key `cloud-post`.
 
-Nutzer zeichnen eine Wolke, einen Ballon, einen Samen oder einen Papierflieger.
-Reale Winddaten tragen das Objekt anschließend durch eine eigene animierte
-Weltkarte. Das Ergebnis ist eine persönliche Route, kein fremdes Video- oder
-Kartenportal.
+Nutzer wählen einen von mehreren Umrissen oder zeichnen eine Wolke, einen
+Ballon, einen Samen oder einen Papierflieger frei weiter. Reale Winddaten
+tragen das Objekt anschließend durch eine eigene animierte Weltkarte mit
+Ländergrenzen. Vor dem Start zeigt eine visuelle Windvorschau drei Höhen; nach
+dem Flug nennt die App kuratierte große Orte und Wahrzeichen nahe der Route.
+Das Ergebnis ist eine persönliche, grobe Modellroute, kein fremdes Video- oder
+Kartenportal und keine Navigation.
 
 ## Feste Grenzen
 
@@ -19,8 +22,8 @@ Kartenportal.
 - `public-app-layout/v1.1.0` wird getrennt aus Shared-Commit
   `55b649d997489ca703682679257ac1a5b790bdc7` mit Profil `guided-flow`
   lokal vendort und über einen eigenen Drei-Artefakt-Lock geprüft;
-- `public-app-essentials/v1.1.2` wird aus Shared-Commit
-  `b14aac6107b75f03ff49e74160af7e7e30c29e59` lokal vendort. Wolkenpost
+- `public-app-essentials/v1.1.3` wird aus Shared-Commit
+  `babe74a0e62e1a7f9095648195e54b322a837726` lokal vendort. Wolkenpost
   aktiviert den kompakten Startscreen, die dauerhafte wahrheitsgemäße Datenschutzinformation,
   Teilen und die explizite Ortssuche; Datumseingabe bleibt deaktiviert;
 - Portal-DEV darf nur über einen dokumentierten Link oder Routingvertrag

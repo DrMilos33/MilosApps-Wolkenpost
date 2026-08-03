@@ -88,6 +88,12 @@ test('reflows at a 320 CSS-pixel viewport without horizontal scrolling', async (
   await page.goto('./');
   await startFlight(page);
   await expectNoHorizontalOverflow(page);
+  const overflowingObjectOptions = await page.locator('.object-option').evaluateAll((options) =>
+    options
+      .filter((option) => option.scrollWidth > option.clientWidth + 1)
+      .map((option) => option.textContent?.trim().replace(/\s+/g, ' ')),
+  );
+  expect(overflowingObjectOptions).toEqual([]);
 });
 
 test('exports a privacy-preserving PNG', async ({ page }) => {
