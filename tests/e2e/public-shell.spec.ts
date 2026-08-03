@@ -18,7 +18,7 @@ test('shell and complete app switch to English and persist across reload', async
   await shell.getByRole('button', { name: 'EN', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await expect(page).toHaveTitle('Cloud Post – Your drawing travels with the wind');
-  await expect(page.getByRole('heading', { level: 1, name: 'Draw it. Let it fly.' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Your drawing takes off.' })).toBeVisible();
   await expect(page.getByRole('radio', { name: /Balloon floating gently/ })).toBeVisible();
   await expect(page.getByLabel('Place or region')).toBeVisible();
   await page.getByText('Appearance, motion and local data', { exact: true }).click();
@@ -42,7 +42,7 @@ test('shell and complete app switch to English and persist across reload', async
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await expect(page.locator('milos-app-shell').getByRole('button', { name: 'EN', exact: true }))
     .toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByRole('heading', { level: 1, name: 'Draw it. Let it fly.' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Your drawing takes off.' })).toBeVisible();
   await expect.poll(() => page.evaluate(() => localStorage.getItem('milosapps.cloud-post.language')))
     .toBe('en');
   expect(consoleProblems).toEqual([]);
@@ -53,7 +53,7 @@ test('corrupt language storage safely falls back to German', async ({ page }) =>
   await page.addInitScript(() => localStorage.setItem('milosapps.cloud-post.language', 'fr'));
   await page.goto('./');
   await expect(page.locator('html')).toHaveAttribute('lang', 'de');
-  await expect(page.getByRole('heading', { level: 1, name: 'Zeichne. Lass es fliegen.' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Deine Zeichnung hebt ab.' })).toBeVisible();
   await expect(page.locator('milos-app-shell').getByRole('button', { name: 'DE', exact: true }))
     .toHaveAttribute('aria-pressed', 'true');
 });
@@ -116,6 +116,6 @@ test('English shell and app remain available after an offline reload', async ({ 
   await context.setOffline(true);
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-  await expect(page.getByRole('heading', { level: 1, name: 'Draw it. Let it fly.' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Your drawing takes off.' })).toBeVisible();
   await expect(page.getByTestId('connection-status')).toContainText(/offline|ready/);
 });

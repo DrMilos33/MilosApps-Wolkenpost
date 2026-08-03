@@ -519,9 +519,6 @@ export function WorldMap({
   return (
     <div className="world-map-stage" data-testid="world-map-stage">
       <div className="map-view-toolbar" aria-label={text.dragHint} data-milos-actions>
-        <button type="button" aria-label={text.zoomOut} onClick={() => changeZoom(1 / 1.35)}>{'\u2212'}</button>
-        <output aria-live="polite">{text.zoomLevel(mapView.zoom)}</output>
-        <button type="button" aria-label={text.zoomIn} onClick={() => changeZoom(1.35)}>+</button>
         <button
           type="button"
           className={mapView.mode === 'country' ? 'is-active' : ''}
@@ -566,6 +563,11 @@ export function WorldMap({
             </button>
           </>
         )}
+      </div>
+      <div className="map-zoom-controls" aria-label={text.zoomLevel(mapView.zoom)} data-milos-actions>
+        <button type="button" aria-label={text.zoomOut} onClick={() => changeZoom(1 / 1.35)}>{'\u2212'}</button>
+        <output aria-live="polite">{mapView.zoom.toLocaleString(undefined, { maximumFractionDigits: 1 })}×</output>
+        <button type="button" aria-label={text.zoomIn} onClick={() => changeZoom(1.35)}>+</button>
       </div>
       <canvas
         ref={canvasRef}

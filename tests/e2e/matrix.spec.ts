@@ -17,7 +17,7 @@ test.beforeEach(async ({ page }) => {
 test('complete wind journey is usable without login', async ({ page }) => {
   const consoleProblems = recordConsoleProblems(page);
   await page.goto('./');
-  await expect(page.getByRole('heading', { name: 'Zeichne. Lass es fliegen.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Deine Zeichnung hebt ab.' })).toBeVisible();
   await expect(page.locator('input[type="password"]')).toHaveCount(0);
   await expect(page.locator('form')).toHaveCount(0);
   await expect(page.locator('milos-app-shell').getByText('ohne Anmeldung', { exact: false })).toBeVisible();

@@ -666,3 +666,27 @@ gemeldet. Zugangsdaten und Nutzerdaten gehören nicht in diese Datei.
 - Für andere MilosApps relevant: Ja. Karten, Boards und Editoren sollten den
   vorgesehenen app-eigenen Breitentoken nutzen, statt Datenflächen in einer
   lesetextorientierten Standardbreite zu belassen.
+
+## 2026-08-03 – Eine breite Karte braucht eine eigene Informationshierarchie
+
+- Datum und geprüfter Stand: 3. August 2026, erster redaktioneller
+  Kartenarbeitsplatz nach Nutzer-Mockup.
+- Beobachtung: Mehr Seitenbreite allein machte Wolkenpost nicht ruhiger. Das
+  separate Intro, die gleichwertigen Karten und die breite Karten-Toolbar
+  konkurrierten weiterhin um Aufmerksamkeit; auf dem Flug fehlte eine direkt
+  auf der Karte lesbare Zusammenfassung.
+- Evidenz oder reproduzierbarer Test: Bei 1440 Pixeln misst der Arbeitsplatz
+  1408 Pixel, die Steuerleiste 290,2 Pixel und die Karte 1074,8 × 820 Pixel.
+  Intro, Steuerung und Karte beginnen gemeinsam bei rund 75 Pixeln. Das
+  fokussierte Browsergate prüft außerdem, dass Titelkarte und Ansichtsumschalter
+  mindestens acht Pixel Abstand halten.
+- Änderung und Regressionstest: Das Intro liegt nun in einer ruhigen linken
+  Steuerspur. Die Karte besitzt getrennte Overlays für Flugraum, echte
+  Windlesung, Zoom/Ansicht und den laufenden Flug; ausführliche Ergebnisse
+  bleiben darunter verfügbar. Die responsiven Gates prüfen 390, 375, 320 und
+  180 CSS-Pixel, 44-Pixel-Ziele, Kontrast, Reduced Motion und Overflow.
+- Für andere MilosApps relevant: Ja. Bei karten- oder canvasdominierten Apps
+  sollte die Hauptfläche nicht nur breiter, sondern als eigener
+  Informationsraum gestaltet werden. Sekundäre Eingaben gehören in eine
+  schmale Steuerspur; wenige zustandsnahe Werte dürfen als klar begrenzte
+  Overlays auf der Hauptfläche liegen.

@@ -13,9 +13,9 @@ export const copy = {
       offline: 'offline',
     },
     hero: {
-      eyebrow: 'Wolkenpost',
-      heading: 'Zeichne. Lass es fliegen.',
-      lead: 'Starte grob. Die private Modellroute folgt echten Winddaten.',
+      eyebrow: 'Deine kleine Luftpost',
+      heading: 'Deine Zeichnung hebt ab.',
+      lead: 'Male sie, wähle einen Start und lass den Wind die Geschichte schreiben.',
       start: 'Jetzt loszeichnen',
     },
     objectTypes: {
@@ -89,7 +89,7 @@ export const copy = {
     },
     windScout: {
       kicker: 'Wind vor dem Start',
-      heading: 'Wie kräftig trägt der Wind hier?',
+      heading: 'Wie trägt der Wind?',
       description: 'Prüfe den gewählten Ort, bevor du startest. Die drei Höhen zeigen denselben Datenstand; dein aktuelles Flugprofil ist markiert.',
       check: 'Wind an diesem Ort prüfen',
       refresh: 'Wind neu prüfen',
@@ -316,9 +316,9 @@ export const copy = {
       offline: 'offline',
     },
     hero: {
-      eyebrow: 'Cloud Post',
-      heading: 'Draw it. Let it fly.',
-      lead: 'Start roughly. The private model route follows real wind data.',
+      eyebrow: 'Your little airmail',
+      heading: 'Your drawing takes off.',
+      lead: 'Draw it, choose a starting point and let the wind write the story.',
       start: 'Start drawing',
     },
     objectTypes: {
@@ -392,7 +392,7 @@ export const copy = {
     },
     windScout: {
       kicker: 'Wind before launch',
-      heading: 'How strongly will the wind carry here?',
+      heading: 'How will the wind carry?',
       description: 'Check the selected place before launching. All three levels use the same data time; your current flight profile is highlighted.',
       check: 'Check wind at this place',
       refresh: 'Check wind again',

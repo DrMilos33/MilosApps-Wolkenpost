@@ -125,6 +125,19 @@ function routeEndLabel(result: RouteResult, language: SupportedLanguage): string
   return copy[language].result.near(place.name);
 }
 
+function compassLabel(bearing: number, language: SupportedLanguage): string {
+  const labels = copy[language].flightSpace.compass;
+  return labels[Math.round((((bearing % 360) + 360) % 360) / 45) % 8];
+}
+
+function pointAtProgress(result: RouteResult, progress: number) {
+  const index = Math.max(0, Math.min(
+    result.points.length - 1,
+    Math.ceil(result.points.length * progress) - 1,
+  ));
+  return result.points[index];
+}
+
 function defaultComparisonType(primary: ObjectType): ObjectType {
   if (primary === 'cloud') return 'seed';
   if (primary === 'balloon') return 'paper-plane';
@@ -614,6 +627,19 @@ export default function App({ initialLanguage: language }: AppProps) {
     })),
     [language],
   );
+  const activeFlightPoint = result ? pointAtProgress(result, flightProgress) : null;
+  const activeFlightPlace = activeFlightPoint
+    ? localizePlace(nearestPlace(activeFlightPoint), language, text.map)
+    : null;
+  const mapWind = activeFlightPoint
+    ? { speedKmh: activeFlightPoint.speed, bearing: activeFlightPoint.bearing }
+    : selectedWindReading;
+  const passedHighlight = result
+    ? activeRouteHighlights.filter((highlight) => highlight.progress <= flightProgress + 0.01).at(-1)
+    : undefined;
+  const nextHighlight = result
+    ? activeRouteHighlights.find((highlight) => highlight.progress > flightProgress + 0.01)
+    : undefined;
 
   return (
     <div
@@ -622,29 +648,29 @@ export default function App({ initialLanguage: language }: AppProps) {
       data-milos-profile="guided-flow"
       data-milos-app-key="cloud-post"
     >
-        <section className="hero" id="top" data-milos-intro>
-          <div className="hero-copy" data-milos-intro-copy>
-            <div className="hero-status-row">
-            <p className="eyebrow" data-milos-eyebrow>{text.hero.eyebrow}</p>
-              <span
-                className={`connection-pill ${online ? '' : 'is-offline'}`}
-                data-testid="connection-status"
-              >
-                <span className="connection-dot" aria-hidden="true" />
-                {online ? text.shell.ready : text.shell.offline}
-              </span>
-            </div>
-            <h1>{text.hero.heading}</h1>
-            <p className="hero-lead" data-milos-lead>{text.hero.lead}</p>
-          </div>
-          <div className="hero-orbit" data-milos-intro-icon aria-hidden="true">
-            <span className="hero-cloud">☁</span>
-            <span className="hero-trail" />
-          </div>
-        </section>
-
         <div className="journey-layout" data-milos-primary-work data-milos-panel>
           <aside className="journey-sidebar" aria-label={text.map.plannerLabel}>
+          <section className="hero" id="top" data-milos-intro>
+            <div className="hero-copy" data-milos-intro-copy>
+              <div className="hero-status-row">
+                <span
+                  className={`connection-pill ${online ? '' : 'is-offline'}`}
+                  data-testid="connection-status"
+                >
+                  <span className="connection-dot" aria-hidden="true" />
+                  {text.appName} · {online ? text.shell.ready : text.shell.offline}
+                </span>
+              </div>
+              <p className="eyebrow" data-milos-eyebrow>{text.hero.eyebrow}</p>
+              <h1>{text.hero.heading}</h1>
+              <p className="hero-lead" data-milos-lead>{text.hero.lead}</p>
+            </div>
+            <div className="hero-orbit" data-milos-intro-icon aria-hidden="true">
+              <span className="hero-cloud">☁</span>
+              <span className="hero-trail" />
+            </div>
+          </section>
+
           <section className="step-card drawing-step" id="zeichnen" aria-labelledby="drawing-heading">
             <div className="step-heading step-heading-inline" data-milos-step>
               <span className="step-number" aria-hidden="true" data-milos-step-index>1</span>
@@ -859,9 +885,38 @@ export default function App({ initialLanguage: language }: AppProps) {
           </section>
           </aside>
 
-          <section className="step-card map-step" aria-label={text.flightSpace.heading}>
+          <section
+            className="step-card map-step"
+            aria-label={text.flightSpace.heading}
+          >
             <div className="flight-space" ref={flightSpaceRef} data-testid="flight-space">
               <div className="map-canvas-shell">
+                <div className="map-overview-card" aria-live="polite">
+                  <p>{text.flightSpace.kicker}</p>
+                  <h2>{result ? routeEndLabel(result, language) : start.name}</h2>
+                  <span>{result ? text.flightSpace.heading : text.map.detail}</span>
+                </div>
+
+                {mapWind && (
+                  <aside className="map-wind-card" aria-label={text.windScout.heading}>
+                    <span className="wind-compass is-map" aria-hidden="true">
+                      <span data-bearing-sector={Math.round((((mapWind.bearing % 360) + 360) % 360) / 45) % 8}>
+                        {'\u27a4'}
+                      </span>
+                    </span>
+                    <span>
+                      <small>{profileLevelText(objectType)}</small>
+                      <strong>{text.flightSpace.windValue(
+                        mapWind.speedKmh,
+                        compassLabel(mapWind.bearing, language),
+                      )}</strong>
+                      {estimatedDistanceKm !== undefined && (
+                        <span>{text.windScout.estimatedRange(estimatedDistanceKm)}</span>
+                      )}
+                    </span>
+                  </aside>
+                )}
+
                 <WorldMap
                   selected={start}
                   result={result}
@@ -879,6 +934,29 @@ export default function App({ initialLanguage: language }: AppProps) {
                   replayToken={replayToken}
                   onProgress={reportFlightProgress}
                 />
+
+                {result && activeFlightPoint && activeFlightPlace && (
+                  <div className="map-flight-hud" data-testid="map-flight-hud">
+                    <div>
+                      <small>{text.flightSpace.current}</small>
+                      <strong>{text.result.near(activeFlightPlace.name)}</strong>
+                      <span>
+                        {text.flightSpace.elapsed(result.durationHours * flightProgress)} · {' '}
+                        {Math.round(result.distanceKm * flightProgress).toLocaleString(locale)} km
+                      </span>
+                    </div>
+                    <div>
+                      <small>{text.routeHighlights.kicker}</small>
+                      <strong>{passedHighlight?.name ?? start.name}</strong>
+                      <span>{passedHighlight ? text.routeHighlights.near(passedHighlight.distanceKm) : text.flightSpace.start}</span>
+                    </div>
+                    <div>
+                      <small>{text.flightSpace.target}</small>
+                      <strong>{nextHighlight?.name ?? routeEndLabel(result, language)}</strong>
+                      <span>{nextHighlight ? text.routeHighlights.time(nextHighlight.elapsedHours) : text.flightSpace.elapsed(result.durationHours)}</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {result && (
